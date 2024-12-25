@@ -61,21 +61,19 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
                 {
                     if (lyt.is_ground_layer(t))
                     {
-                        // two wires in the same tile
+                        // two wires in the same tile -> double wire
                         if (const auto at = lyt.above(t); (t != at) && lyt.is_wire_tile(at))
                         {
-                            //TODO diesen inhalt anpassen an das was ich brauche 
-                              // two possible options: actual crossover and (parallel) hourglass wire
                             const auto pa = determine_port_routing(lyt, at);
 
-                            return CROSSING_MAP.at({p, pa});
+                            return DOUBLE_WIRE_MAP.at({p, pa});
                         }
 
                         //FORME: first set the ports with determine_port_routing, then look the right wire up with these in the wire map,
                         // definition of the wire is given in the constexpr in the private section
                         
                         // single wire
-                        return WIRE_MAP.at(p);
+                        return SINGLE_WIRE_MAP.at(p);
                     }
 
                     return EMPTY_GATE;
@@ -91,7 +89,7 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     }
 
     /**
-     * Returns a map of all gate functions (so only wires) supported by the library and their respectively possible implementations.
+     * Returns a map of all wires implementations supported by the library.
      *
      * This is an optional interface function that is required by some algorithms.
      *
@@ -100,9 +98,16 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     static gate_functions get_functional_implementations() noexcept
     {
         static const gate_functions implementations{
-            {{create_id_tt(),//TODO put all the right wire names here, current ones are just copied and are wrong
-              {STRAIGHT_WIRE, MIRRORED_STRAIGHT_WIRE, DIAGONAL_WIRE, MIRRORED_DIAGONAL_WIRE, CROSSING_WIRE,
-               HOURGLASS_DOUBLE_WIRE, FANOUT_1_2, MIRRORED_FANOUT_1_2}}}};
+            {{create_id_tt(),{
+                // single wires
+                NORTH_EAST_EAST_WIRE, NORTH_EAST_SOUTH_EAST_WIRE, NORTH_EAST_SOUTH_WEST_WIRE, NORTH_EAST_WEST_WIRE, NORTH_EAST_NORTH_WEST_WIRE,
+                EAST_SOUTH_EAST_WIRE, EAST_SOUTH_WEST_WIRE, EAST_WEST_WIRE, EAST_NORTH_WEST_WIRE, SOUTH_EAST_SOUTH_WEST_WIRE, SOUTH_EAST_WEST_WIRE,
+                SOUTH_EAST_NORTH_WEST_WIRE, SOUTH_WEST_WEST_WIRE, SOUTH_WEST_NORTH_WEST_WIRE, WEST_NORTH_WEST_WIRE,
+                // double wires (one straight, one bend)
+                EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE, NORTH_EAST_SOUTH_WEST_AND_WEST_NORTH_WEST_WIRE, EAST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE, NORTH_EAST_SOUTH_WEST_AND_EAST_SOUTH_EAST_WIRE,
+                // double wires (both bend)
+                EAST_SOUTH_EAST_AND_SOUTH_WEST_WEST_WIRE, SOUTH_WEST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE, WEST_NORTH_WEST_AND_NORTH_EAST_EAST_WIRE, NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE
+                }}}};
 
         return implementations;
     }
@@ -117,110 +122,81 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     static gate_ports<port_direction> get_gate_ports() noexcept
     {
         static const gate_ports<port_direction> ports{{// wires
-                                                       {STRAIGHT_WIRE, //TODO put the actual wires here, current ones were copied and can be deleted
-                                                        {{{{}, {port_direction(port_direction::cardinal::SOUTH_WEST)}},
-                                                          {{{port_direction(port_direction::cardinal::NORTH_WEST)},
-                                                            {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}}},
-                                                       {MIRRORED_STRAIGHT_WIRE,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_EAST)}, {}},
-                                                          {{{port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                            {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}}},
-                                                       {DIAGONAL_WIRE,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST)}, {}},
-                                                          {{{port_direction(port_direction::cardinal::NORTH_WEST)},
-                                                            {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}}},
-                                                       {MIRRORED_DIAGONAL_WIRE,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       {HOURGLASS_DOUBLE_WIRE,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST),
-                                                            port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       {CROSSING_WIRE,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST),
-                                                            port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // inverters
-                                                       {STRAIGHT_INVERTER,
-                                                        {{{{}, {port_direction(port_direction::cardinal::SOUTH_WEST)}},
-                                                          {{{port_direction(port_direction::cardinal::NORTH_WEST)},
-                                                            {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}}},
-                                                       {MIRRORED_STRAIGHT_INVERTER,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_EAST)}, {}},
-                                                          {{{port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                            {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}}},
-                                                       {DIAGONAL_INVERTER,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST)}, {}},
-                                                          {{{port_direction(port_direction::cardinal::NORTH_WEST)},
-                                                            {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}}},
-                                                       {MIRRORED_DIAGONAL_INVERTER,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // AND gates
-                                                       {CONJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}},
-                                                       {MIRRORED_CONJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // OR gates
-                                                       {DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}},
-                                                       {MIRRORED_DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // NAND gates
-                                                       {NEGATED_CONJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}},
-                                                       {MIRRORED_NEGATED_CONJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // NOR gates
-                                                       {NEGATED_DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}},
-                                                       {MIRRORED_NEGATED_DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // XOR gates
-                                                       {EXCLUSIVE_DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}},
-                                                       {MIRRORED_EXCLUSIVE_DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // XNOR gates
-                                                       {NEGATED_EXCLUSIVE_DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST)}}}}},
-                                                       {MIRRORED_NEGATED_EXCLUSIVE_DISJUNCTION,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST),
-                                                            port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       // fan-outs
-                                                       {FANOUT_1_2,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_WEST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST),
-                                                            port_direction(port_direction::cardinal::SOUTH_WEST)}}}}},
-                                                       {MIRRORED_FANOUT_1_2,
-                                                        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                           {port_direction(port_direction::cardinal::SOUTH_EAST),
-                                                            port_direction(port_direction::cardinal::SOUTH_WEST)}}}}}
+        //TODO put the actual wires here, current ones were copied and can be deleted
+        //FRAGE: Struktur hiervon bitte einmal erläutern hängen die "komischen" wire einträge mit primary inputs / outputs zusammen?:
+                                                        {
+                                                            STRAIGHT_WIRE,
+                                                            {
+                                                                {
+                                                                    {
+                                                                        {},
+                                                                        {port_direction(port_direction::cardinal::SOUTH_WEST)}
+                                                                    },
+                                                                    {
+                                                                        {
+                                                                            {port_direction(port_direction::cardinal::NORTH_WEST)},
+                                                                            {port_direction(port_direction::cardinal::SOUTH_WEST)}
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            MIRRORED_STRAIGHT_WIRE,
+                                                            {
+                                                                {
+                                                                    {
+                                                                        {port_direction(port_direction::cardinal::NORTH_EAST)},
+                                                                        {}
+                                                                    },
+                                                                    {
+                                                                        {
+                                                                            {port_direction(port_direction::cardinal::NORTH_EAST)},
+                                                                            {port_direction(port_direction::cardinal::SOUTH_EAST)}
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            DIAGONAL_WIRE,
+                                                            {
+                                                                {
+                                                                    {
+                                                                        {port_direction(port_direction::cardinal::NORTH_WEST)},
+                                                                        {}
+                                                                    },
+                                                                    {
+                                                                        {
+                                                                            {port_direction(port_direction::cardinal::NORTH_WEST)},
+                                                                            {port_direction(port_direction::cardinal::SOUTH_EAST)}
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            MIRRORED_DIAGONAL_WIRE,
+                                                            {
+                                                                {
+                                                                    {
+                                                                        {port_direction(port_direction::cardinal::NORTH_EAST)},
+                                                                        {port_direction(port_direction::cardinal::SOUTH_WEST)}
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            HOURGLASS_DOUBLE_WIRE,
+                                                            {
+                                                                {
+                                                                    {
+                                                                        {port_direction(port_direction::cardinal::NORTH_WEST), port_direction(port_direction::cardinal::NORTH_EAST)},
+                                                                        {port_direction(port_direction::cardinal::SOUTH_EAST), port_direction(port_direction::cardinal::SOUTH_WEST)}
+                                                                    }
+                                                                }
+                                                            }
+                                                        }                                
 
         }};
 
@@ -295,10 +271,10 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
         return ports; 
     }
 
-    //TODO put all the other gates here FRAGE: is there an automated method to generate these?
-    
-    // Single wires:
+    //TODO fill out all the other gates here FRAGE: is there an automated method to generate these?
+    // single wires
     //FORME: 01 wire
+    static constexpr const fcn_gate NORTH_EAST_EAST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 02 wire
     static constexpr const fcn_gate NORTH_EAST_SOUTH_EAST_WIRE{cell_list_to_gate<char>({{
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -398,13 +374,21 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}
     }})};
     //FORME: 04 wire
+    static constexpr const fcn_gate NORTH_EAST_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 05 wire
+    static constexpr const fcn_gate NORTH_EAST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 12 wire
+    static constexpr const fcn_gate EAST_SOUTH_EAST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 13 wire
+    static constexpr const fcn_gate EAST_SOUTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 14 wire NOT REQUIRED
+    static constexpr const fcn_gate EAST_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 15 wire
+    static constexpr const fcn_gate EAST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 23 wire
+    static constexpr const fcn_gate SOUTH_EAST_SOUTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 24 wire NOT REQUIRED
+    static constexpr const fcn_gate SOUTH_EAST_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 25 wire
     static constexpr const fcn_gate SOUTH_EAST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -455,6 +439,7 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}
     }})};
     //FORME: 34 wire
+    static constexpr const fcn_gate SOUTH_WEST_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 35 wire
     static constexpr const fcn_gate SOUTH_WEST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
@@ -505,18 +490,140 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
         {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}
     }})};
     //FORME: 45 wire
+    static constexpr const fcn_gate WEST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
 
-    // Double wires:
+    // double wires (one straight, one bend)
     //FORME: 14_23 wire
+    static constexpr const fcn_gate EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 03_45 wire
+    static constexpr const fcn_gate NORTH_EAST_SOUTH_WEST_AND_WEST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 14_05 wire
+    static constexpr const fcn_gate EAST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 03_12 wire
+    static constexpr const fcn_gate NORTH_EAST_SOUTH_WEST_AND_EAST_SOUTH_EAST_WIRE{cell_list_to_gate<char>({{{}}})};
+
+    // double wires (both bend)
     //FORME: 12_34 wire
+    static constexpr const fcn_gate EAST_SOUTH_EAST_AND_SOUTH_WEST_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 34_05 wire
+    static constexpr const fcn_gate SOUTH_WEST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 45_01 wire
+    static constexpr const fcn_gate WEST_NORTH_WEST_AND_NORTH_EAST_EAST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 01_23 wire
+    static constexpr const fcn_gate NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
 
     //FRAGE: was is mit "clang-format on/off" gemeint?
+
+    using port_gate_map = phmap::flat_hash_map<port_list<port_direction>, fcn_gate>;
+    using double_port_gate_map =
+        phmap::flat_hash_map<std::pair<port_list<port_direction>, port_list<port_direction>>, fcn_gate>;
+    
+    /**
+     * Lookup table for wires. Maps ports to corresponding wires.
+     */
+    static inline const port_gate_map SINGLE_WIRE_MAP = {
+        {{{port_direction(port_direction::cardinal::NORTH_EAST)},
+          {port_direction(port_direction::cardinal::EAST)}},
+         NORTH_EAST_EAST_WIRE},
+        {{{port_direction(port_direction::cardinal::NORTH_EAST)},
+          {port_direction(port_direction::cardinal::SOUTH_EAST)}},
+         NORTH_EAST_SOUTH_EAST_WIRE},
+        {{{port_direction(port_direction::cardinal::NORTH_EAST)},
+          {port_direction(port_direction::cardinal::SOUTH_WEST)}},
+         NORTH_EAST_SOUTH_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::NORTH_EAST)},
+          {port_direction(port_direction::cardinal::WEST)}},
+         NORTH_EAST_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::NORTH_EAST)},
+          {port_direction(port_direction::cardinal::NORTH_WEST)}},
+         NORTH_EAST_NORTH_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::EAST)},
+          {port_direction(port_direction::cardinal::SOUTH_EAST)}},
+         EAST_SOUTH_EAST_WIRE},
+        {{{port_direction(port_direction::cardinal::EAST)},
+          {port_direction(port_direction::cardinal::SOUTH_WEST)}},
+         EAST_SOUTH_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::EAST)},
+          {port_direction(port_direction::cardinal::WEST)}},
+         EAST_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::EAST)},
+          {port_direction(port_direction::cardinal::NORTH_WEST)}},
+         EAST_NORTH_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::SOUTH_EAST)},
+          {port_direction(port_direction::cardinal::SOUTH_WEST)}},
+         SOUTH_EAST_SOUTH_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::SOUTH_EAST)},
+          {port_direction(port_direction::cardinal::WEST)}},
+         SOUTH_EAST_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::SOUTH_EAST)},
+          {port_direction(port_direction::cardinal::NORTH_WEST)}},
+         SOUTH_EAST_NORTH_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::SOUTH_WEST)},
+          {port_direction(port_direction::cardinal::WEST)}},
+         SOUTH_WEST_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::SOUTH_WEST)},
+          {port_direction(port_direction::cardinal::NORTH_WEST)}},
+         SOUTH_WEST_NORTH_WEST_WIRE},
+        {{{port_direction(port_direction::cardinal::WEST)},
+          {port_direction(port_direction::cardinal::NORTH_WEST)}},
+         WEST_NORTH_WEST_WIRE},
+        // empty gate (for crossing layer)
+        {{{}, {}}, EMPTY_GATE}, //FRAGE: I just put this here, no clue if I really need it, I think I don't ? '^^
+    };
+
+    /**
+     * Lookup table for double wires. Maps ports to corresponding wires.
+     */
+    static inline const double_port_gate_map DOUBLE_WIRE_MAP = {
+        {{{{port_direction(port_direction::cardinal::EAST)},
+           {port_direction(port_direction::cardinal::WEST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
+         EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE
+        },
+        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}},
+          {{port_direction(port_direction::cardinal::WEST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_WEST_NORTH_WEST_WIRE
+        },
+        {{{{port_direction(port_direction::cardinal::EAST)},
+           {port_direction(port_direction::cardinal::WEST)}},
+          {{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
+         EAST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE
+        },
+        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}},
+          {{port_direction(port_direction::cardinal::EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_EAST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_EAST_SOUTH_EAST_WIRE
+        },
+        {{{{port_direction(port_direction::cardinal::EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_EAST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_WEST)},
+           {port_direction(port_direction::cardinal::WEST)}}},
+         EAST_SOUTH_EAST_AND_SOUTH_WEST_WEST_WIRE
+        },
+        {{{{port_direction(port_direction::cardinal::SOUTH_WEST)},
+           {port_direction(port_direction::cardinal::WEST)}},
+          {{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
+         SOUTH_WEST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE
+        },
+        {{{{port_direction(port_direction::cardinal::WEST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}},
+          {{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::EAST)}}},
+         WEST_NORTH_WEST_AND_NORTH_EAST_EAST_WIRE
+        },
+        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::EAST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
+         NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE
+        },
+    };
 };
 
 }  // namespace fiction
