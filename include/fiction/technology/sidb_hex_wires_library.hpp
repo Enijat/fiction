@@ -1,5 +1,5 @@
 //
-// Created by felix on 24.12.2024
+// Created by Felix Kiefhaber on 24.12.2024
 //
 
 #ifndef FICTION_SIDB_HEX_WIRES_LIBRARY_HPP
