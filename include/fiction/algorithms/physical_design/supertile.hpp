@@ -8,13 +8,13 @@
 #include "fiction/traits.hpp"
 
 #include <limits>
+#include <cstdint>
 
 namespace ficiton
 {
 
 //FRAGE: brauch/soll ich das statistics struct auch? (ist in hexagonalisation an dieser stelle drin)
 
-//FORME: Put in depth implementation here
 namespace detail
 {
     /**
@@ -24,38 +24,113 @@ namespace detail
     template <typename HexLyt>
     [[nodiscrad]] HexLyt grow_to_supertiles(const HexLyt& lyt) noexcept
     {
-        //TODO have all the required static_assters here that I need
+        //TODO have all the required static_asserts here
         static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-        
-        // Brute force search for outermost four tiles
-        // TODO x and y the right names here?
-        int64_t upper_most_core_tile_y = std::numeric_limits<int64_t>::max();
-        int64_t lower_most_core_tile_y = std::numeric_limits<int64_t>::min();
-        int64_t left_most_core_tile_x = std::numeric_limits<int64_t>::max();
-        int64_t right_most_core_tile_x = std::numeric_limits<int64_t>::min();
 
+        //TODO have all the required runtime asserts here
+        assert(lyt.z() == 0); //FRAGE: how does z height work with hexagonal layouts
+
+        // Brute force search trough hexagonal layout column by colum to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
+        //TODO maybe write a function for position translation? Would allow to directly iterate over the EXISTING gates with "ground_coordinates" function
+            // TODO x and y the right names here?
+            int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
+            int64_t rightmost_core_tile_x = std::numeric_limits<int64_t>::min();
+            int64_t top_core_tile_y = std::numeric_limits<int64_t>::max();
+            int64_t bottom_core_tile_y = std::numeric_limits<int64_t>::min();
+
+            // translated base cords of current column
+            uint64_t supertile_column_base_x = 1;
+            uint64_t supertile_column_base_y = 1;
+
+            // translated base cords of current tile
+            int64_t supertile_core_x = 1;
+            int64_t supertile_core_y = 1;
+
+            uint8_t tile_shift_loop_position = 0;
+            bool column_shift_loop_position = false; // the loop is only 2 entries long, so a boolean operator suffices 
+
+            // iterate though original layout
+            for (uint64_t x = 0; x <= lyt.x(); ++x)
+            {
+                for (uint64_t y = 0; y <= lyt.y(); ++y)
+                {
+                    const tile<HexLyt> original_tile{x, y, 0};
+
+                    if (!lyt.is_empty_tile(original_tile))
+                    {
+                        // set the min/max values
+                        supertile_core_x < leftmost_core_tile_x ? leftmost_core_tile_x = supertile_core_x : ;
+                        supertile_core_x > rightmost_core_tile_x ? rightmost_core_tile_x = supertile_core_x : ;
+                        supertile_core_y < top_core_tile_y ? top_core_tile_y = supertile_core_y : ;
+                        supertile_core_y > bottom_core_tile_y ? bottom_core_tile_y = supertile_core_y : ;
+                    }
+
+                    // shift coordinates to the next tiles position
+                    switch (tile_shift_loop_position)
+                    {
+                    default:
+                    case 0:
+                        supertile_core_x -= 2;
+                        supertile_core_y += 2;
+                        tile_shift_loop_position++;
+                        break;
+                    case 1:
+                        supertile_core_y += 3;
+                        tile_shift_loop_position++;
+                        break;
+                    case 2:
+                        supertile_core_x -= 2;
+                        supertile_core_y += 2;
+                        tile_shift_loop_position++;
+                        break;
+                    case 3:
+                        supertile_core_x += 1;
+                        supertile_core_y += 3;
+                        tile_shift_loop_position = 0;
+                        break;
+                    }
+                }
+
+                // set current column base and right loop position for tile shift
+                supertile_column_base_y++;
+                if (column_shift_loop_position) {
+                    tile_shift_loop_position = 0;
+                    supertile_column_base_x += 3;
+                    column_shift_loop_position = false;
+                } else {
+                    tile_shift_loop_position = 2;
+                    supertile_column_base_x += 2;
+                    column_shift_loop_position = true;
+                }
+
+                // set current column tile new
+                supertile_core_x = supertile_column_base_x;
+                supertile_core_y = supertile_column_base_y;
+            }
+
+        // generate new hexagonal layout
+
+            // calculate size
+            if (leftmost_core_tile_x > rightmost_core_tile_x) // There was not a single node in the layout
+            {
+                return NULL; //TODO Throw propper error here?
+            }
+            uint64_t size_x = rightmost_core_tile_x - leftmost_core_tile_x + 3;
+            uint64_t size_y = bottom_core_tile_y - top_core_tile_y + 3;
+
+            // create new layout
+            HexLyt super_hex_lyt{{size_x, size_y, 0/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
+
+        // move tiles to new layout
+        // TODO: this is a lot of copied structure, I should either get this into it's own function or figure out how I can add the nodes in the first step already!!!
+        //CONTINUE
+        
         /**
          * FORME: Methods that could be usefull:
          * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
-         * - "x" and "y" to get size of matrix
          * - struct coord_t 
-         * - // instantiate hexagonal layout
-         *      HexLyt hex_layout{{hex_width, hex_height, hex_depth}, row_clocking<HexLyt>()};
          */
-
-        // iterate trough hexagonal layout column by colum to find the outermost, non-empty tiles
-        // (after translation into supertile-hexagonal layout)
-
-        // translated base cords of current column
-        uint64_t supertile_column_base_x = 1;
-        uint64_t supertoöe_column_base_y = 1;
-
-        // iterate though original layout
-        for (uint64_t x = 0; x <= lyt.x(); x++)
-        {
-            
-        }
-
+       
     }
 
     /**
