@@ -6,7 +6,9 @@
 #define FICTION_SUPERTILE_HPP
 
 #include "fiction/traits.hpp"
+#include "fiction/layouts/coordinates.hpp"
 
+#include <cmath>
 #include <limits>
 #include <cstdint>
 
@@ -14,11 +16,87 @@ namespace ficiton
 {
 
 //FRAGE: brauch/soll ich das statistics struct auch? (ist in hexagonalisation an dieser stelle drin)
-
+// TODO inline and constexpr and noexcept should be added everywhere they are needed
 namespace detail
 {
     /**
-     * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles
+     * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
+     * Offset can be used if one already knows the target coordinates would be negative
+     * or if they should be moved closer to the border of the layout.
+     * 
+     * @param x x position
+     * @param y y postion
+     * @param x_offset offset that is added to the x coordinate
+     * @param y_offset offset that is added to the y coordinate
+     * @return coodrinates which are translated into the supertile hex layout
+     */
+    fiction::offset::ucoord_t super(uint64_t x, uint64_t y, int64_t x_offset, int64_t y_offset)
+    {
+        // position a tile at 0,0 would have in the supertile hex layout
+        uint64_t new_x = 1;
+        uint64_t new_y = 1;
+
+        // calculate column base position
+        new_x += ((x & 0xFFFFFFFFFFFFFFFE) * 5 ) + (x % 2 != 0 ? 2 : 0);
+        new_y += x;
+
+        // calculate position by traversing column
+        new_x += (y & 0xFFFFFFFFFFFFFFFC) * -3;
+        new_y += (y & 0xFFFFFFFFFFFFFFFC) * 10;
+        if (x % 2 == 0)
+        {
+            switch (y % 4)
+            {
+                default:
+                case 1:
+                    new_x += -2;
+                    new_y += 2;
+                    break;
+                case 2:
+                    new_x += -2;
+                    new_y += 5;
+                    break;
+                case 3:
+                    new_x += -4;
+                    new_y += 7;
+                    break;
+            }
+        } else {
+            switch (y % 4)
+            {
+                default:
+                case 1:
+                    new_x += -2;
+                    new_y += 2;
+                    break;
+                case 2:
+                    new_x += -1;
+                    new_y += 5;
+                    break;
+                case 3:
+                    new_x += -3;
+                    new_y += 7;
+                    break;
+            }
+        }
+
+        return fiction::offset::ucoord_t(new_x + x_offset, new_y + y_offset);
+    }
+
+    /**
+     * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
+     * 
+     * @param x x position
+     * @param y y postion
+     * @return coodrinates which are translated into the supertile hex layout
+     */
+    fiction::offset::ucoord_t super(uint64_t x, uint64_t y) noexcept
+    {
+        return super(x, y, 0, 0);
+    }
+
+    /**
+     * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles.
      * TODO inputs und outputs angeben
      */
     template <typename HexLyt>
@@ -55,10 +133,10 @@ namespace detail
                 for (uint64_t y = 0; y <= lyt.y(); ++y)
                 {
                     const tile<HexLyt> original_tile{x, y, 0};
-
+                    
+                    // set the min/max values
                     if (!lyt.is_empty_tile(original_tile))
                     {
-                        // set the min/max values
                         supertile_core_x < leftmost_core_tile_x ? leftmost_core_tile_x = supertile_core_x : ;
                         supertile_core_x > rightmost_core_tile_x ? rightmost_core_tile_x = supertile_core_x : ;
                         supertile_core_y < top_core_tile_y ? top_core_tile_y = supertile_core_y : ;
@@ -119,11 +197,92 @@ namespace detail
             uint64_t size_y = bottom_core_tile_y - top_core_tile_y + 3;
 
             // create new layout
-            HexLyt super_hex_lyt{{size_x, size_y, 0/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
+            HexLyt super_lyt{{size_x, size_y, 0/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
 
         // move tiles to new layout
-        // TODO: this is a lot of copied structure, I should either get this into it's own function or figure out how I can add the nodes in the first step already!!!
-        //CONTINUE
+            // calculate offset for translated tiles
+            uint64_t x_offset = 1 - leftmost_core_tile_x;
+            uint64_t y_offset = 1 - top_core_tile_y;
+
+            // copy inputs
+            lyt.foreach_pi(
+                [&lyt, &super_lyt, &x_offset, &y_offset](const auto& tile)
+                {
+                    //CONTINUE
+                });
+
+
+            // TODO: here is a lot of copied structure, I should either get this into it's own function or figure out how I can add the nodes in the first step already!!!
+
+            // translated base cords of current column
+            uint64_t supertile_column_base_x = 1;
+            uint64_t supertile_column_base_y = 1;
+
+            // translated base cords of current tile
+            int64_t supertile_core_x = 1;
+            int64_t supertile_core_y = 1;
+
+            uint8_t tile_shift_loop_position = 0;
+            bool column_shift_loop_position = false; // the loop is only 2 entries long, so a boolean operator suffices 
+
+            // iterate though original layout
+            for (uint64_t x = 0; x <= lyt.x(); ++x)
+            {
+                for (uint64_t y = 0; y <= lyt.y(); ++y)
+                {
+                    const tile<HexLyt> original_tile{x, y, 0};
+                    
+                    // copy tiles
+                    if (!lyt.is_empty_tile(original_tile))
+                    {
+                        //CONTINUE
+                    }
+
+                    // shift coordinates to the next tiles position
+                    switch (tile_shift_loop_position)
+                    {
+                    default:
+                    case 0:
+                        supertile_core_x -= 2;
+                        supertile_core_y += 2;
+                        tile_shift_loop_position++;
+                        break;
+                    case 1:
+                        supertile_core_y += 3;
+                        tile_shift_loop_position++;
+                        break;
+                    case 2:
+                        supertile_core_x -= 2;
+                        supertile_core_y += 2;
+                        tile_shift_loop_position++;
+                        break;
+                    case 3:
+                        supertile_core_x += 1;
+                        supertile_core_y += 3;
+                        tile_shift_loop_position = 0;
+                        break;
+                    }
+                }
+
+                // set current column base and right loop position for tile shift
+                supertile_column_base_y++;
+                if (column_shift_loop_position) {
+                    tile_shift_loop_position = 0;
+                    supertile_column_base_x += 3;
+                    column_shift_loop_position = false;
+                } else {
+                    tile_shift_loop_position = 2;
+                    supertile_column_base_x += 2;
+                    column_shift_loop_position = true;
+                }
+
+                // set current column tile new
+                supertile_core_x = supertile_column_base_x;
+                supertile_core_y = supertile_column_base_y;
+            }
+
+        // copy outputs
+        lyt.foreach_po();//CONTINUE
         
         /**
          * FORME: Methods that could be usefull:
