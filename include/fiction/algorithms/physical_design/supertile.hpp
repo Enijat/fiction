@@ -6,9 +6,7 @@
 #define FICTION_SUPERTILE_HPP
 
 #include "fiction/traits.hpp"
-#include "fiction/layouts/coordinates.hpp"
 
-#include <cmath>
 #include <limits>
 #include <cstdint>
 
@@ -19,10 +17,22 @@ namespace ficiton
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
 namespace detail
 {
+    struct position
+    {
+        int64_t x;
+        int64_t y;
+        // TODO z?
+
+        position(int64_t x_new, int64_t y_new)
+        {
+            x = x_new;
+            y = y_new;
+        }
+    };
+
     /**
      * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
-     * Offset can be used if one already knows the target coordinates would be negative
-     * or if they should be moved closer to the border of the layout.
+     * Offset will simple be added to the coordinates.
      * 
      * @param x x position
      * @param y y postion
@@ -30,74 +40,84 @@ namespace detail
      * @param y_offset offset that is added to the y coordinate
      * @return coodrinates which are translated into the supertile hex layout
      */
-    fiction::offset::ucoord_t super(uint64_t x, uint64_t y, int64_t x_offset, int64_t y_offset)
+    position super(uint64_t x, uint64_t y, int64_t x_offset, int64_t y_offset)
     {
         // position a tile at 0,0 would have in the supertile hex layout
-        uint64_t new_x = 1;
-        uint64_t new_y = 1;
+        int64_t new_x = 1 + x_offset;
+        int64_t new_y = 1 + y_offset;
 
         // calculate column base position
-        new_x += ((x & 0xFFFFFFFFFFFFFFFE) * 5 ) + (x % 2 != 0 ? 2 : 0);
+        new_x += ((x >> 1) * 5 ) + (x % 2 == 0 ? 0 : 2);
         new_y += x;
 
         // calculate position by traversing column
-        new_x += (y & 0xFFFFFFFFFFFFFFFC) * -3;
-        new_y += (y & 0xFFFFFFFFFFFFFFFC) * 10;
-        if (x % 2 == 0)
-        {
-            switch (y % 4)
+            // rough traversion (the pattern for addition repeates every 4 steps and can be summed up)
+            new_x += (y >> 2) * -3;
+            new_y += (y >> 2) * 10;
+            
+            // fine traversion (traverse the 0 - 3 steps that are left)
+            if (x % 2 == 0)
             {
-                default:
-                case 1:
-                    new_x += -2;
-                    new_y += 2;
-                    break;
-                case 2:
-                    new_x += -2;
-                    new_y += 5;
-                    break;
-                case 3:
-                    new_x += -4;
-                    new_y += 7;
-                    break;
+                switch (y % 4)
+                {
+                    default: // also case 0
+                        break;
+                    case 1:
+                        new_x += -2;
+                        new_y += 2;
+                        break;
+                    case 2:
+                        new_x += -2;
+                        new_y += 5;
+                        break;
+                    case 3:
+                        new_x += -4;
+                        new_y += 7;
+                        break;
+                }
+            } else {
+                switch (y % 4)
+                {
+                    default: // also case 0
+                        break;
+                    case 1:
+                        new_x += -2;
+                        new_y += 2;
+                        break;
+                    case 2:
+                        new_x += -1;
+                        new_y += 5;
+                        break;
+                    case 3:
+                        new_x += -3;
+                        new_y += 7;
+                        break;
+                }
             }
-        } else {
-            switch (y % 4)
-            {
-                default:
-                case 1:
-                    new_x += -2;
-                    new_y += 2;
-                    break;
-                case 2:
-                    new_x += -1;
-                    new_y += 5;
-                    break;
-                case 3:
-                    new_x += -3;
-                    new_y += 7;
-                    break;
-            }
-        }
 
-        return fiction::offset::ucoord_t(new_x + x_offset, new_y + y_offset);
+        return position(new_x, new_y);
     }
 
     /**
      * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
+     * If one already knows the target coordinates would be negative or if they should be moved closer to the border of the layout,
+     * the super() method with offsets should be used.
+     * 
+     * @warning Negative target coordinates will be handled according to the implementation of ucoord_t,
+     * which currently casts them to a unsigned integer without conversion!
      * 
      * @param x x position
      * @param y y postion
      * @return coodrinates which are translated into the supertile hex layout
      */
-    fiction::offset::ucoord_t super(uint64_t x, uint64_t y) noexcept
+    position super(uint64_t x, uint64_t y) noexcept
     {
         return super(x, y, 0, 0);
     }
 
     /**
      * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles.
-     * TODO inputs und outputs angeben
+     * TODO inputs und outputs beschreibung schreiben
      */
     template <typename HexLyt>
     [[nodiscrad]] HexLyt grow_to_supertiles(const HexLyt& lyt) noexcept
@@ -106,85 +126,23 @@ namespace detail
         static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
 
         //TODO have all the required runtime asserts here
-        assert(lyt.z() == 0); //FRAGE: how does z height work with hexagonal layouts
+        assert(lyt.z() == 0); //FRAGE: how does z height work with hexagonal layouts / SiDB gates
 
-        // Brute force search trough hexagonal layout column by colum to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
-        //TODO maybe write a function for position translation? Would allow to directly iterate over the EXISTING gates with "ground_coordinates" function
-            // TODO x and y the right names here?
-            int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
-            int64_t rightmost_core_tile_x = std::numeric_limits<int64_t>::min();
-            int64_t top_core_tile_y = std::numeric_limits<int64_t>::max();
-            int64_t bottom_core_tile_y = std::numeric_limits<int64_t>::min();
+        // Search trough hexagonal layout to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
+        int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
+        int64_t rightmost_core_tile_x = std::numeric_limits<int64_t>::min();
+        int64_t top_core_tile_y = std::numeric_limits<int64_t>::max();
+        int64_t bottom_core_tile_y = std::numeric_limits<int64_t>::min();
 
-            // translated base cords of current column
-            uint64_t supertile_column_base_x = 1;
-            uint64_t supertile_column_base_y = 1;
-
-            // translated base cords of current tile
-            int64_t supertile_core_x = 1;
-            int64_t supertile_core_y = 1;
-
-            uint8_t tile_shift_loop_position = 0;
-            bool column_shift_loop_position = false; // the loop is only 2 entries long, so a boolean operator suffices 
-
-            // iterate though original layout
-            for (uint64_t x = 0; x <= lyt.x(); ++x)
-            {
-                for (uint64_t y = 0; y <= lyt.y(); ++y)
-                {
-                    const tile<HexLyt> original_tile{x, y, 0};
-                    
-                    // set the min/max values
-                    if (!lyt.is_empty_tile(original_tile))
-                    {
-                        supertile_core_x < leftmost_core_tile_x ? leftmost_core_tile_x = supertile_core_x : ;
-                        supertile_core_x > rightmost_core_tile_x ? rightmost_core_tile_x = supertile_core_x : ;
-                        supertile_core_y < top_core_tile_y ? top_core_tile_y = supertile_core_y : ;
-                        supertile_core_y > bottom_core_tile_y ? bottom_core_tile_y = supertile_core_y : ;
-                    }
-
-                    // shift coordinates to the next tiles position
-                    switch (tile_shift_loop_position)
-                    {
-                    default:
-                    case 0:
-                        supertile_core_x -= 2;
-                        supertile_core_y += 2;
-                        tile_shift_loop_position++;
-                        break;
-                    case 1:
-                        supertile_core_y += 3;
-                        tile_shift_loop_position++;
-                        break;
-                    case 2:
-                        supertile_core_x -= 2;
-                        supertile_core_y += 2;
-                        tile_shift_loop_position++;
-                        break;
-                    case 3:
-                        supertile_core_x += 1;
-                        supertile_core_y += 3;
-                        tile_shift_loop_position = 0;
-                        break;
-                    }
-                }
-
-                // set current column base and right loop position for tile shift
-                supertile_column_base_y++;
-                if (column_shift_loop_position) {
-                    tile_shift_loop_position = 0;
-                    supertile_column_base_x += 3;
-                    column_shift_loop_position = false;
-                } else {
-                    tile_shift_loop_position = 2;
-                    supertile_column_base_x += 2;
-                    column_shift_loop_position = true;
-                }
-
-                // set current column tile new
-                supertile_core_x = supertile_column_base_x;
-                supertile_core_y = supertile_column_base_y;
-            }
+        //CONTINUE foreach_node()
+        if (!lyt.is_empty_tile(original_tile))
+        {
+            supertile_core_x < leftmost_core_tile_x ? leftmost_core_tile_x = supertile_core_x : ;
+            supertile_core_x > rightmost_core_tile_x ? rightmost_core_tile_x = supertile_core_x : ;
+            supertile_core_y < top_core_tile_y ? top_core_tile_y = supertile_core_y : ;
+            supertile_core_y > bottom_core_tile_y ? bottom_core_tile_y = supertile_core_y : ;
+        }
+      
 
         // generate new hexagonal layout
 
