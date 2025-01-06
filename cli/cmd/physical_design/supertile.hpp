@@ -24,7 +24,7 @@ class supertile_command : public command
      * @param e alice::environment that specifies stores etc.
      */
     explicit supertile_command(const environment::ptr& e) :
-            command(e, "Transforms a hexagonal ...") //TODO hier gescheiden text und dabei auf benennung achten (also layout vs tiles vs gates, etc.)
+            command(e, "Does super stuff") //TODO hier gescheiden text und dabei auf benennung achten (also layout vs tiles vs gates, etc.)
     {}
 
   protected:

@@ -178,8 +178,9 @@ namespace detail
                     //continue
                 });
 
-            
-        
+        // TODO FORME ACHTUNG: wenn die annahme stimmt das die koordinaten zu passen müssen das bei 0,0 die obere linke ecke des clocking scemes sitzen muss hab ich deutlich weniger freiheit was 
+        // das verschieben des layouts angeht, aber dafür müsste ich mir die base tile nicht mehr merken.            
+        // TODO FORME: ich muss mir unbedingt die base/origianl 0,0 übersetzte koordinate merken, denn die brauch ich für wire generation und clocking zuordnen
         /**
          * FORME: Methods that could be usefull:
          * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)

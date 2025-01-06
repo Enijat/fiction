@@ -168,6 +168,7 @@ inline constexpr const char* ESR           = "ESR";
 inline constexpr const char* CFE           = "CFE";
 inline constexpr const char* RIPPLE        = "RIPPLE";
 inline constexpr const char* BANCS         = "BANCS";
+inline constexpr const char* AMY           = "AMY";
 
 }  // namespace clock_name
 
@@ -709,6 +710,85 @@ static auto bancs_clocking() noexcept
     return clocking_scheme{clock_name::BANCS, bancs_clock_function, std::min(Lyt::max_fanin_size, 2u), 2u, 3u, true};
 
     // clang-format on
+}
+/**
+ * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
+ * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * 
+ * @tparam Lyt Clocked layout type.
+ * @param n Number of clocks.
+ * @return Hexagonal AMY clocking scheme.
+ */
+template <typename Lyt>
+static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
+{
+    // clang-format off
+
+    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 4u>, 4u>
+        even_4_cutout{{{{0, 1, 2, 3}},
+                       {{2, 1, 0, 3}},
+                       {{1, 2, 3, 2}},
+                       {{0, 3, 1, 0}}}};
+
+    // clang-format on
+
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_4_clock_function =
+        [](const clock_zone<Lyt>& cz) noexcept { return even_4_cutout[cz.y % 4ul][cz.x % 4ul]; };
+
+    return clocking_scheme{clock_name::AMY,
+                            even_row_amy_4_clock_function,
+                            std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts?
+                            2u,
+                            4u,
+                            true};
+
+     // TODO: FRAGE check for is_hexagonal_layout_v<Lyt> and has_odd_row_hex_arrangement_v<Lyt> and if not return something else, but not sure what because of noexcept
+}
+/**
+ * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
+ * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * This is the supertile version of the amy pattern
+ * 
+ * @tparam Lyt Clocked layout type.
+ * @param n Number of clocks.
+ * @return Hexagonal SUPER_AMY clocking scheme.
+ */
+template <typename Lyt>
+static auto super_amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
+{
+    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> even{{0, 0, 3, 3, 1, 1, 1, 0, 0, 2, 2, 1, 1, 1, 2, 2, 0, 0, 3, 3, 3, 2, 2, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 3, 3, 2, 2, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, 2, 2, 3, 3, 3}};
+    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> odd{{0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 3, 3, 0, 0, 3, 3, 3, 1, 1, 3, 3, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 3, 3, 3, 3}};
+
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_4_clock_function =
+        [](const clock_zone<Lyt>& cz) noexcept
+        { 
+            //TODO refactor and rename and recomment, now that this is way simpler
+            // This one is gonna be a bit complicated, because if I would use the same way of hardcoding the return values, I would need a 140 x 140 large map
+            uint64_t x = cz.x % 140;
+            uint64_t y = cz.y % 140;
+
+            inline uint16_t pos = (y * 140 + x) % 570;
+
+            if (y % 2 == 0)
+            {
+                inline uint8_t skip = (pos < 140 ? 0 : (pos < 280 ? 1 : 2));
+                return even[(pos - skip * 140) % 56];
+            } else {
+                inline uint8_t skip = (pos < 280 ? 1 : 2);
+                return odd[(pos - skip * 140) % 56];
+            }
+        };
+
+
+    // TODO alles hier anpassen UND das super tile clocking layout auch oben in der datei einfügen.
+    return clocking_scheme{clock_name::AMY,
+                            even_row_amy_4_clock_function,
+                            std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts?
+                            2u,
+                            4u,
+                            true};
+
+     // TODO: FRAGE check for is_hexagonal_layout_v<Lyt> and has_odd_row_hex_arrangement_v<Lyt> and if not return something else, but not sure what because of noexcept
 }
 #pragma GCC diagnostic pop
 /**
