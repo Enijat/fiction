@@ -33,8 +33,18 @@ class supertile_command : public command
      */
     void execute() override
     {
-        //TODO Implement actual logic here
-        env->out() << "There is currently no logic here :/" << std::endl;
+        auto& gls = store<fiction::gate_layout_t>();
+
+        // error case: empty gate-level layout store
+        if (gls.empty())
+        {
+            env->out() << "[w] no gate layout in store" << std::endl;
+            return;
+        }
+
+        const auto& lyt = gls.current();
+
+        //TODO CONTINUE
     }
 };
 

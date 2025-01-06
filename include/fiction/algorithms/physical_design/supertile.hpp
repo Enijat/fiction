@@ -6,6 +6,7 @@
 #define FICTION_SUPERTILE_HPP
 
 #include "fiction/traits.hpp"
+#include "fiction/layouts/gate_level_layout.hpp"
 
 #include <limits>
 #include <cstdint>
@@ -40,7 +41,7 @@ namespace detail
      * @param y_offset offset that is added to the y coordinate
      * @return coodrinates which are translated into the supertile hex layout
      */
-    position super(uint64_t x, uint64_t y, int64_t x_offset, int64_t y_offset)
+    position super(int64_t x, int64_t y, int64_t x_offset, int64_t y_offset) noexcept
     {
         // position a tile at 0,0 would have in the supertile hex layout
         int64_t new_x = 1 + x_offset;
@@ -103,29 +104,31 @@ namespace detail
      * If one already knows the target coordinates would be negative or if they should be moved closer to the border of the layout,
      * the super() method with offsets should be used.
      * 
-     * @warning Negative target coordinates will be handled according to the implementation of ucoord_t,
-     * which currently casts them to a unsigned integer without conversion!
-     * 
      * @param x x position
      * @param y y postion
      * @return coodrinates which are translated into the supertile hex layout
      */
-    position super(uint64_t x, uint64_t y) noexcept
+    inline position super(int64_t x, int64_t y) noexcept
     {
         return super(x, y, 0, 0);
     }
 
     /**
      * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles.
+     * Hexagonal layouts dimensions can't be bigger then "std::numeric_limits<int64_t>::max()".
      * TODO inputs und outputs beschreibung schreiben
      */
     template <typename HexLyt>
     [[nodiscrad]] HexLyt grow_to_supertiles(const HexLyt& lyt) noexcept
     {
+        using namespace fiction;
+
         //TODO have all the required static_asserts here
-        static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+        static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");//TODO did the "fiction::" fix it?
 
         //TODO have all the required runtime asserts here
+        assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
+        assert(lyt.y() <= std::numeric_limits<int64_t>::max());
         assert(lyt.z() == 0); //FRAGE: how does z height work with hexagonal layouts / SiDB gates
 
         // Search trough hexagonal layout to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
@@ -133,20 +136,28 @@ namespace detail
         int64_t rightmost_core_tile_x = std::numeric_limits<int64_t>::min();
         int64_t top_core_tile_y = std::numeric_limits<int64_t>::max();
         int64_t bottom_core_tile_y = std::numeric_limits<int64_t>::min();
+        
+        lyt.foreach_node( //TODO maybe foreach_gate instead?
+            [&lyt, &leftmost_core_tile_x, &rightmost_core_tile_x, &top_core_tile_y, &bottom_core_tile_y](const auto& node)
+            {
+                const auto tile = lyt.get_tile(node);
 
-        //CONTINUE foreach_node()
-        if (!lyt.is_empty_tile(original_tile))
-        {
-            supertile_core_x < leftmost_core_tile_x ? leftmost_core_tile_x = supertile_core_x : ;
-            supertile_core_x > rightmost_core_tile_x ? rightmost_core_tile_x = supertile_core_x : ;
-            supertile_core_y < top_core_tile_y ? top_core_tile_y = supertile_core_y : ;
-            supertile_core_y > bottom_core_tile_y ? bottom_core_tile_y = supertile_core_y : ;
-        }
-      
+                    #pragma GCC diagnostic push
+                    #pragma GCC diagnostic ignored "-Wsign-conversion" // has been checked at the beginning of this method
+                position pos = super(tile.x, tile.y);
+                    #pragma GCC diagnostic pop
+
+                if (pos.x < leftmost_core_tile_x)
+                    {leftmost_core_tile_x = pos.x;}
+                if (pos.x > rightmost_core_tile_x)
+                    {rightmost_core_tile_x = pos.x;}
+                if (pos.y < top_core_tile_y)
+                    {top_core_tile_y = pos.y;}
+                if (pos.y > bottom_core_tile_y)
+                    {bottom_core_tile_y = pos.y;}
+            });
 
         // generate new hexagonal layout
-
-            // calculate size
             if (leftmost_core_tile_x > rightmost_core_tile_x) // There was not a single node in the layout
             {
                 return NULL; //TODO Throw propper error here?
@@ -154,7 +165,6 @@ namespace detail
             uint64_t size_x = rightmost_core_tile_x - leftmost_core_tile_x + 3;
             uint64_t size_y = bottom_core_tile_y - top_core_tile_y + 3;
 
-            // create new layout
             HexLyt super_lyt{{size_x, size_y, 0/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
 
         // move tiles to new layout
@@ -162,92 +172,20 @@ namespace detail
             uint64_t x_offset = 1 - leftmost_core_tile_x;
             uint64_t y_offset = 1 - top_core_tile_y;
 
-            // copy inputs
-            lyt.foreach_pi(
-                [&lyt, &super_lyt, &x_offset, &y_offset](const auto& tile)
+            lyt.foreach_node( //TODO maybe foreach_gate instead?
+                []()
                 {
-                    //CONTINUE
+                    //continue
                 });
 
-
-            // TODO: here is a lot of copied structure, I should either get this into it's own function or figure out how I can add the nodes in the first step already!!!
-
-            // translated base cords of current column
-            uint64_t supertile_column_base_x = 1;
-            uint64_t supertile_column_base_y = 1;
-
-            // translated base cords of current tile
-            int64_t supertile_core_x = 1;
-            int64_t supertile_core_y = 1;
-
-            uint8_t tile_shift_loop_position = 0;
-            bool column_shift_loop_position = false; // the loop is only 2 entries long, so a boolean operator suffices 
-
-            // iterate though original layout
-            for (uint64_t x = 0; x <= lyt.x(); ++x)
-            {
-                for (uint64_t y = 0; y <= lyt.y(); ++y)
-                {
-                    const tile<HexLyt> original_tile{x, y, 0};
-                    
-                    // copy tiles
-                    if (!lyt.is_empty_tile(original_tile))
-                    {
-                        //CONTINUE
-                    }
-
-                    // shift coordinates to the next tiles position
-                    switch (tile_shift_loop_position)
-                    {
-                    default:
-                    case 0:
-                        supertile_core_x -= 2;
-                        supertile_core_y += 2;
-                        tile_shift_loop_position++;
-                        break;
-                    case 1:
-                        supertile_core_y += 3;
-                        tile_shift_loop_position++;
-                        break;
-                    case 2:
-                        supertile_core_x -= 2;
-                        supertile_core_y += 2;
-                        tile_shift_loop_position++;
-                        break;
-                    case 3:
-                        supertile_core_x += 1;
-                        supertile_core_y += 3;
-                        tile_shift_loop_position = 0;
-                        break;
-                    }
-                }
-
-                // set current column base and right loop position for tile shift
-                supertile_column_base_y++;
-                if (column_shift_loop_position) {
-                    tile_shift_loop_position = 0;
-                    supertile_column_base_x += 3;
-                    column_shift_loop_position = false;
-                } else {
-                    tile_shift_loop_position = 2;
-                    supertile_column_base_x += 2;
-                    column_shift_loop_position = true;
-                }
-
-                // set current column tile new
-                supertile_core_x = supertile_column_base_x;
-                supertile_core_y = supertile_column_base_y;
-            }
-
-        // copy outputs
-        lyt.foreach_po();//CONTINUE
+            
         
         /**
          * FORME: Methods that could be usefull:
          * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
          * - struct coord_t 
+         * - connect (for connecting signals)
          */
-       
     }
 
     /**
@@ -269,6 +207,8 @@ namespace detail
 template <typename HexLyt>
 [[nodiscard]] HexLyt supertilezation(const HexLyt& lyt) noexcept
 {
+    using namespace fiction;
+
     static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
     static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
