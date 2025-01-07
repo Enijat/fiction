@@ -169,6 +169,7 @@ inline constexpr const char* CFE           = "CFE";
 inline constexpr const char* RIPPLE        = "RIPPLE";
 inline constexpr const char* BANCS         = "BANCS";
 inline constexpr const char* AMY           = "AMY";
+inline constexpr const char* AMY_SUPER     = "AMYSUPER";
 
 }  // namespace clock_name
 
@@ -738,7 +739,7 @@ static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
     return clocking_scheme{clock_name::AMY,
                             even_row_amy_4_clock_function,
                             std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts?
-                            2u,
+                            2u, // FRAGE same here
                             4u,
                             true};
 
@@ -751,40 +752,44 @@ static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
  * 
  * @tparam Lyt Clocked layout type.
  * @param n Number of clocks.
- * @return Hexagonal SUPER_AMY clocking scheme.
+ * @return Hexagonal supertile AMY clocking scheme.
  */
 template <typename Lyt>
-static auto super_amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
+static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
 {
     static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> even{{0, 0, 3, 3, 1, 1, 1, 0, 0, 2, 2, 1, 1, 1, 2, 2, 0, 0, 3, 3, 3, 2, 2, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 3, 3, 2, 2, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, 2, 2, 3, 3, 3}};
     static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> odd{{0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 3, 3, 0, 0, 3, 3, 3, 1, 1, 3, 3, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 3, 3, 3, 3}};
 
-    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_4_clock_function =
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
         { 
-            //TODO refactor and rename and recomment, now that this is way simpler
-            // This one is gonna be a bit complicated, because if I would use the same way of hardcoding the return values, I would need a 140 x 140 large map
-            uint64_t x = cz.x % 140;
-            uint64_t y = cz.y % 140;
+            // This one is gonna be a bit complicated, because if one would use the same way of hardcoding the return values, a 112 x 56 large map would be required
+            uint8_t x = cz.x % 56;
+            uint8_t y = cz.y % 112;
 
-            inline uint16_t pos = (y * 140 + x) % 570;
+            // translate into top row group coordinates
+            int8_t mod = (x - 10 * (uint8_t)(y / 4)) % 56;
+            x = mod >= 0 ? mod : mod + 56;
+            y = y % 4;
 
-            if (y % 2 == 0)
+            // look up by traversing one super tile clocking block 
+            switch (y)
             {
-                inline uint8_t skip = (pos < 140 ? 0 : (pos < 280 ? 1 : 2));
-                return even[(pos - skip * 140) % 56];
-            } else {
-                inline uint8_t skip = (pos < 280 ? 1 : 2);
-                return odd[(pos - skip * 140) % 56];
+                case 0:
+                    return even[x];
+                case 1:
+                    return odd[x];
+                case 2:
+                    return even[(x + 23/*to compensate the shift in the array*/) % 56];
+                case 3:
+                    return odd[(x + 23/*to compensate the shift in the array*/) % 56];
             }
         };
 
-
-    // TODO alles hier anpassen UND das super tile clocking layout auch oben in der datei einfügen.
-    return clocking_scheme{clock_name::AMY,
-                            even_row_amy_4_clock_function,
+    return clocking_scheme{clock_name::AMY_SUPER,
+                            even_row_amy_supertile_4_clock_function,
                             std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts?
-                            2u,
+                            2u, // FRAGE same here
                             4u,
                             true};
 
