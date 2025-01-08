@@ -10,6 +10,7 @@
 
 #include <limits>
 #include <cstdint>
+#include <array>
 
 namespace ficiton
 {
@@ -114,6 +115,35 @@ namespace detail
     }
 
     /**
+     * 
+     */
+    template <typename ArrayType>
+    uint8_t super_group_lookup_position(uint64_t absolute_x, uint64_t absolute_y, std::array<ArrayType> even_array, std::array<ArrayType> odd_array)
+    {
+        // This one is gonna be a bit complicated, because if one would use the same way of hardcoding the return values, a 112 x 56 large map would be required
+            uint8_t x = absolute_x % 56;
+            uint8_t y = absolute_y % 112;
+
+            // translate into top row group coordinates
+            int8_t mod = (x - 10 * (uint8_t)(y / 4)) % 56;
+            x = mod >= 0 ? mod : mod + 56;
+            y = y % 4;
+
+            // look up by traversing one super tile clocking block 
+            switch (y)
+            {
+                case 0:
+                    return even_slice[x];
+                case 1:
+                    return odd_slice[x];
+                case 2:
+                    return even_slice[(x + 23/*to compensate the shift in the array*/) % 56];
+                case 3:
+                    return odd_slice[(x + 23/*to compensate the shift in the array*/) % 56];
+            }
+    }
+
+    /**
      * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles.
      * Hexagonal layouts dimensions can't be bigger then "std::numeric_limits<int64_t>::max()".
      * TODO inputs und outputs beschreibung schreiben
@@ -124,7 +154,7 @@ namespace detail
         using namespace fiction;
 
         //TODO have all the required static_asserts here
-        static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");//TODO did the "fiction::" fix it?
+        static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
 
         //TODO have all the required runtime asserts here
         assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
@@ -157,15 +187,52 @@ namespace detail
                     {bottom_core_tile_y = pos.y;}
             });
 
+        // clang-format off
+
+        static constexpr std::array<std::array<int8_t, 2u>, 56u> even_coord_slice{{
+                {{0,0}},{{1,0}},
+                {{-1,10}},{{0,10}},{{1,10}},{{2,10}},{{3,10}},{{4,10}},{{5,10}},{{6,10}},{{7,10}},
+                {{-2,6}},{{-1,6}},{{0,6}},{{1,6}},{{2,6}},{{3,6}},{{4,6}},{{5,6}},{{6,6}},{{7,6}},
+                {{-2,2}},{{-1,2}},{{0,2}},{{1,2}},{{2,2}},{{3,2}},{{4,2}},{{5,2}},{{6,2}},
+                {{4,12}},{{4,13}},
+                {{-4,8}},{{-3,8}},{{-2,8}},{{-1,8}},{{0,8}},{{1,8}},{{2,8}},{{3,8}},{{4,8}},{{5,8}},{{6,8}},{{7,8}},
+                {{-2,4}},{{-1,4}},{{0,4}},{{1,4}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{6,4}},{{7,4}},{{8,4}},{{9,4}}
+                }};
+
+        static constexpr std::array<std::array<int8_t, 2u> 56u> odd_coord_slice{{
+                {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
+                {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
+                {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
+                {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},{{8,3}},{{9,3}},
+                {{-3,9}},{{-2,9}},{{-1,9}},{{0,9}},{{1,9}},{{2,9}},{{3,9}},{{4,9}},{{5,9}},{{6,9}},{{7,9}},{{8,9}},
+                {{-1,5}},{{0,5}},{{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},{{6,5}},{{7,5}},{{8,5}},{{9,5}}
+                }};
+
+        // clang-format on
+
+        /*
+         * calculate the offset that
+         * A) keeps every supertile in positive coordinates
+         * B) doesn't wastes to much space (meaning the coordinates are as small as possible)
+         * C) keeps the clocking such that the top left clock zone from the original is the same as the top left super clock zone
+         */
+            // get the top left most position relative to the super clock zone group it is in
+
+
+
+        //CONTINUE
+
         // generate new hexagonal layout
+
             if (leftmost_core_tile_x > rightmost_core_tile_x) // There was not a single node in the layout
             {
-                return NULL; //TODO Throw propper error here?
+                return NULL; //TODO Throw propper error here?, altho I am not allowed to throw an error here
             }
             uint64_t size_x = rightmost_core_tile_x - leftmost_core_tile_x + 3;
             uint64_t size_y = bottom_core_tile_y - top_core_tile_y + 3;
 
             HexLyt super_lyt{{size_x, size_y, 0/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
+
 
         // move tiles to new layout
             // calculate offset for translated tiles

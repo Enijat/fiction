@@ -757,8 +757,28 @@ static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
 template <typename Lyt>
 static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
 {
-    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> even{{0, 0, 3, 3, 1, 1, 1, 0, 0, 2, 2, 1, 1, 1, 2, 2, 0, 0, 3, 3, 3, 2, 2, 0, 0, 1, 1, 1, 2, 2, 0, 0, 0, 0, 0, 3, 3, 2, 2, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, 2, 2, 3, 3, 3}};
-    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> odd{{0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 3, 3, 0, 0, 3, 3, 3, 1, 1, 3, 3, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 3, 3, 3, 3}};
+    // clang-format off
+
+    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> even_slice{{
+        0, 0,
+        3, 3, 1, 1, 1, 0, 0, 2, 2,
+        1, 1, 1, 2, 2, 0, 0, 3, 3, 3,
+        2, 2, 0, 0, 1, 1, 1, 2, 2,
+        0, 0,
+        0, 0, 0, 3, 3, 2, 2, 3, 3, 3, 2, 2,
+        2, 2, 1, 1, 1, 0, 0, 2, 2, 3, 3, 3
+        }};
+
+    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> odd_slice{{
+        0, 0, 0, 1, 1,
+        1, 1, 0, 0, 0,
+        0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3,
+        2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 3, 3,
+        0, 0, 3, 3, 3, 1, 1, 3, 3, 2, 2, 2,
+        1, 1, 1, 1, 0, 0, 0, 3, 3, 3, 3
+        }};
+
+    // clang-format on
 
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
@@ -776,13 +796,13 @@ static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
             switch (y)
             {
                 case 0:
-                    return even[x];
+                    return even_slice[x];
                 case 1:
-                    return odd[x];
+                    return odd_slice[x];
                 case 2:
-                    return even[(x + 23/*to compensate the shift in the array*/) % 56];
+                    return even_slice[(x + 23/*to compensate the shift in the array*/) % 56];
                 case 3:
-                    return odd[(x + 23/*to compensate the shift in the array*/) % 56];
+                    return odd_slice[(x + 23/*to compensate the shift in the array*/) % 56];
             }
         };
 
