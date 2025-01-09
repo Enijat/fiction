@@ -784,7 +784,7 @@ static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
         {
-            return detail::super_4x4_group_lookup<clocking_scheme<clock_zone<Lyt>>::clock_function>(cz.x, cz.y, even_slice, odd_slice);
+            return super_4x4_group_lookup<clocking_scheme<clock_zone<Lyt>>::clock_function>(cz.x, cz.y, even_slice, odd_slice);
         };
 
     return clocking_scheme{clock_name::AMY_SUPER,

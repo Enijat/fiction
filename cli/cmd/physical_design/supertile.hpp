@@ -6,6 +6,7 @@
 #define FICTION_CMD_SUPERTILE_HPP
 
 #include <fiction/algorithms/physical_design/supertile.hpp>
+#include <fiction/traits.hpp>
 
 #include <alice/alice.hpp>
 
@@ -44,7 +45,45 @@ class supertile_command : public command
 
         const auto& lyt = gls.current();
 
-        //TODO CONTINUE
+        const auto check_clocking_scheme_pattern = [](auto&& lyt_ptr)
+        { return lyt_ptr->is_clocking_scheme(fiction::clock_name::AMY); };
+
+        // error case: layout is not AMY-clocked
+        if (const auto is_amy_clocked = std::visit(check_clocking_scheme_pattern, lyt); !is_amy_clocked)
+        {
+            env->out() << "[e] layout has to be AMY-clocked" << std::endl;
+            return;
+        }
+
+        const auto apply_supertilezation = [](auto&& lyt_ptr) -> std::optional<fiction::hex_even_row_gate_clk_lyt>
+        {
+            using Lyt = typename std::decay_t<decltype(lyt_ptr)>::element_type;
+
+            if constexpr (fiction::is_hexagonal_layout_v<Lyt>)
+            {
+                std::cout << "[e] Ups, you almost got me there." << std::endl;
+                return std::nullopt;
+                //return fiction::supertilezation<fiction::hex_even_row_gate_clk_lyt>(*lyt_ptr);
+            }
+            else
+            {
+                std::cout << "[e] layout has to be Hexagonal" << std::endl;
+            }
+
+            return std::nullopt;
+        };
+
+        try
+        {
+            if (const auto hex_lyt = std::visit(apply_supertilezation, lyt); hex_lyt.has_value())
+            {
+                gls.extend() = std::make_shared<fiction::hex_even_row_gate_clk_lyt>(*hex_lyt);
+            }
+        }
+        catch (...)
+        {
+            env->out() << "[e] an error occurred while transforming" << std::endl;
+        }
     }
 };
 

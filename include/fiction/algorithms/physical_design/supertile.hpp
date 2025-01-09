@@ -6,15 +6,51 @@
 #define FICTION_SUPERTILE_HPP
 
 #include "fiction/traits.hpp"
-#include "fiction/layouts/gate_level_layout.hpp"
+//#include "fiction/layouts/gate_level_layout.hpp"
 
 #include <limits>
 #include <cstdint>
 #include <array>
 #include <cmath>
 
-namespace ficiton
+namespace fiction
 {
+
+/**
+ * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
+ * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * 
+ * @param x x coordinate of the looked up position
+ * @param y y coordinate of the looked up position
+ * @param even_slice lookup array for rows with an even reduced_y coodrinate
+ * @param odd_slice lookup array for rows with an odd reduced_y coordinate
+ * @return looked up value from provided arrays
+ */
+template <typename ArrayType>
+const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
+{
+    // reduce to repeating block coordinates
+    uint8_t reduced_x = x % 56;
+    uint8_t reduced_y = y % 112;
+
+    // translate into top row coordinates
+    int8_t mod = (reduced_x - 10 * static_cast<uint8_t>(reduced_y / 4)) % 56;
+    reduced_x = mod >= 0 ? mod : mod + 56;
+    reduced_y = reduced_y % 4;
+
+    // look up by traversing one super tile clocking block
+    switch (reduced_y)
+    {
+        case 0:
+            return even_slice[reduced_x];
+        case 1:
+            return odd_slice[reduced_x];
+        case 2:
+            return even_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
+        case 3:
+            return odd_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
+    }
+}
 
 //FRAGE: brauch/soll ich das statistics struct auch? (ist in hexagonalisation an dieser stelle drin)
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
@@ -116,42 +152,6 @@ namespace detail
     }
 
     /**
-     * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
-     * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
-     * 
-     * @param x x coordinate of the looked up position
-     * @param y y coordinate of the looked up position
-     * @param even_slice lookup array for rows with an even reduced_y coodrinate
-     * @param odd_slice lookup array for rows with an odd reduced_y coordinate
-     * @return looked up value from provided arrays
-     */
-    template <typename ArrayType>
-    const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice)
-    {
-        // reduce to repeating block coordinates
-        uint8_t reduced_x = x % 56;
-        uint8_t reduced_y = y % 112;
-
-        // translate into top row coordinates
-        int8_t mod = (reduced_x - 10 * (uint8_t)(reduced_y / 4)) % 56;
-        reduced_x = mod >= 0 ? mod : mod + 56;
-        reduced_y = reduced_y % 4;
-
-        // look up by traversing one super tile clocking block
-        switch (reduced_y)
-        {
-            case 0:
-                return even_slice[reduced_x];
-            case 1:
-                return odd_slice[reduced_x];
-            case 2:
-                return even_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
-            case 3:
-                return odd_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
-        }
-    }
-
-    /**
      * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles.
      * Hexagonal layouts dimensions can't be bigger then "std::numeric_limits<int64_t>::max()".
      * TODO inputs und outputs beschreibung schreiben
@@ -218,7 +218,7 @@ namespace detail
                     {{-2,4}},{{-1,4}},{{0,4}},{{1,4}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{6,4}},{{7,4}},{{8,4}},{{9,4}}
                     }};
 
-            static constexpr std::array<std::array<int8_t, 2u> 56u> odd_coord_slice{{
+            static constexpr std::array<std::array<int8_t, 2u>, 56u> odd_coord_slice{{
                     {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
                     {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
                     {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
@@ -248,8 +248,8 @@ namespace detail
             }
 
             // calculate offset for translated tiles
-            int64_t x_offset = (int64_t)(relative_x) - leftmost_core_tile_x;
-            int64_t y_offset = (int64_t)(relative_y) - top_core_tile_y;
+            int64_t x_offset = static_cast<int64_t>(relative_x) - leftmost_core_tile_x;
+            int64_t y_offset = static_cast<int64_t>(relative_y) - top_core_tile_y;
 
         // generate new hexagonal layout
         uint64_t size_x = rightmost_core_tile_x + 1 + x_offset;
