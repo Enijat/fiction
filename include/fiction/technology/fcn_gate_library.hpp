@@ -199,6 +199,16 @@ class fcn_gate_library
         return transpose(reverse_columns(g));
     }
     /**
+     * Mirrors the given 'fcn_gate' around vertical axis at compile time.
+     * 
+     * @param g `fcn_gate` to mirror.
+     * @return Mirrored `fcn_gate`.
+     */
+    static constexpr fcn_gate mirror_horizontal(const fcn_gate& g) noexcept
+    {
+        return reverse_rows(g);
+    }
+    /**
      * Merges multiple `fcn_gate`s into one at compile time. This is intended to be used for wires. Unexpected behavior
      * can be caused, if more than one `fcn_gate` has a cell at the same position.
      *
