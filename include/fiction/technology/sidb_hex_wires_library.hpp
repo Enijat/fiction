@@ -381,13 +381,13 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     static constexpr const fcn_gate EAST_SOUTH_EAST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 13 wire
     static constexpr const fcn_gate EAST_SOUTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
-    //FORME: 14 wire NOT REQUIRED
+    //FORME: 14 wire
     static constexpr const fcn_gate EAST_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 15 wire
     static constexpr const fcn_gate EAST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 23 wire
     static constexpr const fcn_gate SOUTH_EAST_SOUTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
-    //FORME: 24 wire NOT REQUIRED
+    //FORME: 24 wire
     static constexpr const fcn_gate SOUTH_EAST_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
     //FORME: 25 wire
     static constexpr const fcn_gate SOUTH_EAST_NORTH_WEST_WIRE{cell_list_to_gate<char>({{

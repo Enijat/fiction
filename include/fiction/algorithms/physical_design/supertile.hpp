@@ -283,6 +283,7 @@ namespace detail
     [[nodiscard]] HexLyt supertile_core_and_wire_generation(const HexLyt& lyt) noexcept
     {
         //TODO have all the required static_assters here that I need
+        //FORME: Don't forget the hash method I crafted
     }
 
     //TODO: (optional) write method for wire optimisation and call it in the right places

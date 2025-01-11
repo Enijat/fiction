@@ -61,9 +61,7 @@ class supertile_command : public command
 
             if constexpr (fiction::is_hexagonal_layout_v<Lyt>)
             {
-                std::cout << "[e] Ups, you almost got me there." << std::endl;
-                return std::nullopt;
-                //return fiction::supertilezation<fiction::hex_even_row_gate_clk_lyt>(*lyt_ptr);
+                return fiction::supertilezation<fiction::hex_even_row_gate_clk_lyt>(*lyt_ptr);
             }
             else
             {
