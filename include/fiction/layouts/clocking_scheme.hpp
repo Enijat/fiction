@@ -6,6 +6,7 @@
 #define FICTION_CLOCKING_SCHEME_HPP
 
 #include "fiction/layouts/coordinates.hpp"
+#include "fiction/algorithms/physical_design/supertile.hpp"
 #include "fiction/traits.hpp"
 
 #include <phmap.h>
@@ -782,28 +783,8 @@ static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
 
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
-        { 
-            // This one is gonna be a bit complicated, because if one would use the same way of hardcoding the return values, a 112 x 56 large map would be required
-            uint8_t x = cz.x % 56;
-            uint8_t y = cz.y % 112;
-
-            // translate into top row group coordinates
-            int8_t mod = (x - 10 * (uint8_t)(y / 4)) % 56;
-            x = mod >= 0 ? mod : mod + 56;
-            y = y % 4;
-
-            // look up by traversing one super tile clocking block 
-            switch (y)
-            {
-                case 0:
-                    return even_slice[x];
-                case 1:
-                    return odd_slice[x];
-                case 2:
-                    return even_slice[(x + 23/*to compensate the shift in the array*/) % 56];
-                case 3:
-                    return odd_slice[(x + 23/*to compensate the shift in the array*/) % 56];
-            }
+        {
+            return super_4x4_group_lookup<clocking_scheme<clock_zone<Lyt>>::clock_function>(cz.x, cz.y, even_slice, odd_slice);
         };
 
     return clocking_scheme{clock_name::AMY_SUPER,
