@@ -56,48 +56,34 @@ const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
 namespace detail
 {
-    struct position
-    {
-        int64_t x;
-        int64_t y;
-        // TODO z?
-
-        position(int64_t x_new, int64_t y_new)
-        {
-            x = x_new;
-            y = y_new;
-        }
-    };
-
     /**
      * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
      * Offset will simple be added to the coordinates.
      * 
-     * @param x x position
-     * @param y y postion
+     * @param tile original position
      * @param x_offset offset that is added to the x coordinate
      * @param y_offset offset that is added to the y coordinate
      * @return coodrinates which are translated into the supertile hex layout
      */
-    position super(int64_t x, int64_t y, int64_t x_offset, int64_t y_offset) noexcept
+    tile<CartLyt> super(tile<CartLyt> tile, int64_t x_offset, int64_t y_offset) noexcept
     {
         // position a tile at 0,0 would have in the supertile hex layout
         int64_t new_x = 1 + x_offset;
         int64_t new_y = 1 + y_offset;
 
         // calculate column base position
-        new_x += ((x >> 1) * 5 ) + (x % 2 == 0 ? 0 : 2);
-        new_y += x;
+        new_x += ((tile.x >> 1) * 5 ) + (tile.x % 2 == 0 ? 0 : 2);
+        new_y += tile.x;
 
         // calculate position by traversing column
             // rough traversion (the pattern for addition repeates every 4 steps and can be summed up)
-            new_x += (y >> 2) * -3;
-            new_y += (y >> 2) * 10;
+            new_x += (tile.y >> 2) * -3;
+            new_y += (tile.y >> 2) * 10;
             
             // fine traversion (traverse the 0 - 3 steps that are left)
-            if (x % 2 == 0)
+            if (tile.x % 2 == 0)
             {
-                switch (y % 4)
+                switch (tile.y % 4)
                 {
                     default: // also case 0
                         break;
@@ -115,7 +101,7 @@ namespace detail
                         break;
                 }
             } else {
-                switch (y % 4)
+                switch (tile.y % 4)
                 {
                     default: // also case 0
                         break;
@@ -134,21 +120,27 @@ namespace detail
                 }
             }
 
-        return position(new_x, new_y);
+        return tile<CartLyt>{new_x, new_y, 1};//TODO check z value and what should really be here
     }
-
+    inline tile<CartLyt> super(signal& signal, int64_t x_offset, int64_t y_offset) noexcept
+    {
+        return super(static_cast<tile<CartLyt>>(signal), x_offset, y_offset);
+    }
     /**
      * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
      * If one already knows the target coordinates would be negative or if they should be moved closer to the border of the layout,
      * the super() method with offsets should be used.
      * 
-     * @param x x position
-     * @param y y postion
+     * @param tile original position
      * @return coodrinates which are translated into the supertile hex layout
      */
-    inline position super(int64_t x, int64_t y) noexcept
+    inline tile<CartLyt> super(tile<CartLyt> tile) noexcept
     {
-        return super(x, y, 0, 0);
+        return super(tile, 0, 0);
+    }
+    inline tile<CartLyt> super(signal& signal) noexcept
+    {
+        return super(signal, 0, 0);
     }
 
     /**
@@ -167,7 +159,7 @@ namespace detail
         //TODO have all the required runtime asserts here
         assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
         assert(lyt.y() <= std::numeric_limits<int64_t>::max());
-        assert(lyt.z() == 0); //FRAGE: how does z height work with hexagonal layouts / SiDB gates
+        assert(lyt.z() == 1); //FRAGE: how does z height work with hexagonal layouts / SiDB gates
 
         // Search trough hexagonal layout to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
         int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
@@ -182,7 +174,7 @@ namespace detail
 
                     #pragma GCC diagnostic push
                     #pragma GCC diagnostic ignored "-Wsign-conversion" // has been checked at the beginning of this method
-                position pos = super(tile.x, tile.y);
+                tile<CartLyt> pos = super(tile);
                     #pragma GCC diagnostic pop
 
                 if (pos.x < leftmost_core_tile_x)
@@ -197,7 +189,7 @@ namespace detail
 
         if (leftmost_core_tile_x > rightmost_core_tile_x) // There was not a single node in the layout
         {
-            return NULL; //TODO Throw propper error here?, altho I am not allowed to throw an error here
+            return NULL; //TODO FRAGE Throw propper error here?, altho I am not allowed to throw an error here
         }
 
         /*
@@ -255,14 +247,45 @@ namespace detail
         uint64_t size_x = rightmost_core_tile_x + 1 + x_offset;
         uint64_t size_y = bottom_core_tile_y + 1 + y_offset;
 
-        HexLyt super_lyt{{size_x, size_y, 0/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
+        HexLyt super_lyt{{size_x, size_y, 1/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
 
 
-        // move tiles to new layout
-            lyt.foreach_node( //TODO maybe foreach_gate instead?
-                [&super_lyt, &lyt](const auto& node)
+        // copy tiles to new layout
+            //inputs
+            lyt.foreach_pi(
+                [&lyt, &super_lyt, x_offset, y_offset](const auto& gate)
                 {
-                    
+                    const auto old_coord = lyt.get_tile(gate);
+                    const tile<CartLyt> super_coord = super(old_coord, x_offset, y_offset);
+                    super_lyt.create_pi(lyt.get_name(lyt.get_node(old_coord)), super_coord);
+                });
+
+            lyt.foreach_node( //TODO maybe foreach_gate instead?
+                [&lyt, &super_lyt, x_offset, y_offset](const auto& gate)
+                {
+                    const auto old_coord = lyt.get_tile(gate);
+                    const auto old_node = lyt.get_node(old_coord);
+
+                    if (lyt.is_pi(old_node))
+                    {
+                        continue;
+                    }
+
+                    const tile<CartLyt> super_coord = super(old_coord, x_offset, y_offset);
+
+                    if (const auto signals = lyt.incoming_data_flow(old_coord); signals.size() == 1)
+                    {
+                        const auto signal = signals[0];
+
+                        const auto super_signal_coord = super(signal, x_offset, y_offset);
+
+                        const auto super_signal = super_lyt.make_signal(super_lyt.get_node(super_signal_coord));
+
+                        if (!lyt.is_po(old_node) and lyt.is_wire(old_node))
+                        {
+                            //CONTINUE
+                        }
+                    }
                 });
 
         /**
