@@ -47,12 +47,11 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     {
         static_assert(is_gate_level_layout_v<GateLyt>, "GateLyt must be a gate-level layout");
         static_assert(is_hexagonal_layout_v<GateLyt>, "GateLyt must be a hexagonal layout");
-        static_assert(has_pointy_top_hex_orientation_v<GateLyt>, "GateLyt must be a pointy-top hexagonal layout"); //FRAGE: In theory I souldn't need this, but I think I do due to current implementations?
+        static_assert(has_pointy_top_hex_orientation_v<GateLyt>, "GateLyt must be a pointy-top hexagonal layout");
 
         const auto n = lyt.get_node(t);
         const auto p = determine_port_routing(lyt, t);
 
-        //FRAGE: wofür stehen das "has" und "v" in "has_is_fanout_v" etcc.
         try
         {
             if constexpr (fiction::has_is_buf_v<GateLyt>) // buf = buffer = wire
@@ -123,7 +122,7 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     {
         static const gate_ports<port_direction> ports{{// wires
         //TODO put the actual wires here, current ones were copied and can be deleted
-        //FRAGE: Struktur hiervon bitte einmal erläutern hängen die "komischen" wire einträge mit primary inputs / outputs zusammen?:
+        //FRAGE: Struktur hiervon bitte einmal erläutern hängen die "komischen" wire einträge mit primary inputs / outputs zusammen?: -> ports sind lookup bei dem der name zurück gegeben wird
                                                         {
                                                             STRAIGHT_WIRE,
                                                             {
@@ -271,7 +270,10 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
         return ports; 
     }
 
-    //TODO fill out all the other gates here FRAGE: is there an automated method to generate these?
+    //TODO fill out all the other gates here FRAGE: is there an automated method to generate these? -> no
+
+    // clang-format off
+
     // single wires
     //FORME: 01 wire TODO fill out
     static constexpr const fcn_gate NORTH_EAST_EAST_WIRE{cell_list_to_gate<char>({{{}}})};
@@ -418,7 +420,7 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     //FORME: 01_23 wire
     static constexpr const fcn_gate NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{cell_list_to_gate<char>({{{}}})};
 
-    //FRAGE: was is mit "clang-format on/off" gemeint?
+    // clang-format on
 
     using port_gate_map = phmap::flat_hash_map<port_list<port_direction>, fcn_gate>;
     using double_port_gate_map =
@@ -474,7 +476,7 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
           {port_direction(port_direction::cardinal::NORTH_WEST)}},
          WEST_NORTH_WEST_WIRE},
         // empty gate (for crossing layer)
-        {{{}, {}}, EMPTY_GATE}, //FRAGE: I just put this here, no clue if I really need it, I think I don't ? '^^
+        {{{}, {}}, EMPTY_GATE},
     };
 
     /**

@@ -52,7 +52,7 @@ const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<
     }
 }
 
-//FRAGE: brauch/soll ich das statistics struct auch? (ist in hexagonalisation an dieser stelle drin)
+//FRAGE: brauch/soll ich das statistics struct auch? (ist in hexagonalisation an dieser stelle drin) -> nein nur bei nicht linearer runtime interessant
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
 namespace detail
 {
@@ -159,7 +159,7 @@ namespace detail
         //TODO have all the required runtime asserts here
         assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
         assert(lyt.y() <= std::numeric_limits<int64_t>::max());
-        assert(lyt.z() == 1); //FRAGE: how does z height work with hexagonal layouts / SiDB gates
+        assert(lyt.z() == 1); //FRAGE: how does z height work with hexagonal layouts / SiDB gates -> answer somewhere else
 
         // Search trough hexagonal layout to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
         int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
@@ -189,7 +189,7 @@ namespace detail
 
         if (leftmost_core_tile_x > rightmost_core_tile_x) // There was not a single node in the layout
         {
-            return NULL; //TODO FRAGE Throw propper error here?, altho I am not allowed to throw an error here
+            return NULL; //TODO FRAGE Throw propper error here?, altho I am not allowed to throw an error here -> so viel noexcept wie möglich -> NIE NULL ZURÜCK GEBEN, am besten keinen error throwen sondern einen guten placeholder finden oder evtl simon fragen wie man hier evtl konsole output rein packt der sagt das etwas nicht geklappt hat
         }
 
         /*
@@ -284,9 +284,12 @@ namespace detail
                         if (!lyt.is_po(old_node) and lyt.is_wire(old_node))
                         {
                             //CONTINUE
+                            //FORME die signals so machen das sie in die leeren, umliegenden felder ragen
                         }
                     }
                 });
+
+        //TODO nicht vergessen das clocking scheme noch zu ändern (bzw hab ich das schon gemacht?)
 
         /**
          * FORME: Methods that could be usefull:
@@ -301,12 +304,13 @@ namespace detail
      * that represent the functionality and connection points of the original center tile, but the new tiles
      * all have existing SiDB implementations.
      * TODO inputs and outputs angeben
+     * TODO mein github hier verlinken um zu dokumentieren wo die layouts her kommen
      */
     template <typename HexLyt>
     [[nodiscard]] HexLyt supertile_core_and_wire_generation(const HexLyt& lyt) noexcept
     {
         //TODO have all the required static_assters here that I need
-        //FORME: Don't forget the hash method I crafted
+        //FORME: Don't forget the hash method(s) I crafted
     }
 
     //TODO: (optional) write method for wire optimisation and call it in the right places

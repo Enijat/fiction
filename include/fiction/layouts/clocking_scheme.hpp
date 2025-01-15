@@ -789,7 +789,7 @@ static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
 
     return clocking_scheme{clock_name::AMY_SUPER,
                             even_row_amy_supertile_4_clock_function,
-                            std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts?
+                            std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts? -> look at each single tile min and max values and then take the total min and max values (wichtig wenn man direkt wissen will welche gate theoretisch möglich sind und welche nicht)
                             2u, // FRAGE same here
                             4u,
                             true};

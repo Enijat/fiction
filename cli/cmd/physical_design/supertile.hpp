@@ -10,7 +10,7 @@
 
 #include <alice/alice.hpp>
 
-namespace alice //FRAGE: wieso alice hier?
+namespace alice
 {
 
 /**
