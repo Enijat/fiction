@@ -739,12 +739,10 @@ static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
 
     return clocking_scheme{clock_name::AMY,
                             even_row_amy_4_clock_function,
-                            std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts?
-                            2u, // FRAGE same here
+                            std::min(Lyt::max_fanin_size, 2u), //TODO correct
+                            2u, // TODO same here
                             4u,
                             true};
-
-     // TODO: FRAGE check for is_hexagonal_layout_v<Lyt> and has_odd_row_hex_arrangement_v<Lyt> and if not return something else, but not sure what because of noexcept
 }
 /**
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
@@ -789,12 +787,10 @@ static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
 
     return clocking_scheme{clock_name::AMY_SUPER,
                             even_row_amy_supertile_4_clock_function,
-                            std::min(Lyt::max_fanin_size, 2u), //FRAGE how are in and out degree defined in hexagonal layouts? -> look at each single tile min and max values and then take the total min and max values (wichtig wenn man direkt wissen will welche gate theoretisch möglich sind und welche nicht)
-                            2u, // FRAGE same here
+                            std::min(Lyt::max_fanin_size, 2u), //TODO put in correct value
+                            2u, // TODO same here
                             4u,
                             true};
-
-     // TODO: FRAGE check for is_hexagonal_layout_v<Lyt> and has_odd_row_hex_arrangement_v<Lyt> and if not return something else, but not sure what because of noexcept
 }
 #pragma GCC diagnostic pop
 /**

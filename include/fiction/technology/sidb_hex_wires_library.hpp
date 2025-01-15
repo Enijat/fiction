@@ -122,7 +122,6 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
     {
         static const gate_ports<port_direction> ports{{// wires
         //TODO put the actual wires here, current ones were copied and can be deleted
-        //FRAGE: Struktur hiervon bitte einmal erläutern hängen die "komischen" wire einträge mit primary inputs / outputs zusammen?: -> ports sind lookup bei dem der name zurück gegeben wird
                                                         {
                                                             STRAIGHT_WIRE,
                                                             {
@@ -270,7 +269,7 @@ class sidb_hex_wires_library : public fcn_gate_library<sidb_technology, 60, 46>
         return ports; 
     }
 
-    //TODO fill out all the other gates here FRAGE: is there an automated method to generate these? -> no
+    //TODO fill out all the other gates here
 
     // clang-format off
 
