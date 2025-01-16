@@ -200,13 +200,15 @@ class fcn_gate_library
     }
     /**
      * Mirrors the given 'fcn_gate' around vertical axis at compile time.
+     * After mirroring it shifts each value one position to the left.
+     * This is because it's build to mirror SiDB gates, which are stored in a 60x50 matrix, but they have a central column that shouldn't move.
      * 
      * @param g `fcn_gate` to mirror.
      * @return Mirrored `fcn_gate`.
      */
     static constexpr fcn_gate mirror_horizontal(const fcn_gate& g) noexcept
     {
-        return reverse_rows(g);
+        return shift_left_once(reverse_rows(g));
     }
     /**
      * Merges multiple `fcn_gate`s into one at compile time. This is intended to be used for wires. Unexpected behavior
@@ -321,6 +323,27 @@ class fcn_gate_library
         std::reverse(std::begin(rev_rows), std::end(rev_rows));
 
         return rev_rows;
+    }
+    /**
+     * Shifts each value of the given `fcn_gate` at compile time one to the left, overflow is discarded and new places are filled with `cell_type::EMPTY`.
+     * 
+     * @param `fcn_gate` to shift.
+     * @return Shifted `fcn_gate`.
+     */
+    static constexpr fcn_gate shift_left_once(const fcn_gate& g) noexcept
+    {
+        fcn_gate shifted = EMPTY_GATE;
+
+        for (auto y = 0ul; y < GateSizeY; ++y)
+        {
+            for (auto x = 1ul; x < GateSizeX; ++x)
+            {
+                shifted[x-1][y] = g[x][y];
+            }
+            shifted[GateSizeX - 1][y] = Technology::cell_type::EMPTY;
+        }
+
+        return shifted;
     }
     /**
      * Single empty gate in given technology and tile size. Used as a blue print to create new ones in merge and
