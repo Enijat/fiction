@@ -309,6 +309,10 @@ namespace detail
     {
         //TODO have all the required static_assters here that I need
         //FORME: Don't forget the hash method(s) I crafted
+        //TODO need to handle fanouts!
+        //TODO need to build new lookup table for inverters, (so 1 in 1 out but not all directions are available)
+        //TODO need to build new lookup table for primary input inverters (so just the straight ones, I can do that by hand)
+        //FORME: inputs können wohl auch inverter sein, 
     }
 
     //TODO: (optional) write method for wire optimisation and call it in the right places
