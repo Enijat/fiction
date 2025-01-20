@@ -223,6 +223,35 @@ supported standard functions.
 Returns:
     Technology mapping parameters.)doc";
 
+static const char *__doc_fiction_amy_clocking =
+R"doc(Returns a hexagonal clocking pattern as defined in the bachelor thesis
+"Super-Tile Routing for Omnidirectional Information Flow in Silicon
+Dangling Bond Logic" by F. Kiefhaber, 2025
+
+Template parameter ``Lyt``:
+    Clocked layout type.
+
+Parameter ``n``:
+    Number of clocks.
+
+Returns:
+    Hexagonal AMY clocking scheme.)doc";
+
+static const char *__doc_fiction_amy_supertile_clocking =
+R"doc(Returns a hexagonal clocking pattern as defined in the bachelor thesis
+"Super-Tile Routing for Omnidirectional Information Flow in Silicon
+Dangling Bond Logic" by F. Kiefhaber, 2025 This is the supertile
+version of the amy pattern
+
+Template parameter ``Lyt``:
+    Clocked layout type.
+
+Parameter ``n``:
+    Number of clocks.
+
+Returns:
+    Hexagonal supertile AMY clocking scheme.)doc";
+
 static const char *__doc_fiction_and_or_not =
 R"doc(Auxiliary function to create technology mapping parameters for AND,
 OR, and NOT gates.
@@ -6994,6 +7023,12 @@ Parameter ``place_info``:
 Parameter ``ssg``:
     The search space graph.)doc";
 
+static const char *__doc_fiction_detail_grow_to_supertiles =
+R"doc(Utility function to inflate a hexagonal layout such that each tile is
+now encased by six new empty tiles. Hexagonal layouts dimensions can't
+be bigger then "std::numeric_limits<int64_t>::max()". TODO inputs und
+outputs beschreibung schreiben)doc";
+
 static const char *__doc_fiction_detail_is_balanced_impl = R"doc()doc";
 
 static const char *__doc_fiction_detail_is_balanced_impl_balanced = R"doc()doc";
@@ -8902,6 +8937,47 @@ R"doc(Enum indicating if primary inputs (PIs) can be placed at the top or
 left.)doc";
 
 static const char *__doc_fiction_detail_search_space_graph_planar = R"doc(Create planar layouts.)doc";
+
+static const char *__doc_fiction_detail_super =
+R"doc(Utility function to translate the original hex coodrinates into the
+new supertile hex coordinates. Offset will simple be added to the
+coordinates.
+
+Parameter ``tile``:
+    original position
+
+Parameter ``x_offset``:
+    offset that is added to the x coordinate
+
+Parameter ``y_offset``:
+    offset that is added to the y coordinate
+
+Returns:
+    coodrinates which are translated into the supertile hex layout)doc";
+
+static const char *__doc_fiction_detail_super_2 = R"doc()doc";
+
+static const char *__doc_fiction_detail_super_3 =
+R"doc(Utility function to translate the original hex coodrinates into the
+new supertile hex coordinates. If one already knows the target
+coordinates would be negative or if they should be moved closer to the
+border of the layout, the super() method with offsets should be used.
+
+Parameter ``tile``:
+    original position
+
+Returns:
+    coodrinates which are translated into the supertile hex layout)doc";
+
+static const char *__doc_fiction_detail_super_4 = R"doc()doc";
+
+static const char *__doc_fiction_detail_supertile_core_and_wire_generation =
+R"doc(Utility function to find a center tile orientation and according wires
+in the outer tiles that represent the functionality and connection
+points of the original center tile, but the new tiles all have
+existing SiDB implementations. TODO inputs and outputs angeben TODO
+mein github hier verlinken um zu dokumentieren wo die layouts her
+kommen)doc";
 
 static const char *__doc_fiction_detail_sweep_parameter_to_string =
 R"doc(Converts a sweep parameter to a string representation. This is used to
@@ -10827,6 +10903,18 @@ Parameter ``gates``:
 Returns:
     Merged `fcn_gate`.)doc";
 
+static const char *__doc_fiction_fcn_gate_library_mirror_horizontal =
+R"doc(Mirrors the given 'fcn_gate' around vertical axis at compile time.
+After mirroring it shifts each value one position to the left. This is
+because it's build to mirror SiDB gates, which are stored in a 60x50
+matrix, but they have a central column that shouldn't move.
+
+Parameter ``g``:
+    `fcn_gate` to mirror.
+
+Returns:
+    Mirrored `fcn_gate`.)doc";
+
 static const char *__doc_fiction_fcn_gate_library_reverse_columns =
 R"doc(Reverses the columns of the given `fcn_gate` at compile time.
 
@@ -10871,6 +10959,16 @@ Parameter ``g``:
 
 Returns:
     Rotated `fcn_gate`.)doc";
+
+static const char *__doc_fiction_fcn_gate_library_shift_left_once =
+R"doc(Shifts each value of the given `fcn_gate` at compile time one to the
+left, overflow is discarded and new places are filled with
+`cell_type::EMPTY`.
+
+@param `fcn_gate` to shift.
+
+Returns:
+    Shifted `fcn_gate`.)doc";
 
 static const char *__doc_fiction_fcn_gate_library_transpose =
 R"doc(Transposes the given `fcn_gate` at compile time.
@@ -17578,6 +17676,51 @@ static const char *__doc_fiction_sidb_defect_type_THREE_BY_ONE = R"doc(A collect
 
 static const char *__doc_fiction_sidb_defect_type_UNKNOWN = R"doc(Unknown defect.)doc";
 
+static const char *__doc_fiction_sidb_extendagon_library = R"doc(TODO give description here)doc";
+
+static const char *__doc_fiction_sidb_extendagon_library_determine_port_routing = R"doc()doc";
+
+static const char *__doc_fiction_sidb_extendagon_library_get_functional_implementations =
+R"doc(Returns a map of all implementations supported by the library.
+
+This is an optional interface function that is required by some
+algorithms.
+
+Returns:
+    Map of all implementations as hexagonal gates.)doc";
+
+static const char *__doc_fiction_sidb_extendagon_library_get_gate_ports =
+R"doc(Returns a map of all different wire implementations and their
+respective port information.
+
+This is an optional interface function that is required by some
+algorithms.
+
+Returns:
+    Map of all different wire implementations and their respective
+    port information.)doc";
+
+static const char *__doc_fiction_sidb_extendagon_library_set_up_gate =
+R"doc(Overrides the corresponding function in fcn_bestagon_library. Given a
+tile `t`, this function takes all necessary information from the
+stored grid into account to choose the correct fcn_gate representation
+for that tile. May it be a gate or wires. Rotation and special marks
+like input and output, const cells etc. are computed additionally.
+
+Template parameter ``GateLyt``:
+    Pointy-top hexagonal gate-level layout type.
+
+Parameter ``lyt``:
+    Layout that hosts tile `t`.
+
+Parameter ``t``:
+    Tile to be realized as a Extendagon gate.
+
+Returns:
+    Extendagon gate representation of `t` including mirroring.)doc";
+
+static const char *__doc_fiction_sidb_extendagon_library_sidb_extendagon_library = R"doc()doc";
+
 static const char *__doc_fiction_sidb_lattice =
 R"doc(A layout type to layer on top of an SiDB cell-level layout. It
 implements an interface for different lattice orientations of the H-Si
@@ -18389,6 +18532,30 @@ Template parameter ``Dist``:
     Integral distance type.)doc";
 
 static const char *__doc_fiction_squared_euclidean_distance_functor_squared_euclidean_distance_functor = R"doc()doc";
+
+static const char *__doc_fiction_super_4x4_group_lookup =
+R"doc(Utility function that allows to look up values which are repeated
+endlessly, and are based on a 4x4 group of supertiles, that are
+arranged as shown in the bachelor thesis "Super-Tile Routing for
+Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F.
+Kiefhaber, 2025
+
+Parameter ``x``:
+    x coordinate of the looked up position
+
+Parameter ``y``:
+    y coordinate of the looked up position
+
+Parameter ``even_slice``:
+    lookup array for rows with an even reduced_y coodrinate
+
+Parameter ``odd_slice``:
+    lookup array for rows with an odd reduced_y coordinate
+
+Returns:
+    looked up value from provided arrays)doc";
+
+static const char *__doc_fiction_supertilezation = R"doc()doc";
 
 static const char *__doc_fiction_sweep_parameter = R"doc(Possible sweep parameters for the operational domain computation.)doc";
 
