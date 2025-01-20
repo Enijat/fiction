@@ -252,7 +252,7 @@ class sidb_extendagon_library : public sidb_bestagon_library
 
   private:
     template <typename Lyt>
-    [[nodiscard]] static port_list<port_direction> determine_port_routing(const Lyt& lyt, const tile<Lyt>& t) override noexcept
+    [[nodiscard]] static port_list<port_direction> determine_port_routing(const Lyt& lyt, const tile<Lyt>& t) noexcept
     {
         port_list<port_direction> ports{};
         
