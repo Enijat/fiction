@@ -739,8 +739,8 @@ static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
 
     return clocking_scheme{clock_name::AMY,
                             even_row_amy_4_clock_function,
-                            std::min(Lyt::max_fanin_size, 2u), //TODO correct
-                            2u, // TODO same here
+                            std::min(Lyt::max_fanin_size, 3u),
+                            3u,
                             4u,
                             true};
 }
@@ -787,8 +787,8 @@ static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
 
     return clocking_scheme{clock_name::AMY_SUPER,
                             even_row_amy_supertile_4_clock_function,
-                            std::min(Lyt::max_fanin_size, 2u), //TODO put in correct value
-                            2u, // TODO same here
+                            std::min(Lyt::max_fanin_size, 3u),
+                            3u,
                             4u,
                             true};
 }
