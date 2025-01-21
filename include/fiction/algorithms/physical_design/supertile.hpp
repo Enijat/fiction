@@ -65,7 +65,8 @@ const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<
 namespace detail
 {
     /**
-     * TODO description (note: has to be adjacent or else the tile itself will be returned)
+     * Utility function to copy the translation of a tile that was adjacent to a translated tile.
+     * If the target tile was not adjacent no translation will be applied an the tile itself will be returned.
      * 
      * @param target_old tile that should copy the shift from the source
      * @param source_old old position of the source
@@ -303,21 +304,21 @@ namespace detail
         uint64_t size_x = rightmost_core_tile_x + 1 + x_offset;
         uint64_t size_y = bottom_core_tile_y + 1 + y_offset;
 
-        HexLyt super_lyt{{size_x, size_y, lyt.z()}, lyt.get_layout_name()};
+        HexLyt super_lyt{{size_x, size_y, lyt.z()}, amy_supertile_clocking<HexLyt>(), lyt.get_layout_name()};
 
 
         // copy tiles to new layout
             //inputs
             lyt.foreach_pi(
-                [&lyt, &super_lyt, x_offset, y_offset](const auto& gate)
+                [&lyt, &super_lyt, x_offset, y_offset](const auto& node)
                 {
-                    const tile<HexLyt> old_coord = lyt.get_tile(gate);
-                    const tile<HexLyt> super_coord = super<HexLyt>(old_coord, x_offset, y_offset);
-                    super_lyt.create_pi(lyt.get_name(lyt.get_node(old_coord)), super_coord);
+                    const tile<HexLyt> old_tile = lyt.get_tile(node);
+                    const tile<HexLyt> super_tile = super<HexLyt>(old_tile, x_offset, y_offset);
+                    super_lyt.create_pi(lyt.get_name(lyt.get_node(old_tile)), super_tile);
                 });
 
             // normal gates/wires
-            lyt.foreach_node( //TODO maybe foreach_gate instead?
+            lyt.foreach_node(
                 [&lyt, &super_lyt, x_offset, y_offset](const auto& node)
                 {
                     if (lyt.is_pi(node))
@@ -325,29 +326,79 @@ namespace detail
                         return;
                     }
 
-                    const tile<HexLyt> old_coord = lyt.get_tile(node);
+                    const tile<HexLyt> old_tile = lyt.get_tile(node);
+                    const tile<HexLyt> super_tile = super<HexLyt>(old_tile, x_offset, y_offset);
 
-                    const tile<HexLyt> super_coord = super<HexLyt>(old_coord, x_offset, y_offset);
-
-                    if (const auto signals = lyt.incoming_data_flow(old_coord); signals.size() == 1) // node is wire or fanout
+                    if (const auto signals = lyt.incoming_data_flow(old_tile); signals.size() == 1) // FORME node is wire, fanout or inverter
                     {
-                        const auto signal = signals[0];
+                        const auto old_signal = signals[0];
+                        const tile<HexLyt> super_signal = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(old_signal), old_tile, super_tile, lyt)));
 
-                        const tile<HexLyt> super_signal = copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(signal), old_coord, super_coord, lyt);
-
-                        if (!lyt.is_po(node) and lyt.is_wire(node))
+                        if (!lyt.is_po(node) and lyt.is_wire(node)) //TODO move is_po to check 10 lines above so it abortes earlier?
                         {
-                            //CONTINUE
-                            //FORME die signals so machen das sie in die leeren, umliegenden felder ragen
+                            super_lyt.create_buf(super_signal, super_tile);
+                        } 
+                        else if (lyt.is_inv(node))
+                        {
+                            super_lyt.create_not(super_signal, super_tile);
                         }
-                    } else if (signals.size() = 2)
+                    }
+                    else if (signals.size() = 2)
                     {
+                        const auto signal_a = signals[0];
+                        const auto signal_b = signals[0];
 
+                        const tile<HexLyt> super_signal_a = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(signal_a), old_tile, super_tile, lyt)));
+                        const tile<HexLyt> super_signal_b = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(signal_b), old_tile, super_tile, lyt)));
+
+                        if (lyt.is_and(node))
+                        {
+                            super_lyt.create_and(super_signal_a, super_signal_b, super_tile);
+                        }
+                        else if (lyt.is_nand(node))
+                        {
+                            super_lyt.create_nand(super_signal_a, super_signal_b, super_tile);
+                        }
+                        else if (lyt.is_or(node))
+                        {
+                            super_lyt.create_or(super_signal_a, super_signal_b, super_tile);
+                        }
+                        else if (lyt.is_nor(node))
+                        {
+                            super_lyt.create_nor(super_signal_a, super_signal_b, super_tile);
+                        }
+                        else if (lyt.is_xor(node))
+                        {
+                            super_lyt.create_xor(super_signal_a, super_signal_b, super_tile);
+                        }
+                        else if (lyt.is_xnor(node))
+                        {
+                            super_lyt.create_xnor(super_signal_a, super_signal_b, super_tile);
+                        }
+                        else if (lyt.is_function(node))
+                        {
+                            const auto node_fun = lyt.node_function(node);
+
+                            super_lyt.create_node({super_signal_a, super_signal_b}, node_fun, super_tile);
+                        }
                     }
                 });
 
-        //TODO nicht vergessen das clocking scheme noch zu ändern (bzw hab ich das schon gemacht?)
+            //ouputs
+            lyt.foreach_po(
+                [&lyt, &super_lyt, x_offset, y_offset](const auto& signal)
+                {
+                    const tile<HexLyt> old_tile = lyt.get_tile(lyt.get_node(signal));
+                    const tile<HexLyt> super_tile = super<HexLyt>(old_tile, x_offset, y_offset);
 
+                    const auto old_signal = lyt.incoming_data_flow(old_tile)[0];
+                    const tile<HexLyt> super_signal = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(old_signal), old_tile, super_tile, lyt)));
+                    super_lyt.create_po(super_signal, lyt.get_name(lyt.get_node(old_tile)), super_tile)
+
+                });
+
+        //TODO maybe I can use "restore_names<CartLyt, HexLyt>(lyt, super_lyt);"
+        return super_lyt;
         /**
          * FORME: Methods that could be usefull:
          * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
@@ -375,6 +426,7 @@ namespace detail
         //TODO need to build new lookup table for inverters, (so 1 in 1 out but not all directions are available)
         //TODO need to build new lookup table for primary input inverters (so just the straight ones, I can do that by hand)
         //FORME: inputs können wohl auch inverter sein, 
+        return lyt;//TODO placeholder
     }
 
     //TODO: (optional) write method for wire optimisation and call it in the right places
@@ -390,7 +442,7 @@ template <typename HexLyt>
     static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
 
     return detail::supertile_core_and_wire_generation<HexLyt>(detail::grow_to_supertiles<HexLyt>(lyt));
-    //TODO make sure to catch every exception (mabye use "catch (...)" if I don't know what kind of errors there are)
+    //TODO make sure to catch every exception (mabye use "catch (...)" if I don't know what kind of errors there are) or maybe I should move thos to the CLI where it is actually executed ?!
 }
 
 }
