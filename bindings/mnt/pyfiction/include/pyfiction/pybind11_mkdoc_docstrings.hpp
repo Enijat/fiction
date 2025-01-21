@@ -8955,9 +8955,7 @@ Parameter ``y_offset``:
 Returns:
     coodrinates which are translated into the supertile hex layout)doc";
 
-static const char *__doc_fiction_detail_super_2 = R"doc()doc";
-
-static const char *__doc_fiction_detail_super_3 =
+static const char *__doc_fiction_detail_super_2 =
 R"doc(Utility function to translate the original hex coodrinates into the
 new supertile hex coordinates. If one already knows the target
 coordinates would be negative or if they should be moved closer to the
@@ -8968,8 +8966,6 @@ Parameter ``tile``:
 
 Returns:
     coodrinates which are translated into the supertile hex layout)doc";
-
-static const char *__doc_fiction_detail_super_4 = R"doc()doc";
 
 static const char *__doc_fiction_detail_supertile_core_and_wire_generation =
 R"doc(Utility function to find a center tile orientation and according wires
