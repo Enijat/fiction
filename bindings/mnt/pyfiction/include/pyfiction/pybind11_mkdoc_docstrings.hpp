@@ -4695,8 +4695,9 @@ static const char *__doc_fiction_detail_convert_network_impl_ntk = R"doc()doc";
 static const char *__doc_fiction_detail_convert_network_impl_run = R"doc()doc";
 
 static const char *__doc_fiction_detail_copy_super_translation =
-R"doc(TODO description (note: has to be adjacent or else the tile itself
-will be returned)
+R"doc(Utility function to copy the translation of a tile that was adjacent
+to a translated tile. If the target tile was not adjacent no
+translation will be applied an the tile itself will be returned.
 
 Parameter ``target_old``:
     tile that should copy the shift from the source
