@@ -9,6 +9,7 @@
 #include <fiction/technology/inml_topolinano_library.hpp>
 #include <fiction/technology/qca_one_library.hpp>
 #include <fiction/technology/sidb_bestagon_library.hpp>
+#include <fiction/technology/sidb_extendagon_library.hpp>
 #include <fiction/types.hpp>
 
 #include <alice/alice.hpp>

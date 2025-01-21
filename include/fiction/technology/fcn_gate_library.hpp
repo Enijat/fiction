@@ -332,7 +332,7 @@ class fcn_gate_library
      */
     static constexpr fcn_gate shift_left_once(const fcn_gate& g) noexcept
     {
-        fcn_gate shifted = EMPTY_GATE;
+        auto shifted = EMPTY_GATE;
 
         for (auto y = 0ul; y < GateSizeY; ++y)
         {

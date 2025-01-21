@@ -6,7 +6,16 @@
 #define FICTION_SUPERTILE_HPP
 
 #include "fiction/traits.hpp"
-//#include "fiction/layouts/gate_level_layout.hpp"
+
+// TODO check if I really need all of these:
+#include "fiction/layouts/bounding_box.hpp"
+#include "fiction/types.hpp"
+#include "fiction/utils/name_utils.hpp"
+#include "fiction/utils/placement_utils.hpp"
+
+#include <mockturtle/traits.hpp>
+#include <mockturtle/utils/stopwatch.hpp>
+#include <mockturtle/views/topo_view.hpp>
 
 #include <limits>
 #include <cstdint>
@@ -64,25 +73,26 @@ namespace detail
      * @param y_offset offset that is added to the y coordinate
      * @return coodrinates which are translated into the supertile hex layout
      */
-    tile<CartLyt> super(tile<CartLyt> tile, int64_t x_offset, int64_t y_offset) noexcept
+    template <typename HexLyt>
+    tile<HexLyt> super(tile<HexLyt> original_tile, int64_t x_offset, int64_t y_offset) noexcept
     {
         // position a tile at 0,0 would have in the supertile hex layout
         int64_t new_x = 1 + x_offset;
         int64_t new_y = 1 + y_offset;
 
         // calculate column base position
-        new_x += ((tile.x >> 1) * 5 ) + (tile.x % 2 == 0 ? 0 : 2);
-        new_y += tile.x;
+        new_x += ((static_cast<int64_t>(original_tile.x) >> 1) * 5 ) + (static_cast<int64_t>(original_tile.x) % 2 == 0 ? 0 : 2);
+        new_y += static_cast<int64_t>(original_tile.x);
 
         // calculate position by traversing column
             // rough traversion (the pattern for addition repeates every 4 steps and can be summed up)
-            new_x += (tile.y >> 2) * -3;
-            new_y += (tile.y >> 2) * 10;
+            new_x += (static_cast<int64_t>(original_tile.y) >> 2) * -3;
+            new_y += (static_cast<int64_t>(original_tile.y) >> 2) * 10;
             
             // fine traversion (traverse the 0 - 3 steps that are left)
-            if (tile.x % 2 == 0)
+            if (static_cast<int64_t>(original_tile.x) % 2 == 0)
             {
-                switch (tile.y % 4)
+                switch (static_cast<int64_t>(original_tile.y) % 4)
                 {
                     default: // also case 0
                         break;
@@ -100,7 +110,7 @@ namespace detail
                         break;
                 }
             } else {
-                switch (tile.y % 4)
+                switch (static_cast<int64_t>(original_tile.y) % 4)
                 {
                     default: // also case 0
                         break;
@@ -118,13 +128,11 @@ namespace detail
                         break;
                 }
             }
+        
+        //return tile<HexLyt>{x, y, z};
+        return tile<HexLyt>{new_x, new_y, original_tile.z};
+    }
 
-        return tile<CartLyt>{new_x, new_y, 1};//TODO check z value and what should really be here
-    }
-    inline tile<CartLyt> super(signal& signal, int64_t x_offset, int64_t y_offset) noexcept
-    {
-        return super(static_cast<tile<CartLyt>>(signal), x_offset, y_offset);
-    }
     /**
      * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
      * If one already knows the target coordinates would be negative or if they should be moved closer to the border of the layout,
@@ -133,13 +141,10 @@ namespace detail
      * @param tile original position
      * @return coodrinates which are translated into the supertile hex layout
      */
-    inline tile<CartLyt> super(tile<CartLyt> tile) noexcept
+    template <typename HexLyt>
+    inline tile<HexLyt> super(tile<HexLyt> tile)
     {
         return super(tile, 0, 0);
-    }
-    inline tile<CartLyt> super(signal& signal) noexcept
-    {
-        return super(signal, 0, 0);
     }
 
     /**
@@ -172,7 +177,7 @@ namespace detail
 
                     #pragma GCC diagnostic push
                     #pragma GCC diagnostic ignored "-Wsign-conversion" // has been checked at the beginning of this method
-                tile<CartLyt> pos = super(tile);
+                const auto pos = super<HexLyt>(tile);
                     #pragma GCC diagnostic pop
 
                 if (pos.x < leftmost_core_tile_x)
@@ -254,7 +259,7 @@ namespace detail
                 [&lyt, &super_lyt, x_offset, y_offset](const auto& gate)
                 {
                     const auto old_coord = lyt.get_tile(gate);
-                    const tile<CartLyt> super_coord = super(old_coord, x_offset, y_offset);
+                    const tile<HexLyt> super_coord = super<HexLyt>(old_coord, x_offset, y_offset);
                     super_lyt.create_pi(lyt.get_name(lyt.get_node(old_coord)), super_coord);
                 });
 
@@ -266,16 +271,16 @@ namespace detail
 
                     if (lyt.is_pi(old_node))
                     {
-                        continue;
+                        return;
                     }
 
-                    const tile<CartLyt> super_coord = super(old_coord, x_offset, y_offset);
+                    const tile<HexLyt> super_coord = super<HexLyt>(old_coord, x_offset, y_offset);
 
                     if (const auto signals = lyt.incoming_data_flow(old_coord); signals.size() == 1)
                     {
                         const auto signal = signals[0];
 
-                        const auto super_signal_coord = super(signal, x_offset, y_offset);
+                        const auto super_signal_coord = super<HexLyt>(static_cast<tile<HexLyt>>(signal), x_offset, y_offset);
 
                         const auto super_signal = super_lyt.make_signal(super_lyt.get_node(super_signal_coord));
 
