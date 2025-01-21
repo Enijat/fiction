@@ -4694,6 +4694,27 @@ static const char *__doc_fiction_detail_convert_network_impl_ntk = R"doc()doc";
 
 static const char *__doc_fiction_detail_convert_network_impl_run = R"doc()doc";
 
+static const char *__doc_fiction_detail_copy_super_translation =
+R"doc(TODO description (note: has to be adjacent or else the tile itself
+will be returned)
+
+Parameter ``target_old``:
+    tile that should copy the shift from the source
+
+Parameter ``source_old``:
+    old position of the source
+
+Parameter ``source_super``:
+    new position of the source that has been translated to the super
+    clocking sceme
+
+Parameter ``lyt``:
+    hexagonal layout that houses the tiles
+
+Returns:
+    new position of the target that kept the same relative position to
+    the source tile)doc";
+
 static const char *__doc_fiction_detail_count_gate_types_impl = R"doc()doc";
 
 static const char *__doc_fiction_detail_count_gate_types_impl_count_gate_types_impl = R"doc()doc";
@@ -13604,6 +13625,19 @@ Parameter ``c``:
 Returns:
     `true` iff `c` is located in an odd row.)doc";
 
+static const char *__doc_fiction_hexagonal_layout_is_north_east_of =
+R"doc(Returns `true` iff coordinate `c2` is directly north-east of
+coordinate `c1`.
+
+Parameter ``c1``:
+    Base coordinate.
+
+Parameter ``c2``:
+    Coordinate to test for its location in relation to `c1`.
+
+Returns:
+    `true` iff `c2` is directly north-east of `c1`.)doc";
+
 static const char *__doc_fiction_hexagonal_layout_is_north_of =
 R"doc(Returns `true` iff coordinate `c2` is directly north of coordinate
 `c1`.
@@ -13616,6 +13650,19 @@ Parameter ``c2``:
 
 Returns:
     `true` iff `c2` is directly north of `c1`.)doc";
+
+static const char *__doc_fiction_hexagonal_layout_is_north_west_of =
+R"doc(Returns `true` iff coordinate `c2` is directly north-west of
+coordinate `c1`.
+
+Parameter ``c1``:
+    Base coordinate.
+
+Parameter ``c2``:
+    Coordinate to test for its location in relation to `c1`.
+
+Returns:
+    `true` iff `c2` is directly north-west of `c1`.)doc";
 
 static const char *__doc_fiction_hexagonal_layout_is_northwards_of =
 R"doc(Returns `true` iff coordinate `c2` is somewhere north of coordinate
@@ -13630,6 +13677,19 @@ Parameter ``c2``:
 Returns:
     `true` iff `c2` is somewhere north of `c1`.)doc";
 
+static const char *__doc_fiction_hexagonal_layout_is_south_east_of =
+R"doc(Returns `true` iff coordinate `c2` is directly south-east of
+coordinate `c1`.
+
+Parameter ``c1``:
+    Base coordinate.
+
+Parameter ``c2``:
+    Coordinate to test for its location in relation to `c1`.
+
+Returns:
+    `true` iff `c2` is directly south-east of `c1`.)doc";
+
 static const char *__doc_fiction_hexagonal_layout_is_south_of =
 R"doc(Returns `true` iff coordinate `c2` is directly south of coordinate
 `c1`.
@@ -13642,6 +13702,19 @@ Parameter ``c2``:
 
 Returns:
     `true` iff `c2` is directly south of `c1`.)doc";
+
+static const char *__doc_fiction_hexagonal_layout_is_south_west_of =
+R"doc(Returns `true` iff coordinate `c2` is directly south-west of
+coordinate `c1`.
+
+Parameter ``c1``:
+    Base coordinate.
+
+Parameter ``c2``:
+    Coordinate to test for its location in relation to `c1`.
+
+Returns:
+    `true` iff `c2` is directly south-west of `c1`.)doc";
 
 static const char *__doc_fiction_hexagonal_layout_is_southwards_of =
 R"doc(Returns `true` iff coordinate `c2` is somewhere south of coordinate
