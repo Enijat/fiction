@@ -65,6 +65,56 @@ const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<
 namespace detail
 {
     /**
+     * TODO description (note: has to be adjacent or else the tile itself will be returned)
+     * 
+     * @param target_old tile that should copy the shift from the source
+     * @param source_old old position of the source
+     * @param source_super new position of the source that has been translated to the super clocking sceme
+     * @param lyt hexagonal layout that houses the tiles
+     * @return new position of the target that kept the same relative position to the source tile 
+     */
+    template <typename HexLyt>
+    tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source_old, tile<HexLyt> source_super, HexLyt lyt) noexcept
+    {
+        static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+
+        if (lyt.is_north_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.north(source_super))
+        }
+        if (lyt.is_north_east_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.north_east(source_super))
+        }
+        if (lyt.is_east_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.east(source_super))
+        }
+        if (lyt.is_south_east_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.south_east(source_super))
+        }
+        if (lyt.is_south_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.south(source_super))
+        }
+        if (lyt.is_south_west_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.south_west(source_super))
+        }
+        if (lyt.is_west_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.west(source_super))
+        }
+        if (lyt.is_north_west_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.north_west(source_super))
+        }
+
+        return target_old;
+    }
+
+    /**
      * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
      * Offset will simple be added to the coordinates.
      * 
@@ -94,7 +144,8 @@ namespace detail
             {
                 switch (static_cast<int64_t>(original_tile.y) % 4)
                 {
-                    default: // also case 0
+                    default:
+                    case 0:
                         break;
                     case 1:
                         new_x += -2;
@@ -112,7 +163,8 @@ namespace detail
             } else {
                 switch (static_cast<int64_t>(original_tile.y) % 4)
                 {
-                    default: // also case 0
+                    default:
+                    case 0:
                         break;
                     case 1:
                         new_x += -2;
@@ -129,7 +181,6 @@ namespace detail
                 }
             }
         
-        //return tile<HexLyt>{x, y, z};
         return tile<HexLyt>{new_x, new_y, original_tile.z};
     }
 
@@ -163,6 +214,7 @@ namespace detail
         //TODO have all the required runtime asserts here
         assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
         assert(lyt.y() <= std::numeric_limits<int64_t>::max());
+        assert(lyt.is_clocking_scheme(clock_name::AMY));
 
         // Search trough hexagonal layout to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
         int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
@@ -190,9 +242,10 @@ namespace detail
                     {bottom_core_tile_y = pos.y;}
             });
 
-        if (leftmost_core_tile_x > rightmost_core_tile_x) // There was not a single node in the layout
+        if (leftmost_core_tile_x > rightmost_core_tile_x)
         {
-            return NULL; //TODO so viel noexcept wie möglich -> NIE NULL ZURÜCK GEBEN, am besten keinen error throwen sondern einen guten placeholder finden oder evtl simon fragen wie man hier evtl konsole output rein packt der sagt das etwas nicht geklappt hat
+            std::cout << "[w] didn't find any nodes in layout" << std::endl;
+            return lyt;
         }
 
         /*
@@ -250,7 +303,7 @@ namespace detail
         uint64_t size_x = rightmost_core_tile_x + 1 + x_offset;
         uint64_t size_y = bottom_core_tile_y + 1 + y_offset;
 
-        HexLyt super_lyt{{size_x, size_y, 1/*TODO check if 1 or 0 (or prior value)*/}, lyt.get_layout_name()};
+        HexLyt super_lyt{{size_x, size_y, lyt.z()}, lyt.get_layout_name()};
 
 
         // copy tiles to new layout
@@ -258,37 +311,38 @@ namespace detail
             lyt.foreach_pi(
                 [&lyt, &super_lyt, x_offset, y_offset](const auto& gate)
                 {
-                    const auto old_coord = lyt.get_tile(gate);
+                    const tile<HexLyt> old_coord = lyt.get_tile(gate);
                     const tile<HexLyt> super_coord = super<HexLyt>(old_coord, x_offset, y_offset);
                     super_lyt.create_pi(lyt.get_name(lyt.get_node(old_coord)), super_coord);
                 });
 
+            // normal gates/wires
             lyt.foreach_node( //TODO maybe foreach_gate instead?
-                [&lyt, &super_lyt, x_offset, y_offset](const auto& gate)
+                [&lyt, &super_lyt, x_offset, y_offset](const auto& node)
                 {
-                    const auto old_coord = lyt.get_tile(gate);
-                    const auto old_node = lyt.get_node(old_coord);
-
-                    if (lyt.is_pi(old_node))
+                    if (lyt.is_pi(node))
                     {
                         return;
                     }
 
+                    const tile<HexLyt> old_coord = lyt.get_tile(node);
+
                     const tile<HexLyt> super_coord = super<HexLyt>(old_coord, x_offset, y_offset);
 
-                    if (const auto signals = lyt.incoming_data_flow(old_coord); signals.size() == 1)
+                    if (const auto signals = lyt.incoming_data_flow(old_coord); signals.size() == 1) // node is wire or fanout
                     {
                         const auto signal = signals[0];
 
-                        const auto super_signal_coord = super<HexLyt>(static_cast<tile<HexLyt>>(signal), x_offset, y_offset);
+                        const tile<HexLyt> super_signal = copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(signal), old_coord, super_coord, lyt);
 
-                        const auto super_signal = super_lyt.make_signal(super_lyt.get_node(super_signal_coord));
-
-                        if (!lyt.is_po(old_node) and lyt.is_wire(old_node))
+                        if (!lyt.is_po(node) and lyt.is_wire(node))
                         {
                             //CONTINUE
                             //FORME die signals so machen das sie in die leeren, umliegenden felder ragen
                         }
+                    } else if (signals.size() = 2)
+                    {
+
                     }
                 });
 
@@ -312,6 +366,9 @@ namespace detail
     template <typename HexLyt>
     [[nodiscard]] HexLyt supertile_core_and_wire_generation(const HexLyt& lyt) noexcept
     {
+        assert(lyt.is_clocking_scheme(clock_name::AMY_SUPER)); // To catch if grow_to_supertiles() didn't work
+        assert(lyt.z() == 0); // Method doesn't handle wire crossings yet
+
         //TODO have all the required static_assters here that I need
         //FORME: Don't forget the hash method(s) I crafted
         //TODO need to handle fanouts!
