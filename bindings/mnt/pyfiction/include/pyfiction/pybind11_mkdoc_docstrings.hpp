@@ -231,9 +231,6 @@ Dangling Bond Logic" by F. Kiefhaber, 2025
 Template parameter ``Lyt``:
     Clocked layout type.
 
-Parameter ``n``:
-    Number of clocks.
-
 Returns:
     Hexagonal AMY clocking scheme.)doc";
 
@@ -245,9 +242,6 @@ version of the amy pattern
 
 Template parameter ``Lyt``:
     Clocked layout type.
-
-Parameter ``n``:
-    Number of clocks.
 
 Returns:
     Hexagonal supertile AMY clocking scheme.)doc";
@@ -7593,6 +7587,21 @@ the canvas SiDBs satisfies the criteria for physical validity.)doc";
 
 static const char *__doc_fiction_detail_layout_invalidity_reason_POTENTIAL_POSITIVE_CHARGES = R"doc(Positive SiDBs can potentially occur.)doc";
 
+static const char *__doc_fiction_detail_mod =
+R"doc(A modulo operation that will return the least positive residue instead
+of the remainder of the division.
+
+`a mod b = c` <=> `c = mod(a,b)`
+
+Parameter ``a``:
+    number to be "divided"
+
+Parameter ``b``:
+    "dividend"
+
+Returns:
+    least positive residue)doc";
+
 static const char *__doc_fiction_detail_nested_vector_hash =
 R"doc(This struct defines a hash function for a nested vector of layout
 tiles. It calculates a combined hash value for a vector of tiles based
@@ -8077,6 +8086,10 @@ static const char *__doc_fiction_detail_orthogonal_impl_ps = R"doc()doc";
 static const char *__doc_fiction_detail_orthogonal_impl_pst = R"doc()doc";
 
 static const char *__doc_fiction_detail_orthogonal_impl_run = R"doc()doc";
+
+static const char *__doc_fiction_detail_perfectHashFunction11 = R"doc()doc";
+
+static const char *__doc_fiction_detail_perfectHashFunction21 = R"doc()doc";
 
 static const char *__doc_fiction_detail_physical_population_stability_impl =
 R"doc(This class implements the simulation of the population stability for a
