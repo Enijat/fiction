@@ -7,14 +7,15 @@
 
 #include "fiction/traits.hpp"
 
+
 // TODO check if I really need all of these:
 #include "fiction/layouts/bounding_box.hpp"
 #include "fiction/types.hpp"
 #include "fiction/utils/name_utils.hpp"
 #include "fiction/utils/placement_utils.hpp"
+#include "fiction/layouts/clocking_scheme.hpp"
 
 #include <mockturtle/traits.hpp>
-#include <mockturtle/utils/stopwatch.hpp>
 #include <mockturtle/views/topo_view.hpp>
 
 #include <limits>
@@ -36,15 +37,14 @@ namespace fiction
  * @return looked up value from provided arrays
  */
 template <typename ArrayType>
-const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
+static constexpr const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
 {
     // reduce to repeating block coordinates
     uint8_t reduced_x = x % 56;
     uint8_t reduced_y = y % 112;
 
     // translate into top row coordinates
-    int8_t mod = (reduced_x - 10 * static_cast<uint8_t>(reduced_y / 4)) % 56;
-    reduced_x = mod >= 0 ? mod : mod + 56;
+    reduced_x = detail::mod(reduced_x - 10 * static_cast<uint8_t>(reduced_y / 4), 56);
     reduced_y = reduced_y % 4;
 
     // look up by traversing one super tile clocking block
@@ -65,54 +65,18 @@ const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<
 namespace detail
 {
     /**
-     * Utility function to copy the translation of a tile that was adjacent to a translated tile.
-     * If the target tile was not adjacent no translation will be applied an the tile itself will be returned.
+     * A modulo operation that will return the least positive residue instead of the remainder of the division.
      * 
-     * @param target_old tile that should copy the shift from the source
-     * @param source_old old position of the source
-     * @param source_super new position of the source that has been translated to the super clocking sceme
-     * @param lyt hexagonal layout that houses the tiles
-     * @return new position of the target that kept the same relative position to the source tile 
+     * `a mod b = c` <=> `c = mod(a,b)`
+     * 
+     * @param a number to be "divided"
+     * @param b "dividend"
+     * @return least positive residue 
      */
-    template <typename HexLyt>
-    tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source_old, tile<HexLyt> source_super, HexLyt lyt) noexcept
+    inline static constexpr const uint8_t mod(uint8_t a, uint8_t b) noexcept
     {
-        static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-
-        if (lyt.is_north_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.north(source_super))
-        }
-        if (lyt.is_north_east_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.north_east(source_super))
-        }
-        if (lyt.is_east_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.east(source_super))
-        }
-        if (lyt.is_south_east_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.south_east(source_super))
-        }
-        if (lyt.is_south_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.south(source_super))
-        }
-        if (lyt.is_south_west_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.south_west(source_super))
-        }
-        if (lyt.is_west_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.west(source_super))
-        }
-        if (lyt.is_north_west_of(source_old, target_old))
-        {
-            return static_cast<tile<HexLyt>>(lyt.north_west(source_super))
-        }
-
-        return target_old;
+        int8_t remainder = a % b;
+        return remainder >= 0 ? remainder : remainder + b;
     }
 
     /**
@@ -200,12 +164,63 @@ namespace detail
     }
 
     /**
+     * Utility function to copy the translation of a tile that was adjacent to a translated tile.
+     * If the target tile was not adjacent no translation will be applied an the tile itself will be returned.
+     * 
+     * @param target_old tile that should copy the shift from the source
+     * @param source_old old position of the source
+     * @param source_super new position of the source that has been translated to the super clocking sceme
+     * @param lyt hexagonal layout that houses the tiles
+     * @return new position of the target that kept the same relative position to the source tile 
+     */
+    template <typename HexLyt>
+    tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source_old, tile<HexLyt> source_super, HexLyt lyt) noexcept
+    {
+        static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+
+        if (lyt.is_north_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.north(source_super));
+        }
+        if (lyt.is_north_east_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.north_east(source_super));
+        }
+        if (lyt.is_east_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.east(source_super));
+        }
+        if (lyt.is_south_east_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.south_east(source_super));
+        }
+        if (lyt.is_south_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.south(source_super));
+        }
+        if (lyt.is_south_west_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.south_west(source_super));
+        }
+        if (lyt.is_west_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.west(source_super));
+        }
+        if (lyt.is_north_west_of(source_old, target_old))
+        {
+            return static_cast<tile<HexLyt>>(lyt.north_west(source_super));
+        }
+
+        return target_old;
+    }
+
+    /**
      * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles.
      * Hexagonal layouts dimensions can't be bigger then "std::numeric_limits<int64_t>::max()".
      * TODO inputs und outputs beschreibung schreiben
      */
     template <typename HexLyt>
-    [[nodiscrad]] HexLyt grow_to_supertiles(const HexLyt& lyt) noexcept
+    [[nodiscard]] HexLyt grow_to_supertiles(const HexLyt& lyt) noexcept
     {
         using namespace fiction;
 
@@ -304,8 +319,7 @@ namespace detail
         uint64_t size_x = rightmost_core_tile_x + 1 + x_offset;
         uint64_t size_y = bottom_core_tile_y + 1 + y_offset;
 
-        HexLyt super_lyt{{size_x, size_y, lyt.z()}, amy_supertile_clocking<HexLyt>(), lyt.get_layout_name()};
-
+        HexLyt super_lyt{{size_x, size_y, lyt.z()}, ::fiction::amy_supertile_clocking<HexLyt>(), lyt.get_layout_name()};
 
         // copy tiles to new layout
             //inputs
@@ -393,7 +407,7 @@ namespace detail
 
                     const auto old_signal = lyt.incoming_data_flow(old_tile)[0];
                     const tile<HexLyt> super_signal = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(old_signal), old_tile, super_tile, lyt)));
-                    super_lyt.create_po(super_signal, lyt.get_name(lyt.get_node(old_tile)), super_tile)
+                    super_lyt.create_po(super_signal, lyt.get_name(lyt.get_node(old_tile)), super_tile);
 
                 });
 
@@ -407,6 +421,40 @@ namespace detail
          */
     }
 
+    //TODO description (mention that it's perfectly space efficient (no empty or double spaces))
+    uint8_t perfectHashFunction21(uint8_t A, uint8_t B, uint8_t C)
+    {
+        uint8_t b = mod((B - A), 6);
+        uint8_t c = mod((C - A), 6);
+        if ((b + c) == 9)
+        {
+            return 10*A + (12 - 5);
+        }
+        else
+        {
+            return 10*A + ((2*(b + c) - abs(A -B)) - 5);
+        }
+    }
+
+    //TODO description (mention that it's perfectly space efficient (no empty or double spaces))
+    uint8_t perfectHashFunction11(uint8_t A, uint8_t B)
+    {
+        if ((A * B) == 2)
+        {
+            return 12;
+        }
+        else if ((A + B) == 9)
+        {
+            return 0;
+        }
+        else
+        {
+            return 2*(A + B) - abs(A - B);
+        }
+    }
+
+    //static constexpr const 
+
     /**
      * Utility function to find a center tile orientation and according wires in the outer tiles
      * that represent the functionality and connection points of the original center tile, but the new tiles
@@ -419,6 +467,13 @@ namespace detail
     {
         assert(lyt.is_clocking_scheme(clock_name::AMY_SUPER)); // To catch if grow_to_supertiles() didn't work
         assert(lyt.z() == 0); // Method doesn't handle wire crossings yet
+
+        /**
+         * FORME: Methods that could be usefull:
+         * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
+         * - struct coord_t 
+         * - connect() (for connecting signals)
+         */
 
         //TODO have all the required static_assters here that I need
         //FORME: Don't forget the hash method(s) I crafted

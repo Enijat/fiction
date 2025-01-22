@@ -718,11 +718,10 @@ static auto bancs_clocking() noexcept
  * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
  * 
  * @tparam Lyt Clocked layout type.
- * @param n Number of clocks.
  * @return Hexagonal AMY clocking scheme.
  */
 template <typename Lyt>
-static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
+static auto amy_clocking() noexcept
 {
     // clang-format off
 
@@ -750,11 +749,10 @@ static auto amy_clocking(const num_clks& n = num_clks::FOUR) noexcept
  * This is the supertile version of the amy pattern
  * 
  * @tparam Lyt Clocked layout type.
- * @param n Number of clocks.
  * @return Hexagonal supertile AMY clocking scheme.
  */
 template <typename Lyt>
-static auto amy_supertile_clocking(const num_clks& n = num_clks::FOUR) noexcept
+static auto amy_supertile_clocking() noexcept
 {
     // clang-format off
 
