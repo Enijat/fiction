@@ -674,22 +674,22 @@ class sidb_extendagon_library : public sidb_bestagon_library
     static constexpr const fcn_gate WEST_NORTH_WEST_WIRE{mirror_horizontal(NORTH_EAST_EAST_WIRE)};
 
     // double wires (one straight, one bend)
-    static constexpr const fcn_gate EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{merge({EAST_WEST_WIRE, SOUTH_EAST_SOUTH_WEST_WIRE})};
+    static constexpr const fcn_gate EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{merge_at_compiletime({EAST_WEST_WIRE, SOUTH_EAST_SOUTH_WEST_WIRE})};
 
-    static constexpr const fcn_gate NORTH_EAST_SOUTH_WEST_AND_WEST_NORTH_WEST_WIRE{merge({NORTH_EAST_SOUTH_WEST_WIRE, WEST_NORTH_WEST_WIRE})};
+    static constexpr const fcn_gate NORTH_EAST_SOUTH_WEST_AND_WEST_NORTH_WEST_WIRE{merge_at_compiletime({NORTH_EAST_SOUTH_WEST_WIRE, WEST_NORTH_WEST_WIRE})};
 
-    static constexpr const fcn_gate EAST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE{merge({EAST_WEST_WIRE, NORTH_EAST_NORTH_WEST_WIRE})};
+    static constexpr const fcn_gate EAST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE{merge_at_compiletime({EAST_WEST_WIRE, NORTH_EAST_NORTH_WEST_WIRE})};
 
-    static constexpr const fcn_gate NORTH_EAST_SOUTH_WEST_AND_EAST_SOUTH_EAST_WIRE{merge({NORTH_EAST_SOUTH_WEST_WIRE, EAST_SOUTH_EAST_WIRE})};
+    static constexpr const fcn_gate NORTH_EAST_SOUTH_WEST_AND_EAST_SOUTH_EAST_WIRE{merge_at_compiletime({NORTH_EAST_SOUTH_WEST_WIRE, EAST_SOUTH_EAST_WIRE})};
 
     // double wires (both bend)
-    static constexpr const fcn_gate EAST_SOUTH_EAST_AND_SOUTH_WEST_WEST_WIRE{merge({EAST_SOUTH_EAST_WIRE, SOUTH_WEST_WEST_WIRE})};
+    static constexpr const fcn_gate EAST_SOUTH_EAST_AND_SOUTH_WEST_WEST_WIRE{merge_at_compiletime({EAST_SOUTH_EAST_WIRE, SOUTH_WEST_WEST_WIRE})};
 
-    static constexpr const fcn_gate SOUTH_WEST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE{merge({SOUTH_WEST_WEST_WIRE, NORTH_EAST_NORTH_WEST_WIRE})};
+    static constexpr const fcn_gate SOUTH_WEST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE{merge_at_compiletime({SOUTH_WEST_WEST_WIRE, NORTH_EAST_NORTH_WEST_WIRE})};
 
-    static constexpr const fcn_gate WEST_NORTH_WEST_AND_NORTH_EAST_EAST_WIRE{merge({WEST_NORTH_WEST_WIRE, NORTH_EAST_EAST_WIRE})};
+    static constexpr const fcn_gate WEST_NORTH_WEST_AND_NORTH_EAST_EAST_WIRE{merge_at_compiletime({WEST_NORTH_WEST_WIRE, NORTH_EAST_EAST_WIRE})};
 
-    static constexpr const fcn_gate NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{merge({NORTH_EAST_EAST_WIRE, SOUTH_EAST_SOUTH_WEST_WIRE})};
+    static constexpr const fcn_gate NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{merge_at_compiletime({NORTH_EAST_EAST_WIRE, SOUTH_EAST_SOUTH_WEST_WIRE})};
 
     // fanouts
     static constexpr const fcn_gate NORTH_EAST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT = MIRRORED_FANOUT_1_2;

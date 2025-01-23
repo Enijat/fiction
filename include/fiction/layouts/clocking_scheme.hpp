@@ -6,7 +6,6 @@
 #define FICTION_CLOCKING_SCHEME_HPP
 
 #include "fiction/layouts/coordinates.hpp"
-#include "fiction/algorithms/physical_design/supertile.hpp"
 #include "fiction/traits.hpp"
 
 #include <phmap.h>
@@ -742,6 +741,41 @@ static auto amy_clocking() noexcept
                             3u,
                             4u,
                             true};
+}
+/**
+ * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
+ * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * 
+ * @param x x coordinate of the looked up position
+ * @param y y coordinate of the looked up position
+ * @param even_slice lookup array for rows with an even reduced_y coodrinate
+ * @param odd_slice lookup array for rows with an odd reduced_y coordinate
+ * @return looked up value from provided arrays
+ */
+template <typename ArrayType>
+static constexpr const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
+{
+    // reduce to repeating block coordinates
+    uint8_t reduced_x = x % 56;
+    uint8_t reduced_y = y % 112;
+
+    // translate into top row coordinates
+    reduced_x = (reduced_x - 10 * static_cast<uint8_t>(reduced_y / 4)) % 56;
+    reduced_x = reduced_x >= 0 ? reduced_x : reduced_x + 56;
+    reduced_y = reduced_y % 4;
+
+    // look up by traversing one super tile clocking block
+    switch (reduced_y)
+    {
+        case 0:
+            return even_slice[reduced_x];
+        case 1:
+            return odd_slice[reduced_x];
+        case 2:
+            return even_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
+        case 3:
+            return odd_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
+    }
 }
 /**
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional

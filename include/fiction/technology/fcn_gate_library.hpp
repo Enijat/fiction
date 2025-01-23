@@ -208,7 +208,7 @@ class fcn_gate_library
      */
     static constexpr fcn_gate mirror_horizontal(const fcn_gate& g) noexcept
     {
-        return shift_left_once(reverse_rows(g));
+        return shift_left_once(reverse_columns_at_compiletime(g));
     }
     /**
      * Merges multiple `fcn_gate`s into one at compile time. This is intended to be used for wires. Unexpected behavior
@@ -230,6 +230,38 @@ class fcn_gate_library
                     if (!Technology::is_empty_cell(g[x][y]))
                     {
                         merged[x][y] = g[x][y];
+                    }
+                }
+            }
+        }
+
+        return merged;
+    }
+    /**
+     * Since the `std::vector` used in `merge()` is a `non-literal` but I need it to be,
+     * this does the exact same as `merge()`, just actually at compile time. (by using `std::array`)
+     * Also x and y are swappend in this method because the SiDB gates are constructed in such a way that each row is an array, instead of each array, which is how this class intends it to be.
+     * TODO -> One could implement a method that changes the way a gate is stored (from row arrays in a single column array to column array stored in a single row array) so that all the methods here are usable again. (method should be true `constexpr`!)
+     * 
+     * Merges two `fcn_gate`s into one at compile time. This is intended to be used for wires. Unexpected behavior
+     * can be caused, if more than one `fcn_gate` has a cell at the same position.
+     *
+     * @param gates Array of gates to be merged.
+     * @return Merged `fcn_gate`.
+     */
+    static constexpr fcn_gate merge_at_compiletime(const std::array<fcn_gate, 2>& gates) noexcept
+    {
+        auto merged = EMPTY_GATE;
+
+        for (auto x = 0ul; x < GateSizeX; x++)
+        {
+            for (auto y = 0ul; y < GateSizeY; y++)
+            {
+                for (const auto& g : gates)
+                {
+                    if (!Technology::is_empty_cell(g[y][x]))
+                    {
+                        merged[y][x] = g[y][x];
                     }
                 }
             }
@@ -311,6 +343,33 @@ class fcn_gate_library
         return rev_cols;
     }
     /**
+     * Since the `std::reverse` and `std::for_each` method used in `reverse_columns()` isn't a `constexpr` in the C++ version used here (17) and I need it to be (would be in 20),
+     * this does the exact same as `reverse_columns()`, just actually at compile time.
+     * Also x and y are swappend in this method because the SiDB gates are constructed in such a way that each row is an array, instead of each column, which is not how this class intends it to be.
+     * TODO -> One could implement a method that changes the way a gate is stored (from row arrays in a single column array to column array stored in a single row array) so that all the methods here are usable again. (method should be true `constexpr`!)
+     * 
+     * Reverses the columns of the given `fcn_gate` at compile time.
+     *
+     * @param g `fcn_gate` whose columns are to be reversed.
+     * @return `fcn_gate` with reversed columns.
+     */
+    static constexpr fcn_gate reverse_columns_at_compiletime(const fcn_gate& g) noexcept
+    {
+        fcn_gate rev_cols = g;
+
+        for (auto y = 0ul; y < GateSizeY; y++)
+        {
+            for (auto x = 0ul; x < GateSizeX / 2; x++)
+            {
+                auto temp = rev_cols[y][x];
+                rev_cols[y][x] = rev_cols[y][GateSizeY-1-x];
+                rev_cols[y][GateSizeY-1-x] = temp;
+            }
+        }
+
+        return rev_cols;
+    }
+    /**
      * Reverses the rows of the given `fcn_gate` at compile time.
      *
      * @param g `fcn_gate` whose rows are to be reversed.
@@ -326,6 +385,8 @@ class fcn_gate_library
     }
     /**
      * Shifts each value of the given `fcn_gate` at compile time one to the left, overflow is discarded and new places are filled with `cell_type::EMPTY`.
+     * This method was created for SiDB gates, so the x and y coordinate are swapped, since the SiDB gates are constructed in such a way that each row is an array,
+     * instead of each column, which is not how this class intends it to be.
      * 
      * @param `fcn_gate` to shift.
      * @return Shifted `fcn_gate`.
@@ -334,13 +395,13 @@ class fcn_gate_library
     {
         auto shifted = EMPTY_GATE;
 
-        for (auto y = 0ul; y < GateSizeY; ++y)
+        for (auto y = 0ul; y < GateSizeY; y++)
         {
-            for (auto x = 1ul; x < GateSizeX; ++x)
+            for (auto x = 1ul; x < GateSizeX; x++)
             {
-                shifted[x-1][y] = g[x][y];
+                shifted[y][x-1] = g[y][x-1];
             }
-            shifted[GateSizeX - 1][y] = Technology::cell_type::EMPTY;
+            shifted[y][GateSizeX - 1] = Technology::cell_type::EMPTY;
         }
 
         return shifted;

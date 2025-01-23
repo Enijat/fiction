@@ -5,8 +5,11 @@
 #ifndef FICTION_CMD_SUPERTILE_HPP
 #define FICTION_CMD_SUPERTILE_HPP
 
+//TODO check if I really need all of these
 #include <fiction/algorithms/physical_design/supertile.hpp>
+#include <fiction/layouts/clocked_layout.hpp>
 #include <fiction/traits.hpp>
+#include <fiction/types.hpp>
 
 #include <alice/alice.hpp>
 
@@ -57,7 +60,7 @@ class supertile_command : public command
 
         const auto apply_supertilezation = [](auto&& lyt_ptr) -> std::optional<fiction::hex_even_row_gate_clk_lyt>
         {
-            using Lyt = typename std::decay_t<decltype(lyt_ptr)>::element_type;
+            using Lyt = typename std::decay_t<decltype(lyt_ptr)>::element_type const&; //TODO find out why the const& worked and was required
 
             if constexpr (fiction::is_hexagonal_layout_v<Lyt>)
             {
