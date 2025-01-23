@@ -5,11 +5,11 @@
 #ifndef FICTION_SUPERTILE_HPP
 #define FICTION_SUPERTILE_HPP
 
-#include "fiction/traits.hpp"
 
 
 // TODO check if I really need all of these:
 #include "fiction/layouts/bounding_box.hpp"
+#include "fiction/traits.hpp"
 #include "fiction/types.hpp"
 #include "fiction/utils/name_utils.hpp"
 #include "fiction/utils/placement_utils.hpp"
@@ -25,6 +25,23 @@
 
 namespace fiction
 {
+namespace detail
+{
+    /**
+     * A modulo operation that will return the least positive residue instead of the remainder of the division.
+     * 
+     * `a mod b = c` <=> `c = mod(a,b)`
+     * 
+     * @param a number to be "divided"
+     * @param b "dividend"
+     * @return least positive residue 
+     */
+    inline static constexpr uint8_t mod(uint8_t a, uint8_t b) noexcept
+    {
+        int8_t remainder = static_cast<int8_t>(a) % static_cast<int8_t>(b);
+        return remainder >= 0 ? static_cast<uint8_t>(remainder) : static_cast<uint8_t>(remainder + b);
+    }
+}
 
 /**
  * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
@@ -64,21 +81,6 @@ static constexpr const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, 
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
 namespace detail
 {
-    /**
-     * A modulo operation that will return the least positive residue instead of the remainder of the division.
-     * 
-     * `a mod b = c` <=> `c = mod(a,b)`
-     * 
-     * @param a number to be "divided"
-     * @param b "dividend"
-     * @return least positive residue 
-     */
-    inline static constexpr const uint8_t mod(uint8_t a, uint8_t b) noexcept
-    {
-        int8_t remainder = a % b;
-        return remainder >= 0 ? remainder : remainder + b;
-    }
-
     /**
      * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
      * Offset will simple be added to the coordinates.
@@ -421,6 +423,9 @@ namespace detail
          */
     }
 
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wconversion"
+
     //TODO description (mention that it's perfectly space efficient (no empty or double spaces))
     uint8_t perfectHashFunction21(uint8_t A, uint8_t B, uint8_t C)
     {
@@ -452,6 +457,8 @@ namespace detail
             return 2*(A + B) - abs(A - B);
         }
     }
+
+    #pragma GCC diagnostic pop
 
     //static constexpr const 
 
