@@ -397,7 +397,7 @@ template <typename HexLyt>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 
-//TODO description (mention that it's perfectly space efficient (no empty or double spaces))
+//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and ignores input order of a and b
 uint8_t perfectHashFunction21(uint8_t A, uint8_t B, uint8_t C)
 {
     uint8_t b = mod((B - A), 6);
@@ -412,20 +412,21 @@ uint8_t perfectHashFunction21(uint8_t A, uint8_t B, uint8_t C)
     }
 }
 
-//TODO description (mention that it's perfectly space efficient (no empty or double spaces))
+//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and respects input order
 uint8_t perfectHashFunction11(uint8_t A, uint8_t B)
 {
+    uint8_t base = A > B ? 15 : 0;
     if ((A * B) == 2)
     {
-        return 12;
+        return 12 + base;
     }
     else if ((A + B) == 9)
     {
-        return 0;
+        return base;
     }
     else
     {
-        return 2*(A + B) - abs(A - B);
+        return 2*(A + B) - abs(A - B) + base;
     }
 }
 
