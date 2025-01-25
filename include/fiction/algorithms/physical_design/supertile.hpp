@@ -195,7 +195,8 @@ tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source
 
 /**
  * These reflect the possible directions in a pointy-top hexagonal layout.
- * They are additionally used to represent the positions in a supertile, in which case each value represents the position in the direction its name reflects, relative to the central position.
+ * They are additionally used to represent the positions in a supertile, in which case each
+ * value represents the position in the direction its name reflects, relative to the central position.
  */
 enum hex_direction {
     NE = 0, // values fixed because they are used in the hash functions
@@ -208,7 +209,15 @@ enum hex_direction {
     CORE
 };
 
-//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and ignores input order of a and b (explain or rename A, B and c to be more understandable)
+/**
+ * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
+ * to the range 0 to 59 without gaps and or overlaps. The order of the input values `B` and `C` is not relevant. 
+ * 
+ * @param A Can reflect the single output in a 2-in 1-out logic gate or the single input in a fanout.
+ * @param B Can reflect either of the two inputs in a 2-in 1-out logic gate or either of the two oupputs of a fanout.
+ * @param C Can reflect either of the two inputs in a 2-in 1-out logic gate or either of the two oupputs of a fanout.
+ * @return Hash result to be used in the respective lookup table.
+ */
 uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C)
 {
     uint8_t b = mod((B - A), 6);
@@ -223,7 +232,14 @@ uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C)
     }
 }
 
-//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and respects input order (explain or rename A, B and c to be more understandable)
+/**
+ * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
+ * to the range 0 to 29 without gaps and or overlaps.
+ * 
+ * @param A Can reflect the input of a wire or inverter.
+ * @param B Can reflect the output of a wire or inverter.
+ * @return Hash result to be used in the respective lookup table.
+ */
 uint8_t perfectHashFunction11(hex_direction A, hex_direction B)
 {
     uint8_t base = A > B ? 15 : 0;
@@ -242,13 +258,16 @@ uint8_t perfectHashFunction11(hex_direction A, hex_direction B)
 }
 
 #pragma GCC diagnostic pop
+
 /**
- * @brief TODO write description
+ * Utility function to find the required size of a supertile layout and the offset required for copying existing gates and wires, based on the original layout that is to be transformed.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
- * @param lyt 
- * @param size_x 
- * @param size_y 
+ * @param lyt Original layout that will should be transformed.
+ * @param size_x Pointer to where to write the required size in the x-dimension.
+ * @param size_y Pointer to where to write the required size in the y-dimension.
+ * @param offset_x Pointer to where to write the required offset in the x-dimension.
+ * @param offset_y Pointer to where to write the required offset in the y-dimension.
  */
 template <typename HexLyt>
 [[nodiscard]] void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_y, int64_t* offset_x, int64_t* offset_y) noexcept
