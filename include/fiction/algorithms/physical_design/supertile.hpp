@@ -55,10 +55,11 @@ inline static constexpr uint8_t mod(uint8_t a, uint8_t b) noexcept
  * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
  * Offset will simple be added to the coordinates.
  * 
- * @param tile original position
- * @param x_offset offset that is added to the x coordinate
- * @param y_offset offset that is added to the y coordinate
- * @return coodrinates which are translated into the supertile hex layout
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param tile Original position.
+ * @param x_offset Offset that is added to the x coordinate.
+ * @param y_offset Offset that is added to the y coordinate.
+ * @return Coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
 tile<HexLyt> super(tile<HexLyt> original_tile, int64_t x_offset, int64_t y_offset) noexcept
@@ -126,8 +127,9 @@ tile<HexLyt> super(tile<HexLyt> original_tile, int64_t x_offset, int64_t y_offse
  * If one already knows the target coordinates would be negative or if they should be moved closer to the border of the layout,
  * the super() method with offsets should be used.
  * 
- * @param tile original position
- * @return coodrinates which are translated into the supertile hex layout
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param tile Original position.
+ * @return Coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
 inline tile<HexLyt> super(tile<HexLyt> tile)
@@ -135,16 +137,17 @@ inline tile<HexLyt> super(tile<HexLyt> tile)
     return super(tile, 0, 0);
 }
 
-//TODO remove and also remove the methods I created for it in the other file
+//TODO remove and also remove the methods I created for it in the other file, IF I didn't use it
 /**
  * Utility function to copy the translation of a tile that was adjacent to a translated tile.
  * If the target tile was not adjacent no translation will be applied an the tile itself will be returned.
  * 
- * @param target_old tile that should copy the shift from the source
- * @param source_old old position of the source
- * @param source_super new position of the source that has been translated to the super clocking sceme
- * @param lyt hexagonal layout that houses the tiles
- * @return new position of the target that kept the same relative position to the source tile 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param target_old Tile that should copy the shift from the source.
+ * @param source_old Old position of the source.
+ * @param source_super New position of the source that has been translated to the super clocking sceme.
+ * @param lyt Hexagonal layout that houses the tiles.
+ * @return New position of the target that kept the same relative position to the source tile .
  */
 template <typename HexLyt>
 tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source_old, tile<HexLyt> source_super, HexLyt lyt) noexcept
@@ -187,23 +190,72 @@ tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source
     return target_old;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+
 /**
- * Utility function to inflate a hexagonal layout such that each tile is now encased by six new empty tiles.
- * Hexagonal layouts dimensions can't be bigger then "std::numeric_limits<int64_t>::max()".
- * TODO inputs und outputs beschreibung schreiben
+ * These reflect the possible directions in a pointy-top hexagonal layout.
+ * They are additionally used to represent the positions in a supertile, in which case each value represents the position in the direction its name reflects, relative to the central position.
+ */
+enum hex_direction {
+    NE = 0, // values fixed because they are used in the hash functions
+    E = 1,
+    SE = 2,
+    SW = 3,
+    W = 4,
+    NW = 5,
+    X, // represents invalid direction, used for spacing / filling
+    CORE
+};
+
+//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and ignores input order of a and b (explain or rename A, B and c to be more understandable)
+uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C)
+{
+    uint8_t b = mod((B - A), 6);
+    uint8_t c = mod((C - A), 6);
+    if ((b + c) == 9)
+    {
+        return 10*A + (12 - 5);
+    }
+    else
+    {
+        return 10*A + ((2*(b + c) - abs(b - c)) - 5);
+    }
+}
+
+//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and respects input order (explain or rename A, B and c to be more understandable)
+uint8_t perfectHashFunction11(hex_direction A, hex_direction B)
+{
+    uint8_t base = A > B ? 15 : 0;
+    if ((A * B) == 2)
+    {
+        return 12 + base;
+    }
+    else if ((A + B) == 9)
+    {
+        return base;
+    }
+    else
+    {
+        return 2*(A + B) - abs(A - B) + base;
+    }
+}
+
+#pragma GCC diagnostic pop
+/**
+ * @brief TODO write description
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param lyt 
+ * @param size_x 
+ * @param size_y 
  */
 template <typename HexLyt>
-[[nodiscard]] HexLyt grow_to_supertiles(const HexLyt& lyt) noexcept
+[[nodiscard]] void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_y, int64_t* offset_x, int64_t* offset_y) noexcept
 {
-    using namespace fiction;
-
-    //TODO have all the required static_asserts here
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-
-    //TODO have all the required runtime asserts here
     assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
     assert(lyt.y() <= std::numeric_limits<int64_t>::max());
-    assert(lyt.is_clocking_scheme(clock_name::AMY));
 
     // Search trough hexagonal layout to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
     int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
@@ -211,7 +263,7 @@ template <typename HexLyt>
     int64_t top_core_tile_y = std::numeric_limits<int64_t>::max();
     int64_t bottom_core_tile_y = std::numeric_limits<int64_t>::min();
     
-    lyt.foreach_node( //TODO maybe foreach_gate instead?
+    lyt.foreach_node(
         [&lyt, &leftmost_core_tile_x, &rightmost_core_tile_x, &top_core_tile_y, &bottom_core_tile_y](const auto& node)
         {
             const auto tile = lyt.get_tile(node);
@@ -238,215 +290,189 @@ template <typename HexLyt>
     }
 
     /*
-        * calculate the offset that
-        * A) keeps every supertile (so core and wires) in positive coordinates
-        * B) doesn't wastes to much space (meaning the coordinates are as small as possible)
-        * C) keeps the clocking such that the top left clock zone from the original is the same as the top left super clock zone
-        */
-        // clang-format off
+    * calculate the offset that
+    * A) keeps every supertile (so core and wires) in positive coordinates
+    * B) doesn't wastes to much space (meaning the coordinates are as small as possible)
+    * C) keeps the clocking such that the top left clock zone from the original is the same as the top left super clock zone
+    */
+    // clang-format off
 
-        static constexpr std::array<std::array<int8_t, 2u>, 56u> even_coord_slice{{
-                {{0,0}},{{1,0}},
-                {{-1,10}},{{0,10}},{{1,10}},{{2,10}},{{3,10}},{{4,10}},{{5,10}},{{6,10}},{{7,10}},
-                {{-2,6}},{{-1,6}},{{0,6}},{{1,6}},{{2,6}},{{3,6}},{{4,6}},{{5,6}},{{6,6}},{{7,6}},
-                {{-2,2}},{{-1,2}},{{0,2}},{{1,2}},{{2,2}},{{3,2}},{{4,2}},{{5,2}},{{6,2}},
-                {{4,12}},{{4,13}},
-                {{-4,8}},{{-3,8}},{{-2,8}},{{-1,8}},{{0,8}},{{1,8}},{{2,8}},{{3,8}},{{4,8}},{{5,8}},{{6,8}},{{7,8}},
-                {{-2,4}},{{-1,4}},{{0,4}},{{1,4}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{6,4}},{{7,4}},{{8,4}},{{9,4}}
-                }};
+    static constexpr std::array<std::array<int8_t, 2u>, 56u> even_coord_slice{{
+            {{0,0}},{{1,0}},
+            {{-1,10}},{{0,10}},{{1,10}},{{2,10}},{{3,10}},{{4,10}},{{5,10}},{{6,10}},{{7,10}},
+            {{-2,6}},{{-1,6}},{{0,6}},{{1,6}},{{2,6}},{{3,6}},{{4,6}},{{5,6}},{{6,6}},{{7,6}},
+            {{-2,2}},{{-1,2}},{{0,2}},{{1,2}},{{2,2}},{{3,2}},{{4,2}},{{5,2}},{{6,2}},
+            {{4,12}},{{4,13}},
+            {{-4,8}},{{-3,8}},{{-2,8}},{{-1,8}},{{0,8}},{{1,8}},{{2,8}},{{3,8}},{{4,8}},{{5,8}},{{6,8}},{{7,8}},
+            {{-2,4}},{{-1,4}},{{0,4}},{{1,4}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{6,4}},{{7,4}},{{8,4}},{{9,4}}
+            }};
 
-        static constexpr std::array<std::array<int8_t, 2u>, 56u> odd_coord_slice{{
-                {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
-                {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
-                {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
-                {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},{{8,3}},{{9,3}},
-                {{-3,9}},{{-2,9}},{{-1,9}},{{0,9}},{{1,9}},{{2,9}},{{3,9}},{{4,9}},{{5,9}},{{6,9}},{{7,9}},{{8,9}},
-                {{-1,5}},{{0,5}},{{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},{{6,5}},{{7,5}},{{8,5}},{{9,5}}
-                }};
+    static constexpr std::array<std::array<int8_t, 2u>, 56u> odd_coord_slice{{
+            {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
+            {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
+            {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
+            {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},{{8,3}},{{9,3}},
+            {{-3,9}},{{-2,9}},{{-1,9}},{{0,9}},{{1,9}},{{2,9}},{{3,9}},{{4,9}},{{5,9}},{{6,9}},{{7,9}},{{8,9}},
+            {{-1,5}},{{0,5}},{{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},{{6,5}},{{7,5}},{{8,5}},{{9,5}}
+            }};
 
-        // clang-format on
+    // clang-format on
 
-        // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
-        std::array<int8_t, 2u> relative_position = fiction::super_4x4_group_lookup<std::array<int8_t, 2u>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
-        
-        int8_t relative_x = relative_position[0];
-        int8_t relative_y = relative_position[1];
+    // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
+    std::array<int8_t, 2u> relative_position = fiction::super_4x4_group_lookup<std::array<int8_t, 2u>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
+    
+    int8_t relative_x = relative_position[0];
+    int8_t relative_y = relative_position[1];
 
-        // check if offset needs to be moved to ...
-        if (relative_x < 1/*1 instead of 0 to include future surrounding wires*/) // ... the next right super clock zone group (to stay in the positive coordinates)
+    // check if offset needs to be moved to ...
+    if (relative_x < 1/*1 instead of 0 to include future surrounding wires*/) // ... the next right super clock zone group (to stay in the positive coordinates)
+    {
+        relative_x += 10;
+        relative_y += 4;
+    }
+    if (relative_y > 10/*10 instead of 9 to include future surrounding wires*/) // ... the next upper super clock zone group (to safe some space)
+    {
+        relative_x += 3;
+        relative_y -= 10;
+    }
+
+    // calculate offset for translated tiles
+    int64_t x_offset = static_cast<int64_t>(relative_x) - leftmost_core_tile_x;
+    int64_t y_offset = static_cast<int64_t>(relative_y) - top_core_tile_y;
+
+    *size_x = rightmost_core_tile_x + 1 + x_offset;
+    *size_y = bottom_core_tile_y + 1 + y_offset;
+    *offset_x = x_offset;
+    *offset_y = y_offset;
+}
+
+/**
+ * Utility function that returns a tile next to the given one, based on the passed direction. Z position stays the same.
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param refference `tile` that gives the position to be refferenced in the hexagonal layout. 
+ * @param direction Direction in which the desired `tile` is positioned, relative to `refference`. 
+ * @return The desired `tile`.
+ */
+template <typename HexLyt>
+[[nodiscard]] tile<HexLyt> get_near_position(const tile<HexLyt> refference, hex_direction direction) noexcept
+{
+    assert(refference.x > 0);
+    assert(refference.y > 0);
+
+    uint64_t x = refference.x;
+    uint64_t y = refference.y;
+
+    switch (direction)
+    {
+    case NE:
+        y--;
+        if (refference.y % 2 == 0)
+            {x++;}
+        break;
+    case E:
+        x++;
+        break;
+    case SE:
+        y++;
+        if (refference.y % 2 == 0)
+            {x++;}
+        break;
+    case SW:
+        y++;
+        if (refference.y % 2 != 0)
+            {x--;}
+        break;
+    case W:
+        x--;
+        break;
+    case NW:
+        y--;
+        if (refference.y % 2 != 0)
+            {x--;}
+        break;
+    default:
+        x = refference.x;
+        y = refference.y;
+        break;
+    }
+
+    return tile<HexLyt>{x, y, refference.z};
+}
+
+/**
+ * Utility function that tries to place and connect a wire with the given positions. Will place another wire without incoming signal if the `input_position` has no node.
+ * If in it's own `position` a wire already exists, it will only connect the input.
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param lyt Layout that houses the tiles.
+ * @param position Position that the wire should have.
+ * @param input_position Position of the incomming signal to the wire.
+ * @return `true` if an unfinished wire was already present at the `position`, else `false`.
+ */
+template <typename HexLyt>
+[[nodiscard]] bool place_wire(const HexLyt& lyt, const tile<HexLyt> position, const tile<HexLyt> input_position) noexcept
+{   
+    const auto current_node = lyt.get_node(position);
+    const auto input_node = lyt.get_node(input_position);
+
+    if (current_node == 0)
+    {
+        if (input_node == 0) // the tile from which the signal should be coming is empty, so a unfinished wire will be placed there that will later be connected
         {
-            relative_x += 10;
-            relative_y += 4;
+            lyt.create_buf(lyt.create_node_from_literal({}, 2, input_position), position);
+        } else {
+            lyt.create_buf(lyt.make_signal(input_node), position);
         }
-        if (relative_y > 10/*10 instead of 9 to include future surrounding wires*/) // ... the next upper super clock zone group (to safe some space)
-        {
-            relative_x += 3;
-            relative_y -= 10;
-        }
+    }
+    else // the wire already exists, it only needs it's incoming signal
+    {
+        lyt.connect(lyt.make_signal(input_node), current_node);
+        return true;
+    }
 
-        // calculate offset for translated tiles
-        int64_t x_offset = static_cast<int64_t>(relative_x) - leftmost_core_tile_x;
-        int64_t y_offset = static_cast<int64_t>(relative_y) - top_core_tile_y;
+    return false;
+}
+}
 
-    // generate new hexagonal layout
-    uint64_t size_x = rightmost_core_tile_x + 1 + x_offset;
-    uint64_t size_y = bottom_core_tile_y + 1 + y_offset;
+/**
+ * @brief TODO write description
+ * 
+ * @tparam HexLyt 
+ * @param lyt 
+ * @return HexLyt 
+ */
+template <typename HexLyt>
+[[nodiscard]] HexLyt supertilezation(const HexLyt& lyt) noexcept
+{
+    //using namespace fiction; //TODO can I delete this?
+    static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
+    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+    assert(lyt.is_clocking_scheme(clock_name::AMY));
 
-    HexLyt super_lyt{{size_x, size_y, lyt.z()}, fiction::amy_supertile_clocking<HexLyt>(), lyt.get_layout_name()};
+    uint64_t size_x;
+    uint64_t size_y;
+    int64_t offset_x;
+    int64_t offset_y;
+    find_super_layout_size(lyt, &size_x, &size_y, &offset_x, &offset_y);
+    HexLyt super_lyt{{size_x, size_y, 1}, fiction::amy_supertile_clocking<HexLyt>(), lyt.get_layout_name()};
 
-    // copy tiles to new layout
-        //inputs
-        lyt.foreach_pi(
+    /** TODO: 
+     * SICHERSTELLEN DAS ICH DIE Z ACHSE RICHTIG BEHANDLE, ALSO ENTWEDER SICHERSTELLEN DAS ALLES IM INCOMING HEXLAYOUT AUF 0 IST
+     * ODER SICHERSTELLEN DAS ES KEINE ÜBERKREUZUNGEN GIBT UND DANN ALLES AUF 0 RUNTER SETZTEN (runtersetzen kann in super() passieren)
+     */
+
+    // replace all inputs
+    lyt.foreach_pi(
             [&lyt, &super_lyt, x_offset, y_offset](const auto& node)
             {
+                //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich da handlen?
                 const tile<HexLyt> old_tile = lyt.get_tile(node);
                 const tile<HexLyt> super_tile = super<HexLyt>(old_tile, x_offset, y_offset);
                 super_lyt.create_pi(lyt.get_name(lyt.get_node(old_tile)), super_tile);
             });
-
-        // normal gates/wires
-        lyt.foreach_node(
-            [&lyt, &super_lyt, x_offset, y_offset](const auto& node)
-            {
-                if (lyt.is_pi(node))
-                {
-                    return;
-                }
-
-                const tile<HexLyt> old_tile = lyt.get_tile(node);
-                const tile<HexLyt> super_tile = super<HexLyt>(old_tile, x_offset, y_offset);
-
-                if (const auto signals = lyt.incoming_data_flow(old_tile); signals.size() == 1) // FORME node is wire, fanout or inverter
-                {
-                    const auto old_signal = signals[0];
-                    const tile<HexLyt> super_signal = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(old_signal), old_tile, super_tile, lyt)));
-
-                    if (!lyt.is_po(node) and lyt.is_wire(node)) //TODO move is_po to check 10 lines above so it abortes earlier?
-                    {
-                        super_lyt.create_buf(super_signal, super_tile);
-                    } 
-                    else if (lyt.is_inv(node))
-                    {
-                        super_lyt.create_not(super_signal, super_tile);
-                    }
-                }
-                else if (signals.size() = 2)
-                {
-                    const auto signal_a = signals[0];
-                    const auto signal_b = signals[0];
-
-                    const tile<HexLyt> super_signal_a = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(signal_a), old_tile, super_tile, lyt)));
-                    const tile<HexLyt> super_signal_b = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(signal_b), old_tile, super_tile, lyt)));
-
-                    if (lyt.is_and(node))
-                    {
-                        super_lyt.create_and(super_signal_a, super_signal_b, super_tile);
-                    }
-                    else if (lyt.is_nand(node))
-                    {
-                        super_lyt.create_nand(super_signal_a, super_signal_b, super_tile);
-                    }
-                    else if (lyt.is_or(node))
-                    {
-                        super_lyt.create_or(super_signal_a, super_signal_b, super_tile);
-                    }
-                    else if (lyt.is_nor(node))
-                    {
-                        super_lyt.create_nor(super_signal_a, super_signal_b, super_tile);
-                    }
-                    else if (lyt.is_xor(node))
-                    {
-                        super_lyt.create_xor(super_signal_a, super_signal_b, super_tile);
-                    }
-                    else if (lyt.is_xnor(node))
-                    {
-                        super_lyt.create_xnor(super_signal_a, super_signal_b, super_tile);
-                    }
-                    else if (lyt.is_function(node))
-                    {
-                        const auto node_fun = lyt.node_function(node);
-
-                        super_lyt.create_node({super_signal_a, super_signal_b}, node_fun, super_tile);
-                    }
-                }
-            });
-
-        //ouputs
-        lyt.foreach_po(
-            [&lyt, &super_lyt, x_offset, y_offset](const auto& signal)
-            {
-                const tile<HexLyt> old_tile = lyt.get_tile(lyt.get_node(signal));
-                const tile<HexLyt> super_tile = super<HexLyt>(old_tile, x_offset, y_offset);
-
-                const auto old_signal = lyt.incoming_data_flow(old_tile)[0];
-                const tile<HexLyt> super_signal = super_lyt.make_signal(super_lyt.get_node(copy_super_translation<HexLyt>(static_cast<tile<HexLyt>>(old_signal), old_tile, super_tile, lyt)));
-                super_lyt.create_po(super_signal, lyt.get_name(lyt.get_node(old_tile)), super_tile);
-
-            });
-
-    //TODO maybe I can use "restore_names<CartLyt, HexLyt>(lyt, super_lyt);"
-    return super_lyt;
-    /**
-     * FORME: Methods that could be usefull:
-     * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
-     * - struct coord_t 
-     * - connect() (for connecting signals)
-     */
-}
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-
-//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and ignores input order of a and b
-uint8_t perfectHashFunction21(uint8_t A, uint8_t B, uint8_t C)
-{
-    uint8_t b = mod((B - A), 6);
-    uint8_t c = mod((C - A), 6);
-    if ((b + c) == 9)
-    {
-        return 10*A + (12 - 5);
-    }
-    else
-    {
-        return 10*A + ((2*(b + c) - abs(A -B)) - 5);
-    }
-}
-
-//TODO description (mention that it's perfectly space efficient (no empty or double spaces)) and respects input order
-uint8_t perfectHashFunction11(uint8_t A, uint8_t B)
-{
-    uint8_t base = A > B ? 15 : 0;
-    if ((A * B) == 2)
-    {
-        return 12 + base;
-    }
-    else if ((A + B) == 9)
-    {
-        return base;
-    }
-    else
-    {
-        return 2*(A + B) - abs(A - B) + base;
-    }
-}
-
-#pragma GCC diagnostic pop
-
-//static constexpr const 
-
-/**
- * Utility function to find a center tile orientation and according wires in the outer tiles
- * that represent the functionality and connection points of the original center tile, but the new tiles
- * all have existing SiDB implementations.
- * TODO inputs and outputs angeben
- * TODO mein github hier verlinken um zu dokumentieren wo die layouts her kommen
- */
-template <typename HexLyt>
-[[nodiscard]] HexLyt supertile_core_and_wire_generation(const HexLyt& lyt) noexcept
-{
-    assert(lyt.is_clocking_scheme(clock_name::AMY_SUPER)); // To catch if grow_to_supertiles() didn't work
-    assert(lyt.z() == 0); // Method doesn't handle wire crossings yet
-
+    //TODO am ende die z dimension nochmal checken und evtl wieder auf 0 setzen wenn möglich (mit resize()?)
     /**
      * FORME: Methods that could be usefull:
      * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
@@ -454,29 +480,7 @@ template <typename HexLyt>
      * - connect() (for connecting signals) (can also use move() without actually moving to update the children)
      */
 
-    //TODO have all the required static_assters here that I need
-    //FORME: Don't forget the hash method(s) I crafted
-    //TODO need to handle fanouts!
-    //TODO need to build new lookup table for inverters, (so 1 in 1 out but not all directions are available)
-    //TODO need to build new lookup table for primary input inverters (so just the straight ones, I can do that by hand)
-    //FORME: inputs können wohl auch inverter sein, 
-    return lyt;//TODO placeholder
-}
-
-    //TODO: (optional) write method for wire optimisation and call it in the right places
-}
-
-template <typename HexLyt>
-[[nodiscard]] HexLyt supertilezation(const HexLyt& lyt) noexcept
-{
-    using namespace fiction;
-
-    static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
-    return detail::supertile_core_and_wire_generation<HexLyt>(detail::grow_to_supertiles<HexLyt>(lyt));
-    //TODO make sure to catch every exception (mabye use "catch (...)" if I don't know what kind of errors there are) or maybe I should move thos to the CLI where it is actually executed ?!
+    
 }
 
 }

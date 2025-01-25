@@ -29,7 +29,7 @@ namespace fiction
 class sidb_extendagon_library : public sidb_bestagon_library
 {
   public:
-        explicit sidb_extendagon_library() = delete;
+    explicit sidb_extendagon_library() = delete;
 
     /**
      * Overrides the corresponding function in fcn_bestagon_library. Given a tile `t`, this function takes all necessary
@@ -69,19 +69,28 @@ class sidb_extendagon_library : public sidb_bestagon_library
                 {
                     if (lyt.is_ground_layer(t))
                     {
-                        // double wire
-                        if (const auto at = lyt.above(t); (t != at) && lyt.is_wire_tile(at))
+                        if (const auto at = lyt.above(t); (t != at) && lyt.is_wire_tile(at)) // double wire
                         {
                             const auto pa = determine_port_routing(lyt, at);
 
                             return DOUBLE_WIRE_MAP.at({p, pa});
                         }
-                        // regular wire
-
-                        return SINGLE_WIRE_MAP.at(p);
+                        else // regular wire
+                        {
+                            return SINGLE_WIRE_MAP.at(p);
+                        }
                     }
-
-                    return EMPTY_GATE;
+                    else
+                    {
+                        if (const auto at = lyt.below(t); (t != at) && lyt.is_wire_tile(at)) // double wire
+                        {
+                            return EMPTY_GATE; // so that double wires aren't returned for each of the two wires
+                        }
+                        else // regular wire
+                        {
+                            return SINGLE_WIRE_MAP.at(p);
+                        }
+                    }  
                 }
             }
             if constexpr (fiction::has_is_inv_v<GateLyt>)
