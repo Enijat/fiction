@@ -43,7 +43,7 @@ namespace detail
  * @param b "dividend"
  * @return least positive residue 
  */
-inline static constexpr uint8_t mod(uint8_t a, uint8_t b) noexcept
+[[nodiscard]] inline static constexpr uint8_t mod(uint8_t a, uint8_t b) noexcept
 {
     int8_t remainder = a % b;
     return remainder >= 0 ? remainder : remainder + b;
@@ -62,7 +62,7 @@ inline static constexpr uint8_t mod(uint8_t a, uint8_t b) noexcept
  * @return Coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y) noexcept
+[[nodiscard]] constexpr tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y) noexcept
 {
     // position a tile at 0,0 would have in the supertile hex layout
     int64_t new_x = 1 + offset_x;
@@ -132,7 +132,7 @@ tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_
  * @return Coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-inline tile<HexLyt> super(tile<HexLyt> tile)
+[[nodiscard]] inline constexpr tile<HexLyt> super(tile<HexLyt> tile)
 {
     return super(tile, 0, 0);
 }
@@ -150,7 +150,7 @@ inline tile<HexLyt> super(tile<HexLyt> tile)
  * @return New position of the target that kept the same relative position to the source tile .
  */
 template <typename HexLyt>
-tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source_old, tile<HexLyt> source_super, HexLyt lyt) noexcept
+[[nodiscard]] tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source_old, tile<HexLyt> source_super, HexLyt lyt) noexcept
 {
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
 
@@ -218,7 +218,7 @@ enum hex_direction {
  * @param C Can reflect either of the two inputs in a 2-in 1-out logic gate or either of the two oupputs of a fanout.
  * @return Hash result to be used in the respective lookup table.
  */
-uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C)
+[[nodiscard]] constexpr uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C) noexcept
 {
     uint8_t b = mod((B - A), 6);
     uint8_t c = mod((C - A), 6);
@@ -236,11 +236,11 @@ uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C)
  * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
  * to the range 0 to 29 without gaps and or overlaps.
  * 
- * @param A Can reflect the input of a wire or inverter.
- * @param B Can reflect the output of a wire or inverter.
+ * @param A Reflects the input of a wire or inverter.
+ * @param B Reflects the output of a wire or inverter.
  * @return Hash result to be used in the respective lookup table.
  */
-uint8_t perfectHashFunction11(hex_direction A, hex_direction B)
+[[nodiscard]] constexpr uint8_t perfectHashFunction11(hex_direction A, hex_direction B) noexcept
 {
     uint8_t base = A > B ? 15 : 0;
     if ((A * B) == 2)
@@ -366,15 +366,16 @@ template <typename HexLyt>
 }
 
 /**
- * Utility function that returns a tile next to the given one, based on the passed direction. Z position stays the same.
+ * Utility function that returns a tile next to the given one, based on the passed direction.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
  * @param refference `tile` that gives the position to be refferenced in the hexagonal layout. 
- * @param direction Direction in which the desired `tile` is positioned, relative to `refference`. 
- * @return The desired `tile`.
+ * @param direction Direction in which the requested `tile` is positioned, relative to `refference`. 
+ * @param z The z-position that the requested tile shoudl have.
+ * @return The requested `tile`.
  */
 template <typename HexLyt>
-[[nodiscard]] tile<HexLyt> get_near_position(const tile<HexLyt> refference, hex_direction direction) noexcept
+[[nodiscard]] constexpr tile<HexLyt> get_near_position(const tile<HexLyt> refference, hex_direction direction, uint64_t z) noexcept
 {
     assert(refference.x > 0);
     assert(refference.y > 0);
@@ -416,7 +417,7 @@ template <typename HexLyt>
         break;
     }
 
-    return tile<HexLyt>{x, y, refference.z};
+    return tile<HexLyt>{x, y, z};
 }
 
 /**
@@ -425,10 +426,10 @@ template <typename HexLyt>
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
  * @param refference `tile` that gives the position to be refferenced in the hexagonal layout. 
  * @param position Position of the other `tile`, defines the `hex_direction` from the refference tile. 
- * @return The desired `hex_direction`.
+ * @return The requested `hex_direction`.
  */
 template <typename HexLyt>
-[[nodiscard]] hex_direction get_near_direction(const tile<HexLyt> refference, const tile<HexLyt> position) noexcept
+[[nodiscard]] constexpr hex_direction get_near_direction(const tile<HexLyt> refference, const tile<HexLyt> position) noexcept
 {
     if (position.y < refference.y)
     {
@@ -510,7 +511,7 @@ template <typename HexLyt>
     return false;
 }
 
-static constexpr const std::array<std::array<std::array<int8_t,2>,10>,60> lookup_table_2in1out = {{
+static constexpr const std::array<std::array<std::array<hex_direction,2>,10>,60> lookup_table_2in1out = {{
 {{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SE, SW}}, {{SW, E}}, {{X, X}}, {{SE, SW}}, {{NE, SW}}, {{X, X}}, {{X, X}}}},
 {{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SW, W}}, {{X, X}}, {{SE, SW}}, {{NE, SW}}, {{X, X}}, {{X, X}}, {{X, X}}}},
 {{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{W, NW}}, {{SW, NW}}, {{X, X}}, {{SE, SW}}, {{NE, SW}}, {{X, X}}, {{X, X}}}},
@@ -572,7 +573,7 @@ static constexpr const std::array<std::array<std::array<int8_t,2>,10>,60> lookup
 {{{{SE, SW}}, {{X, X}}, {{SW, W}}, {{X, X}}, {{SE, SW}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
 {{{{SE, SW}}, {{X, X}}, {{W, NW}}, {{SW, NW}}, {{X, X}}, {{SE, SW}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}}}};
 
-static constexpr const std::array<std::array<std::array<int8_t,2>,10>,60> lookup_table_1in2out = {{
+static constexpr const std::array<std::array<std::array<hex_direction,2>,10>,60> lookup_table_1in2out = {{
 {{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}, {{X, X}}}},
 {{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
 {{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
@@ -634,7 +635,7 @@ static constexpr const std::array<std::array<std::array<int8_t,2>,10>,60> lookup
 {{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
 {{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}}}};
 
-static constexpr const std::array<std::array<std::array<int8_t,2>,3>,30> lookup_table_1in1out_WIRE = {{
+static constexpr const std::array<std::array<std::array<hex_direction,2>,3>,30> lookup_table_1in1out_WIRE = {{
 {{{{W, NW}}, {{CORE, W}}, {{NW, SE}}}},
 {{{{NE, E}}, {{CORE, NE}}, {{E, W}}}},
 {{{{NE, E}}, {{CORE, NE}}, {{SE, NW}}}},
@@ -666,7 +667,7 @@ static constexpr const std::array<std::array<std::array<int8_t,2>,3>,30> lookup_
 {{{{W, NW}}, {{CORE, W}}, {{SW, NE}}}},
 {{{{NW, NE}}, {{CORE, NW}}, {{SW, NE}}}}}};
 
-static constexpr const std::array<std::array<std::array<int8_t,2>,6>,30> lookup_table_1in1out_INVERTER = {{
+static constexpr const std::array<std::array<std::array<hex_direction,2>,6>,30> lookup_table_1in1out_INVERTER = {{
 {{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{CORE, SW}}, {{NW, SE}}, {{X, X}}}},
 {{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{E, SW}}, {{X, X}}}},
 {{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{X, X}}, {{X, X}}}},
@@ -710,29 +711,67 @@ static constexpr const std::array<std::array<std::array<int8_t,2>,6>,30> lookup_
  * @param offset_y Offset in y direction required for the translation of the `original_tile` to the super_lyt.
  * @param output_a If the supertile populated by this function has a ouput to another supertile which isn't populated yet,
  * this function will place the `hex_direction` of this other supertile at the location of this pointer.
- * @param output_b This pointer has the same functionallity as `output_a` and will be used if there is a second `hex_output` direction into another unpopulated supertile. 
- * @return `true` if a unknown gate/fanout was placed at `original_tile`, else `false`.
+ * @param output_b This pointer has the same functionallity as `output_a` and will only be used if there is a second `hex_output` direction into another unpopulated supertile. 
+ * @return `true` if a unknown gate/fanout was placed at `original_tile`, else `false`. This includes primary inputs.
  */
 template <typename HexLyt>
 [[nodiscard]] bool populate_supertile(const HexLyt& original_lyt, const HexLyt& super_lyt, const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, hex_direction* output_a, hex_direction* output_b) noexcept
 {
     const auto original_node = original_lyt.get_node(original_tile);
-    const auto incoming_signals = original_lyt.incoming_data_flow(original_tile); //TODO falls ich die signals selbst nicht gebraucht hab, sondern nur deren größe, dann kann ich auch fanin_size() und fanout_size() nutzen, sollte effizienter sein.
+    const auto incoming_signals = original_lyt.incoming_data_flow(original_tile);
     const auto outgoing_signals = original_lyt.outgoing_data_flow(original_tile);
 
     if (incoming_signals.size() == 1)
     {
         if (original_lyt.is_po(original_node))
         {
-            //original_node is primary output
+            //TODO later
         }
-        else if (outgoing_signals.size() == 1)
+        else if (original_lyt.is_wire(original_node))
         {
-            //original_node is wire or inverter
+            hex_direction in = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(incoming_signals[0]));
+            hex_direction out = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(outgoing_signals[0]));
+
+            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y);
+
+            std::array<std::array<int8_t,2>,3> lookup_table = lookup_table_1in1out_WIRE[perfectHashFunction11(in, out)];
+
+            // place input wire
+            const auto input_wire_position = get_near_position(core_tile, lookup_table[0][0], 0);
+            place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position(input_wire_position, lookup_table[0][1], 0));
+
+            // place core wire
+            place_wire<HexLyt>(super_lyt, core_tile, get_near_position(core_tile, lookup_table[1][1], 0));
+
+            // place output wire
+            const auto output_wire_position = get_near_position(core_tile, lookup_table[2][0], 0);
+            if (!place_wire<HexLyt>(super_lyt, output_wire_position, get_near_position(output_wire_position, lookup_table[2][1], 0)))
+            {
+                output_a* = lookup_table[2][0];
+            }
+        }
+        else if (original_lyt.is_inv(original_node))
+        {
+            hex_direction in = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(incoming_signals[0]));
+            hex_direction out = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(outgoing_signals[0]));
+
+            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y);
+
+            std::array<std::array<int8_t,2>,6> lookup_table = lookup_table_1in1out_INVERTER[perfectHashFunction11(in, out)];
+
+            // place input wires
+            while(true)
+            {
+                
+            }
+
+            // place inverter core
+
+            // place output wires
         }
         else if (outgoing_signals.size() == 2)
         {
-            //original_node is fanout
+            //FORME original_node is fanout
         }
         else
         {
@@ -741,12 +780,11 @@ template <typename HexLyt>
     }
     else if (incoming_signals.size() == 2 and outgoing_signals.size() == 1)
     {
-        //original_node is on of the following logic gates: OR, NOR, AND, NAND, XOR, XNOR
+        //FORME original_node is on of the following logic gates: OR, NOR, AND, NAND, XOR, XNOR
     }
     else{
         return true;
     }
-
     return false;
 }
 }
@@ -780,11 +818,6 @@ template <typename HexLyt>
      * da garantiert noch kein dummy wire in der entsprechenden supertile platziert worder sein kann.
      */
 
-    /** TODO: 
-     * SICHERSTELLEN DAS ICH DIE Z ACHSE RICHTIG BEHANDLE, ALSO ENTWEDER SICHERSTELLEN DAS ALLES IM INCOMING HEXLAYOUT AUF 0 IST
-     * ODER SICHERSTELLEN DAS ES KEINE ÜBERKREUZUNGEN GIBT UND DANN ALLES AUF 0 RUNTER SETZTEN (runtersetzen kann in super() passieren)
-     */
-
     // replace all inputs
     lyt.foreach_pi(
             [&lyt, &super_lyt, x_offset, y_offset](const auto& node)
@@ -801,10 +834,8 @@ template <typename HexLyt>
      * - struct coord_t 
      * - connect() (for connecting signals) (can also use move() without actually moving to update the children)
      */
-
     
 }
-
 }
 
 #endif  // FICTION_SUPERTILE_HPP
