@@ -420,6 +420,63 @@ template <typename HexLyt>
 }
 
 /**
+ * Utility function that returns the `hex_direction` in which an adjacent tile is relative to the refference tile. Z position is ignored.
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param refference `tile` that gives the position to be refferenced in the hexagonal layout. 
+ * @param position Position of the other `tile`, defines the `hex_direction` from the refference tile. 
+ * @return The desired `hex_direction`.
+ */
+template <typename HexLyt>
+[[nodiscard]] hex_direction get_near_direction(const tile<HexLyt> refference, const tile<HexLyt> position) noexcept
+{
+    if (position.y < refference.y)
+    {
+        if (position.x == refference.x)
+        {
+            if (refference.y % 2 == 0)
+                {return NW;}
+            else
+                {return NE;}
+        }
+        else
+        {
+            if (refference.y % 2 == 0)
+                {return NE;}
+            else
+                {return NW;}
+        }
+    }
+    else if (position.y == refference.y)
+    {
+        if (position.x > refference.x)
+            {return E;}
+        else if (position.x < refference.x)
+            {return W;}
+        else
+            {return CORE;}
+    }
+    else
+    {
+        if (position.x == refference.x)
+        {
+            if (refference.y % 2 == 0)
+                {return SW;}
+            else
+                {return SE;}
+        }
+        else
+        {
+            if (refference.y % 2 == 0)
+                {return SE;}
+            else
+                {return SW;}
+        }
+    }
+    return X;
+}
+
+/**
  * Utility function that tries to place and connect a wire with the given positions. Will place another wire without incoming signal if the `input_position` has no node.
  * If in it's own `position` a wire already exists, it will only connect the input.
  * 
