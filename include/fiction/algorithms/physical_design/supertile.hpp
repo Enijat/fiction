@@ -59,10 +59,11 @@ namespace detail
  * @param tile Original position.
  * @param offset_x Offset that is added to the x coordinate.
  * @param offset_y Offset that is added to the y coordinate.
+ * @param z z coordinate the translated `tile` should have.
  * @return Coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-[[nodiscard]] constexpr tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y) noexcept
+[[nodiscard]] constexpr tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, uint64_t z) noexcept
 {
     // position a tile at 0,0 would have in the supertile hex layout
     int64_t new_x = 1 + offset_x;
@@ -119,22 +120,38 @@ template <typename HexLyt>
             }
         }
     
-    return tile<HexLyt>{new_x, new_y, original_tile.z};
+    return tile<HexLyt>{new_x, new_y, z};
 }
 
 /**
  * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
+ * Offset will simple be added to the coordinates. z coordinate will stay stay the same.
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param tile Original position.
+ * @param offset_x Offset that is added to the x coordinate.
+ * @param offset_y Offset that is added to the y coordinate.
+ * @return Coodrinates which are translated into the supertile hex layout.
+ */
+template <typename HexLyt>
+[[nodiscard]] inline constexpr tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y) noexcept
+{
+    return super<HexLyt>(original_tile, offset_x, offset_y, original_tile.z)
+}
+
+/**
+ * Utility function to translate the original hex coodrinates into the new supertile hex coordinates. z coordinate will stay the same.
  * If one already knows the target coordinates would be negative or if they should be moved closer to the border of the layout,
  * the super() function with offsets should be used.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
- * @param tile Original position.
+ * @param original_tile Original position.
  * @return Coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-[[nodiscard]] inline constexpr tile<HexLyt> super(tile<HexLyt> tile)
+[[nodiscard]] inline constexpr tile<HexLyt> super(tile<HexLyt> original_tile)
 {
-    return super(tile, 0, 0);
+    return super(original_tile, 0, 0, original_tile.z);
 }
 
 //TODO remove and also remove the function I created for it in the other file, IF I didn't use it
@@ -732,9 +749,9 @@ template <typename HexLyt>
             hex_direction in = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(incoming_signals[0]));
             hex_direction out = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(outgoing_signals[0]));
 
-            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y);
+            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
 
-            std::array<std::array<int8_t,2>,3> lookup_table = lookup_table_1in1out_WIRE[perfectHashFunction11(in, out)];
+            std::array<std::array<hex_direction,2>,3> lookup_table = lookup_table_1in1out_WIRE[perfectHashFunction11(in, out)];
 
             // place input wire
             const auto input_wire_position = get_near_position(core_tile, lookup_table[0][0], 0);
@@ -755,19 +772,44 @@ template <typename HexLyt>
             hex_direction in = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(incoming_signals[0]));
             hex_direction out = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(outgoing_signals[0]));
 
-            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y);
+            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
 
-            std::array<std::array<int8_t,2>,6> lookup_table = lookup_table_1in1out_INVERTER[perfectHashFunction11(in, out)];
+            std::array<std::array<hex_direction,2>,6> lookup_table = lookup_table_1in1out_INVERTER[perfectHashFunction11(in, out)];
 
-            // place input wires
-            while(true)
+            uint8_t table_position = 0;
+            uint64_t last_z_position = 0;
+
+            // place input wires // TODO maybe I can reduce this code with do .. while () and get the first 3 lines also into the loop?
+            const auto first_input_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 0);
+            place_wire<HexLyt>(super_lyt, first_input_wire_position, get_near_position(first_input_wire_position, lookup_table[table_position][1], last_z_position));
+            table_position++;
+            while (lookup_table[table_position][0] != X)
             {
-                
+                const auto input_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 1);
+                place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position(input_wire_position, lookup_table[table_position][1], last_z_position));
+                last_z_position = 1;
+                table_position++;
             }
+            table_position++; // to skip the spacer
 
             // place inverter core
+            super_lyt.create_not(get_near_position(core_tile, lookup_table[table_position][1], last_z_position), core_tile);
+            last_z_position = 0;
+            table_position++;
 
             // place output wires
+            while (table_position < 5 && lookup_table[table_position + 1][0] != X)
+            {
+                const auto output_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 1);
+                place_wire<HexLyt>(super_lyt, output_wire_position, get_near_position(output_wire_position, lookup_table[table_position][1], last_z_position));
+                last_z_position = 1;
+                table_position++;
+            }
+            const auto last_output_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 0);
+            if (!place_wire<HexLyt>(super_lyt, last_output_wire_position, get_near_position(last_output_wire_position, lookup_table[table_position][1], last_z_position)))
+            {
+                output_a* = lookup_table[table_position][0];
+            }
         }
         else if (outgoing_signals.size() == 2)
         {
@@ -828,6 +870,11 @@ template <typename HexLyt>
                 super_lyt.create_pi(lyt.get_name(lyt.get_node(old_tile)), super_tile);
             });
     //TODO am ende die z dimension nochmal checken und evtl wieder auf 0 setzen wenn möglich (mit resize()?)
+    // FORME: ich kreiere einen vector in dem ich alle tiles speicher an denen man weiter arbeiten muss,
+    //und für alle inputs füge ich einen eintrag in diesen vector hinzu, genauso bei abzweigungen.
+    // beim rausnehmen eines neuen elements aus dem vektor erstmal checken ob das nicht doch schon bearbeitet wurde (könnte passieren wenn zwei inputs direkt in ein OR gate oder so gehen)
+    // ich bin fertig mit ersetzten wenn der vektor leer ist
+
     /**
      * FORME: Functions that could be usefull:
      * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
