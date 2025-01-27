@@ -651,66 +651,66 @@ static constexpr const std::array<std::array<std::array<hex_direction,2>,10>,60>
 {{{{SE, SW}}, {{X, X}}, {{W, NW}}, {{SW, NW}}, {{X, X}}, {{SE, SW}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}}}};
 
 static constexpr const std::array<std::array<std::array<hex_direction,2>,10>,60> lookup_table_1in2out = {{
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}, {{X, X}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}, {{X, X}}}},
-{{{{NE, E}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
-{{{{NE, E}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}}},
-{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
-{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}}},
-{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{SE, W}}}},
-{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}}},
-{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}}},
-{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}}},
-{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}}},
-{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
-{{{{SE, SW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{NE, X}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{SE, SW}}, {{X, X}}, {{SE, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{W, SE}}, {{NW, SW}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}, {{X, X}}}},
-{{{{SW, W}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}}},
-{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}}},
-{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{X, X}}}},
-{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{SW, E}}, {{X, X}}, {{NW, SE}}}},
-{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}}},
-{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{SE, W}}}},
-{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{X, X}}}},
-{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}}},
-{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}}},
-{{{{NW, NE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}, {{SW, X}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
-{{{{NW, NE}}, {{X, X}}, {{NW, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}}}};
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}, {{X, X}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}, {{X, X}}}},
+{{{{NE, E}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
+{{{{NE, E}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}}},
+{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
+{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}, {{X, X}}}},
+{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{SE, W}}}},
+{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}}},
+{{{{E, SE}}, {{NE, SE}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{NW, SW}}}},
+{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}}},
+{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}}},
+{{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
+{{{{SE, SW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{CORE, NE}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{SE, SW}}, {{X, X}}, {{CORE, SE}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{NW, E}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{W, NE}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{W, SE}}, {{NW, SW}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}, {{X, X}}}},
+{{{{SW, W}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}}},
+{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{X, X}}, {{X, X}}}},
+{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{X, X}}, {{NW, SE}}, {{X, X}}}},
+{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{SE, NE}}, {{SW, E}}, {{X, X}}, {{NW, SE}}}},
+{{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}, {{X, X}}}},
+{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{SE, W}}}},
+{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{X, X}}}},
+{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}}},
+{{{{W, NW}}, {{NW, SW}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}}},
+{{{{NW, NE}}, {{W, NE}}, {{SW, NW}}, {{X, X}}, {{CORE, SW}}, {{NE, SW}}, {{E, NW}}, {{X, X}}, {{NW, SE}}, {{NE, W}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{NE, SE}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{SE, W}}, {{X, X}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{E, SW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{SW, E}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
+{{{{NW, NE}}, {{X, X}}, {{CORE, NW}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}}}};
 
 static constexpr const std::array<std::array<std::array<hex_direction,2>,3>,30> lookup_table_1in1out_WIRE = {{
 {{{{W, NW}}, {{CORE, W}}, {{NW, SE}}}},
@@ -836,6 +836,9 @@ template <typename HexLyt>
 
             std::array<std::array<hex_direction,2>,6> lookup_table = lookup_table_1in1out_INVERTER[perfectHashFunction11(in, out)];
 
+            uint8_t table_position = 0;
+            uint64_t last_z_position = 0;
+
             // place input wires
             table_position = place_input_wires(super_lyt, core_tile, lookup_table, table_position);
 
@@ -846,9 +849,11 @@ template <typename HexLyt>
 
             // place output wires
             bool found_wire = false;
-            place_output_wires(super_lyt, ) //CONTINUE
-               hier found wire checken -> output_a* = out;
-            
+            place_output_wires(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+            if (found_wire)
+            {
+                output_a* = out;
+            }
         }
         else if (outgoing_signals.size() == 2) // original_node is fanout
         {
@@ -864,7 +869,27 @@ template <typename HexLyt>
             uint64_t last_z_position = 0;
 
             // place input wires
+            table_position = place_input_wires(super_lyt, core_tile, lookup_table, table_position);
 
+            // place fanout core
+            super_lyt.create_buf(get_near_position(core_tile, lookup_table[table_position][1], 1), core_tile);
+            last_z_position = 0;
+            table_position++;
+
+            // place output wires 1
+            bool found_wire = false;
+            table_position = place_output_wires(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+            if (found_wire)
+            {
+                output_a* = lookup_table[table_position - 2][0];
+            }
+            // place output wires 2
+            found_wire = false;
+            table_position = place_output_wires(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+            if (found_wire)
+            {
+                output_b* = lookup_table[table_position - 2][0];
+            }
         }
         else
         {
