@@ -33,6 +33,7 @@ namespace detail
 #pragma GCC diagnostic ignored "-Wconversion" 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+
 /**
  * A modulo operation that will return the least positive residue instead of the remainder of the division.
  * 
@@ -47,6 +48,7 @@ namespace detail
     int8_t remainder = a % b;
     return remainder >= 0 ? remainder : remainder + b;
 }
+
 #pragma GCC diagnostic pop
 #pragma GCC diagnostic pop
 
@@ -660,38 +662,6 @@ static constexpr const std::array<std::array<std::array<hex_direction,2>,9>,60> 
 {{{{NW, NE}}, {{X, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{X, X}}, {{X, X}}, {{X, X}}, {{X, X}}}},
 {{{{NW, NE}}, {{X, X}}, {{SE, NW}}, {{X, X}}, {{SW, NE}}, {{W, SE}}, {{X, X}}, {{X, X}}, {{X, X}}}}}};
 
-static constexpr const std::array<std::array<std::array<hex_direction,2>,3>,30> lookup_table_1in1out_WIRE = {{
-{{{{W, NW}}, {{CORE, W}}, {{NW, SE}}}},
-{{{{NE, E}}, {{CORE, NE}}, {{E, W}}}},
-{{{{NE, E}}, {{CORE, NE}}, {{SE, NW}}}},
-{{{{NE, E}}, {{CORE, NE}}, {{SW, NE}}}},
-{{{{NE, E}}, {{CORE, NE}}, {{W, E}}}},
-{{{{NE, E}}, {{CORE, NE}}, {{NW, SE}}}},
-{{{{E, SE}}, {{CORE, E}}, {{SW, NE}}}},
-{{{{E, SE}}, {{CORE, E}}, {{W, E}}}},
-{{{{E, SE}}, {{CORE, E}}, {{NW, SE}}}},
-{{{{SE, SW}}, {{CORE, SE}}, {{SW, NE}}}},
-{{{{SE, SW}}, {{CORE, SE}}, {{W, E}}}},
-{{{{SE, SW}}, {{CORE, SE}}, {{NW, SE}}}},
-{{{{E, SE}}, {{CORE, E}}, {{SE, NW}}}},
-{{{{SW, W}}, {{CORE, SW}}, {{W, E}}}},
-{{{{SW, W}}, {{CORE, SW}}, {{NW, SE}}}},
-{{{{NW, NE}}, {{CORE, NW}}, {{W, E}}}},
-{{{{E, SE}}, {{CORE, E}}, {{NE, SW}}}},
-{{{{SE, SW}}, {{CORE, SE}}, {{NE, SW}}}},
-{{{{SW, W}}, {{CORE, SW}}, {{NE, SW}}}},
-{{{{W, NW}}, {{CORE, W}}, {{NE, SW}}}},
-{{{{NW, NE}}, {{CORE, NW}}, {{NE, SW}}}},
-{{{{SW, W}}, {{CORE, SW}}, {{E, W}}}},
-{{{{W, NW}}, {{CORE, W}}, {{E, W}}}},
-{{{{NW, NE}}, {{CORE, NW}}, {{E, W}}}},
-{{{{SW, W}}, {{CORE, SW}}, {{SE, NW}}}},
-{{{{W, NW}}, {{CORE, W}}, {{SE, NW}}}},
-{{{{NW, NE}}, {{CORE, NW}}, {{SE, NW}}}},
-{{{{SE, SW}}, {{CORE, SE}}, {{E, W}}}},
-{{{{W, NW}}, {{CORE, W}}, {{SW, NE}}}},
-{{{{NW, NE}}, {{CORE, NW}}, {{SW, NE}}}}}};
-
 static constexpr const std::array<std::array<std::array<hex_direction,2>,5>,30> lookup_table_1in1out_INVERTER = {{
 {{{{W, NW}}, {{SW, NW}}, {{X, X}}, {{NW, SE}}, {{X, X}}}},
 {{{{NE, E}}, {{X, X}}, {{SE, NW}}, {{E, SW}}, {{X, X}}}},
@@ -750,7 +720,17 @@ template <typename HexLyt>
     {
         if (original_lyt.is_po(original_node))
         {
-            //TODO later
+            hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
+            
+            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+
+            // place input wire
+            const auto input_wire_position = get_near_position<HexLyt>(core_tile, in, 0);
+            place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position<HexLyt>(input_wire_position, (in + 1) % 6, 0));
+
+            // place output
+            super_lyt.create_po(input_wire_position, original_lyt.get_name(original_node), core_tile);
+
         }
         else if (original_lyt.is_wire(original_node))
         {
@@ -759,18 +739,16 @@ template <typename HexLyt>
 
             const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
 
-            std::array<std::array<hex_direction,2>,3> lookup_table = lookup_table_1in1out_WIRE[perfectHashFunction11(in, out)];
-
             // place input wire
-            const auto input_wire_position = get_near_position<HexLyt>(core_tile, lookup_table[0][0], 0);
-            place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position<HexLyt>(input_wire_position, lookup_table[0][1], 0));
+            const auto input_wire_position = get_near_position<HexLyt>(core_tile, in, 0);
+            place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position<HexLyt>(input_wire_position, (in + 1) % 6, 0));
 
             // place core wire
-            place_wire<HexLyt>(super_lyt, core_tile, get_near_position<HexLyt>(core_tile, lookup_table[1][1], 0));
+            place_wire<HexLyt>(super_lyt, core_tile, get_near_position<HexLyt>(core_tile, in, 0));
 
             // place output wire
-            const auto output_wire_position = get_near_position<HexLyt>(core_tile, lookup_table[2][0], 0);
-            if (!place_wire<HexLyt>(super_lyt, output_wire_position, get_near_position<HexLyt>(output_wire_position, lookup_table[2][1], 0)))
+            const auto output_wire_position = get_near_position<HexLyt>(core_tile, out, 0);
+            if (!place_wire<HexLyt>(super_lyt, output_wire_position, core_tile))
             {
                 output_a* = out; 
             }
