@@ -27,6 +27,7 @@ namespace fiction
 {
 // TODO after checking all -Wconversion errors and beeing finished, I should move the diagnostics-compiler info to the top and bottom of the file, so I don't have to repeat it everywhere I need it
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
+// TODO alle "layout" erwähnungen durch "gate-level layout" ersetzen ?!
 namespace detail
 {
 
@@ -154,7 +155,7 @@ template <typename HexLyt>
     return super(original_tile, 0, 0, original_tile.z);
 }
 
-//TODO remove and also remove the function I created for it in the other file, IF I didn't use it
+//TODO remove and also remove the functions I created for it in the other file, IF I didn't use it
 /**
  * Utility function to copy the translation of a tile that was adjacent to a translated tile.
  * If the target tile was not adjacent no translation will be applied an the tile itself will be returned.
@@ -528,6 +529,65 @@ template <typename HexLyt>
     return false;
 }
 
+/**
+ * Utility function that places one string of input wires in a supertile, whichs position is defined by the core `tile`.
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @tparam table_size Size of the lookup table that is passed.
+ * @param lyt Hexagonal gate-level supertile layout that will house the wires.
+ * @param core `tile` that represents the central position in a supertile.
+ * @param lookup_table Lookup table that defines the path the wires will take.
+ * @param table_position Position in the lookup table where the start of the current wire string is positioned.
+ * @return Returns the updated position in the lookup table that reflects the position of the next entity in the table.
+ */
+template <typename HexLyt, std::size_t table_size>
+[[nodiscard]] uint8_t place_input_wires(const HexLyt& lyt, const tile<HexLyt> core, const std::array<std::array<hex_direction,2>,table_size>& lookup_table, uint8_t table_position) noexcept
+{
+    uint8_t last_z_position = 0;
+    const auto first_input_wire_position = get_near_position(core, lookup_table[table_position][0], 0);
+    place_wire<HexLyt>(lyt, first_input_wire_position, get_near_position(first_input_wire_position, lookup_table[table_position][1], last_z_position));
+    table_position++;
+    while (lookup_table[table_position][0] != X)
+    {
+        const auto input_wire_position = get_near_position(core, lookup_table[table_position][0], 1);
+        place_wire<HexLyt>(lyt, input_wire_position, get_near_position(input_wire_position, lookup_table[table_position][1], last_z_position));
+        last_z_position = 1;
+        table_position++;
+    }
+    return ++table_position; // to skip the spacer
+}
+
+/**
+ * Utility function that places one string of output wires in a supertile, whichs position is defined by the core `tile`.
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @tparam table_size Size of the lookup table that is passed.
+ * @param lyt Hexagonal gate-level supertile layout that will house the wires.
+ * @param core `tile` that represents the central position in a supertile.
+ * @param lookup_table Lookup table that defines the path the wires will take.
+ * @param table_position Position in the lookup table where the start of the current wire string is positioned.
+ * @param found_wire Pointer to where this method will write `true` if an unfinished wire was already present at the position of the last wire placed by this function.
+ * @return Returns the updated position in the lookup table that reflects the position of the next entity in the table.
+ */
+template <typename HexLyt, std::size_t table_size>
+[[nodiscard]] uint8_t place_output_wires(const HexLyt& lyt, const tile<HexLyt> core, const std::array<std::array<hex_direction,2>,table_size>& lookup_table, uint8_t table_position, bool* found_wire) noexcept //This one also needs a pointer to a bool where it can write if it found a existing wire
+{
+    uint8_t last_z_position = 0;
+    while (table_position + 1 < table_size && lookup_table[table_position + 1][0] != X)
+    {
+        const auto output_wire_position = get_near_position(core, lookup_table[table_position][0], 1);
+        place_wire<HexLyt>(lyt, output_wire_position, get_near_position(output_wire_position, lookup_table[table_position][1], last_z_position));
+        last_z_position = 1;
+        table_position++;
+    }
+    const auto last_output_wire_position = get_near_position(core, lookup_table[table_position][0], 0);
+    if (!place_wire<HexLyt>(lyt, last_output_wire_position, get_near_position(last_output_wire_position, lookup_table[table_position][1], last_z_position)))
+    {
+        found_wire* = true;
+    }
+    return table_position + 2; // to skip the last placed wire and a potential spacer
+}
+
 static constexpr const std::array<std::array<std::array<hex_direction,2>,10>,60> lookup_table_2in1out = {{
 {{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SE, SW}}, {{SW, E}}, {{X, X}}, {{SE, SW}}, {{NE, SW}}, {{X, X}}, {{X, X}}}},
 {{{{E, SE}}, {{SE, NE}}, {{X, X}}, {{SW, W}}, {{X, X}}, {{SE, SW}}, {{NE, SW}}, {{X, X}}, {{X, X}}, {{X, X}}}},
@@ -764,7 +824,7 @@ template <typename HexLyt>
             const auto output_wire_position = get_near_position(core_tile, lookup_table[2][0], 0);
             if (!place_wire<HexLyt>(super_lyt, output_wire_position, get_near_position(output_wire_position, lookup_table[2][1], 0)))
             {
-                output_a* = lookup_table[2][0];
+                output_a* = out; 
             }
         }
         else if (original_lyt.is_inv(original_node))
@@ -776,21 +836,8 @@ template <typename HexLyt>
 
             std::array<std::array<hex_direction,2>,6> lookup_table = lookup_table_1in1out_INVERTER[perfectHashFunction11(in, out)];
 
-            uint8_t table_position = 0;
-            uint64_t last_z_position = 0;
-
-            // place input wires // TODO maybe I can reduce this code with do .. while () and get the first 3 lines also into the loop?
-            const auto first_input_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 0);
-            place_wire<HexLyt>(super_lyt, first_input_wire_position, get_near_position(first_input_wire_position, lookup_table[table_position][1], last_z_position));
-            table_position++;
-            while (lookup_table[table_position][0] != X)
-            {
-                const auto input_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 1);
-                place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position(input_wire_position, lookup_table[table_position][1], last_z_position));
-                last_z_position = 1;
-                table_position++;
-            }
-            table_position++; // to skip the spacer
+            // place input wires
+            table_position = place_input_wires(super_lyt, core_tile, lookup_table, table_position);
 
             // place inverter core
             super_lyt.create_not(get_near_position(core_tile, lookup_table[table_position][1], last_z_position), core_tile);
@@ -798,22 +845,26 @@ template <typename HexLyt>
             table_position++;
 
             // place output wires
-            while (table_position < 5 && lookup_table[table_position + 1][0] != X)
-            {
-                const auto output_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 1);
-                place_wire<HexLyt>(super_lyt, output_wire_position, get_near_position(output_wire_position, lookup_table[table_position][1], last_z_position));
-                last_z_position = 1;
-                table_position++;
-            }
-            const auto last_output_wire_position = get_near_position(core_tile, lookup_table[table_position][0], 0);
-            if (!place_wire<HexLyt>(super_lyt, last_output_wire_position, get_near_position(last_output_wire_position, lookup_table[table_position][1], last_z_position)))
-            {
-                output_a* = lookup_table[table_position][0];
-            }
+            bool found_wire = false;
+            place_output_wires(super_lyt, ) //CONTINUE
+               hier found wire checken -> output_a* = out;
+            
         }
-        else if (outgoing_signals.size() == 2)
+        else if (outgoing_signals.size() == 2) // original_node is fanout
         {
-            //FORME original_node is fanout
+            hex_direction in = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(incoming_signals[0]));
+            hex_direction out1 = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(outgoing_signals[0]));
+            hex_direction out2 = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(outgoing_signals[1]));
+
+            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+
+            std::array<std::array<hex_direction,2>,10> lookup_table = lookup_table_1in2out[perfectHashFunction21(in, out1, out2)];
+
+            uint8_t table_position = 0;
+            uint64_t last_z_position = 0;
+
+            // place input wires
+
         }
         else
         {
