@@ -543,40 +543,15 @@ class hexagonal_layout
         return c1 != c2 && north(c1) == c2;
     }
     /**
-     * Returns `true` iff coordinate `c2` is directly north-east of coordinate `c1`.
-     *
-     * @param c1 Base coordinate.
-     * @param c2 Coordinate to test for its location in relation to `c1`.
-     * @return `true` iff `c2` is directly north-east of `c1`.
-     */
-    [[nodiscard]] constexpr bool is_north_east_of(const OffsetCoordinateType& c1,
-                                                  const OffsetCoordinateType& c2) const noexcept
-    {
-        return c1 != c2 && north_east(c1) == c2;
-    }
-    /**
      * Returns `true` iff coordinate `c2` is directly east of coordinate `c1`.
      *
      * @param c1 Base coordinate.
      * @param c2 Coordinate to test for its location in relation to `c1`.
      * @return `true` iff `c2` is directly east of `c1`.
      */
-    [[nodiscard]] constexpr bool is_east_of(const OffsetCoordinateType& c1,
-                                            const OffsetCoordinateType& c2) const noexcept
+    [[nodiscard]] bool is_east_of(const OffsetCoordinateType& c1, const OffsetCoordinateType& c2) const noexcept
     {
         return c1 != c2 && east(c1) == c2;
-    }
-    /**
-     * Returns `true` iff coordinate `c2` is directly south-east of coordinate `c1`.
-     *
-     * @param c1 Base coordinate.
-     * @param c2 Coordinate to test for its location in relation to `c1`.
-     * @return `true` iff `c2` is directly south-east of `c1`.
-     */
-    [[nodiscard]] constexpr bool is_south_east_of(const OffsetCoordinateType& c1,
-                                                  const OffsetCoordinateType& c2) const noexcept
-    {
-        return c1 != c2 && south_east(c1) == c2;
     }
     /**
      * Returns `true` iff coordinate `c2` is directly south of coordinate `c1`.
@@ -585,22 +560,9 @@ class hexagonal_layout
      * @param c2 Coordinate to test for its location in relation to `c1`.
      * @return `true` iff `c2` is directly south of `c1`.
      */
-    [[nodiscard]] constexpr bool is_south_of(const OffsetCoordinateType& c1,
-                                             const OffsetCoordinateType& c2) const noexcept
+    [[nodiscard]] bool is_south_of(const OffsetCoordinateType& c1, const OffsetCoordinateType& c2) const noexcept
     {
         return c1 != c2 && south(c1) == c2;
-    }
-    /**
-     * Returns `true` iff coordinate `c2` is directly south-west of coordinate `c1`.
-     *
-     * @param c1 Base coordinate.
-     * @param c2 Coordinate to test for its location in relation to `c1`.
-     * @return `true` iff `c2` is directly south-west of `c1`.
-     */
-    [[nodiscard]] constexpr bool is_south_west_of(const OffsetCoordinateType& c1,
-                                                  const OffsetCoordinateType& c2) const noexcept
-    {
-        return c1 != c2 && south_west(c1) == c2;
     }
     /**
      * Returns `true` iff coordinate `c2` is directly west of coordinate `c1`.
@@ -613,18 +575,6 @@ class hexagonal_layout
                                             const OffsetCoordinateType& c2) const noexcept
     {
         return c1 != c2 && west(c1) == c2;
-    }
-    /**
-     * Returns `true` iff coordinate `c2` is directly north-west of coordinate `c1`.
-     *
-     * @param c1 Base coordinate.
-     * @param c2 Coordinate to test for its location in relation to `c1`.
-     * @return `true` iff `c2` is directly north-west of `c1`.
-     */
-    [[nodiscard]] constexpr bool is_north_west_of(const OffsetCoordinateType& c1,
-                                                  const OffsetCoordinateType& c2) const noexcept
-    {
-        return c1 != c2 && north_west(c1) == c2;
     }
     /**
      * Returns `true` iff coordinate `c2` is either north, north-east, east, south-east, south, south-west, west, or
