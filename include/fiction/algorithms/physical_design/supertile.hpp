@@ -5,8 +5,6 @@
 #ifndef FICTION_SUPERTILE_HPP
 #define FICTION_SUPERTILE_HPP
 
-
-
 // TODO check if I really need all of these:
 #include "fiction/layouts/bounding_box.hpp"
 #include "fiction/traits.hpp"
@@ -153,59 +151,6 @@ template <typename HexLyt>
 [[nodiscard]] inline constexpr tile<HexLyt> super(tile<HexLyt> original_tile)
 {
     return super<HexLyt>(original_tile, 0, 0, original_tile.z);
-}
-
-//TODO remove and also remove the functions I created for it in the other file, IF I didn't use it
-/**
- * Utility function to copy the translation of a tile that was adjacent to a translated tile.
- * If the target tile was not adjacent no translation will be applied an the tile itself will be returned.
- * 
- * @tparam HexLyt Even-row hexagonal gate-level layout return type.
- * @param target_old Tile that should copy the shift from the source.
- * @param source_old Old position of the source.
- * @param source_super New position of the source that has been translated to the super clocking sceme.
- * @param lyt Hexagonal layout that houses the tiles.
- * @return New position of the target that kept the same relative position to the source tile .
- */
-template <typename HexLyt>
-[[nodiscard]] tile<HexLyt> copy_super_translation(tile<HexLyt> target_old, tile<HexLyt> source_old, tile<HexLyt> source_super, HexLyt lyt) noexcept
-{
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-
-    if (lyt.is_north_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.north(source_super));
-    }
-    if (lyt.is_north_east_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.north_east(source_super));
-    }
-    if (lyt.is_east_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.east(source_super));
-    }
-    if (lyt.is_south_east_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.south_east(source_super));
-    }
-    if (lyt.is_south_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.south(source_super));
-    }
-    if (lyt.is_south_west_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.south_west(source_super));
-    }
-    if (lyt.is_west_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.west(source_super));
-    }
-    if (lyt.is_north_west_of(source_old, target_old))
-    {
-        return static_cast<tile<HexLyt>>(lyt.north_west(source_super));
-    }
-
-    return target_old;
 }
 
 #pragma GCC diagnostic push
