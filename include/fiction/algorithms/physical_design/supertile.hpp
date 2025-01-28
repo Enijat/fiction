@@ -26,6 +26,7 @@ namespace fiction
 // TODO after checking all -Wconversion errors and beeing finished, I should move the diagnostics-compiler info to the top and bottom of the file, so I don't have to repeat it everywhere I need it
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
 // TODO alle "layout" erwähnungen durch "gate-level layout" ersetzen ?!
+// TODO coordinates und positions einheitlich verwenden
 namespace detail
 {
 
@@ -775,7 +776,7 @@ template <typename HexLyt>
             // place output wires
             bool found_wire = false;
             place_output_wires<HexLyt,5>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
-            if (found_wire)
+            if (!found_wire)
             {
                 output_a* = out;
             }
@@ -803,14 +804,14 @@ template <typename HexLyt>
             // place output wires 1
             bool found_wire = false;
             table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
-            if (found_wire)
+            if (!found_wire)
             {
                 output_a* = lookup_table[table_position - 2][0];
             }
             // place output wires 2
             found_wire = false;
             table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
-            if (found_wire)
+            if (!found_wire)
             {
                 output_b* = lookup_table[table_position - 2][0];
             }
@@ -876,7 +877,7 @@ template <typename HexLyt>
         // place output wires
         bool found_wire = false;
         place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
-        if (found_wire)
+        if (!found_wire)
         {
             output_a* = lookup_table[table_position - 2][0];
         }
@@ -887,59 +888,100 @@ template <typename HexLyt>
     }
     return false;
 }
-}
 
 /**
- * @brief TODO write description
+ * Utility function that adds a tile to a vector of tiles, but only if there is no tile with the same x and y coordinates present.
  * 
- * @tparam HexLyt 
- * @param lyt 
- * @return HexLyt 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param vector Vector to which the tile will be added.
+ * @param tile Tile to be added.
  */
 template <typename HexLyt>
-[[nodiscard]] HexLyt supertilezation(const HexLyt& lyt) noexcept
+void add_unique(const std::vector<tile<HexLyt>>& vector, const tile<HexLyt> tile) noexcept
 {
-    //using namespace fiction; //TODO can I delete this?
+    const auto pos = std::find(vector.begin(), vector.end(), 
+        [](const tile<HexLyt>& existing_tile) noexcept
+        {
+            return existing_tile.x == tile.x && existing_tile.y == tile.y;
+        });
+
+    if (pos == vector.end())
+    {
+        vector.push_back(tile);
+    }
+}
+}
+
+
+/**
+ * Transform a AMY-clocked hexagonal even-row gate-level layout into a AMYSUPER-clocked hexagonal even-row gate-level layout
+ * that only contains gates that can be realised with gates/wires from the SiDB extendagon gate library.
+ * This algorithm was proposed in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
+ * 
+ * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @param original_lyt the gate-level layout that is to be transformed.
+ * @return Either to new supertile gate-level layout or the original layout if something went wrong.
+ */
+template <typename HexLyt>
+[[nodiscard]] HexLyt supertilezation(const HexLyt& original_lyt) noexcept
+{
     static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
     static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-    assert(lyt.is_clocking_scheme(clock_name::AMY));
+    assert(original_lyt.is_clocking_scheme(clock_name::AMY));
+    assert(original_lyt.z() == 0);
 
     uint64_t size_x;
     uint64_t size_y;
     int64_t offset_x;
     int64_t offset_y;
-    find_super_layout_size<HexLyt>(lyt, &size_x, &size_y, &offset_x, &offset_y);
-    HexLyt super_lyt{{size_x, size_y, 1}, fiction::amy_supertile_clocking<HexLyt>(), lyt.get_layout_name()};
+    detail::find_super_layout_size<HexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y);
+    HexLyt super_lyt{{size_x, size_y, 1}, fiction::amy_supertile_clocking<HexLyt>(), original_lyt.get_layout_name()};
+    std::vector<tile<HexLyt>> path_beginnings;
 
-    /**
-     * FORME:
-     * Erst alle inputs machen und dann nochmal durch alle inputs laufen und die platzierung der supertiles anstoßen, damit ich das platzieren von inputs nicht speziell behandlen muss,
-     * da garantiert noch kein dummy wire in der entsprechenden supertile platziert worder sein kann.
-     */
-
-    // replace all inputs
-    lyt.foreach_pi(
-            [&lyt, &super_lyt, x_offset, y_offset](const auto& node)
+    // replace all inputs and save their output tile
+    original_lyt.foreach_pi(
+            [&original_lyt, &super_lyt, x_offset, y_offset](const auto& node)
             {
-                //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich da handlen?
-                const tile<HexLyt> old_tile = lyt.get_tile(node);
-                const tile<HexLyt> super_tile = super<HexLyt>(old_tile, x_offset, y_offset);
-                super_lyt.create_pi(lyt.get_name(lyt.get_node(old_tile)), super_tile);
+                //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich das handlen?
+                const auto original_tile = original_lyt.get_tile(node);
+                const auto super_tile = detail::super<HexLyt>(original_tile, x_offset, y_offset);
+                super_lyt.create_pi(original_lyt.get_name(original_lyt.get_node(original_tile)), super_tile);
+                const auto original_output_position = original_lyt.outgoing_data_flow(original_tile)[0];
+                const auto super_output_wire_position = detail::get_near_position<HexLyt>(super_tile, detail::get_near_direction<HexLyt>(original_tile, original_output_position), 0);
+                super_lyt.create_buf(super_lyt.make_signal(super_tile), super_output_wire_position);
+                detail::add_unique<HexLyt>(path_beginnings, original_output_position);
             });
-    //TODO am ende die z dimension nochmal checken und evtl wieder auf 0 setzen wenn möglich (mit resize()?)
-    // FORME: ich kreiere einen vector in dem ich alle tiles speicher an denen man weiter arbeiten muss,
-    //und für alle inputs füge ich einen eintrag in diesen vector hinzu, genauso bei abzweigungen.
-    // beim rausnehmen eines neuen elements aus dem vektor erstmal checken ob das nicht doch schon bearbeitet wurde (könnte passieren wenn zwei inputs direkt in ein OR gate oder so gehen)
-    // ich bin fertig mit ersetzten wenn der vektor leer ist
 
-    /**
-     * FORME: Functions that could be usefull:
-     * - "ground_coordinates" for iteration over a range of hex tiles (has default mode for whole matrix)
-     * - struct coord_t 
-     * - connect() (for connecting signals) (can also use move() without actually moving to update the children)
-     */
-    
+    while (!path_beginnings.empty())
+    {
+        auto current_original_tile = path_beginnings.pop_back();
+
+        while (true)
+        {
+            detail::hex_direction output_a = detail::hex_direction::X;
+            detail::hex_direction output_b = detail::hex_direction::X;
+            if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b))
+            {
+                return original_lyt; // Error, so the process was aborted
+            }
+            if (output_a == detail::hex_direction::X) // path is finished
+            {
+                break;
+            }
+            else if (output_b == detail::hex_direction::X) // path continues on one path
+            {
+                current_original_tile = detail::get_near_position<HexLyt>(current_original_tile, output_a, 0);
+            }
+            else // path splits up
+            {
+                current_original_tile = detail::get_near_position<HexLyt>(current_original_tile, output_a, 0);
+                detail::add_unique<HexLyt>(path_beginnings, detail::get_near_position<HexLyt>(current_original_tile, output_b, 0));
+            }
+        }
+    }
+
+    //TODO OPTIONAL: am ende die z dimension nochmal checken und evtl wieder auf 0 setzen wenn möglich (mit resize()?)    
 }
 }
 
