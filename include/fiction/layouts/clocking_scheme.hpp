@@ -756,17 +756,18 @@ template <typename ArrayType>
 static constexpr const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
 {
     // reduce to repeating block coordinates
-    uint8_t reduced_x = x % 56;
-    uint8_t reduced_y = y % 112;
+    uint8_t reduced_x = static_cast<uint8_t>(x % 56);
+    uint8_t reduced_y = static_cast<uint8_t>(y % 112);
 
     // translate into top row coordinates
-    reduced_x = (reduced_x - 10 * static_cast<uint8_t>(reduced_y / 4)) % 56;
+    reduced_x = static_cast<uint8_t>((reduced_x - 10u * static_cast<uint8_t>(reduced_y / 4)) % 56);
     reduced_x = reduced_x >= 0 ? reduced_x : reduced_x + 56;
     reduced_y = reduced_y % 4;
 
     // look up by traversing one super tile clocking block
     switch (reduced_y)
     {
+        default: // to get rid of compiler warning
         case 0:
             return even_slice[reduced_x];
         case 1:
@@ -790,7 +791,7 @@ static auto amy_supertile_clocking() noexcept
 {
     // clang-format off
 
-    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> even_slice{{
+    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 56u> even_slice{{
         0, 0,
         3, 3, 1, 1, 1, 0, 0, 2, 2,
         1, 1, 1, 2, 2, 0, 0, 3, 3, 3,
@@ -800,7 +801,7 @@ static auto amy_supertile_clocking() noexcept
         2, 2, 1, 1, 1, 0, 0, 2, 2, 3, 3, 3
         }};
 
-    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clocknumber,56u> odd_slice{{
+    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 56u> odd_slice{{
         0, 0, 0, 1, 1,
         1, 1, 0, 0, 0,
         0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3,
@@ -814,7 +815,7 @@ static auto amy_supertile_clocking() noexcept
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
         {
-            return super_4x4_group_lookup<clocking_scheme<clock_zone<Lyt>>::clock_function>(cz.x, cz.y, even_slice, odd_slice);
+            return super_4x4_group_lookup<typename clocking_scheme<clock_zone<Lyt>>::clock_number>(cz.x, cz.y, even_slice, odd_slice);
         };
 
     return clocking_scheme{clock_name::AMY_SUPER,
@@ -903,7 +904,9 @@ std::optional<clocking_scheme<clock_zone<Lyt>>> get_clocking_scheme(const std::s
         {clock_name::ESR, esr_clocking<Lyt>()},
         {clock_name::CFE, cfe_clocking<Lyt>()},
         {clock_name::RIPPLE, ripple_clocking<Lyt>()},
-        {clock_name::BANCS, bancs_clocking<Lyt>()}};
+        {clock_name::BANCS, bancs_clocking<Lyt>()},
+        {clock_name::AMY, amy_clocking<Lyt>()},
+        {clock_name::AMY_SUPER, amy_supertile_clocking<Lyt>()}};
 
     std::string upper_name = name.data();
     std::transform(upper_name.begin(), upper_name.end(), upper_name.begin(), ::toupper);
