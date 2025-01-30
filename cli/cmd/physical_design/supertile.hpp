@@ -49,22 +49,28 @@ class supertile_command : public command
         const auto& lyt = gls.current();
 
         const auto check_clocking_scheme_pattern = [](auto&& lyt_ptr)
-        { return lyt_ptr->is_clocking_scheme(fiction::clock_name::AMY); };
+        { return lyt_ptr->is_clocking_scheme(fiction::clock_name::AMY) || lyt_ptr->is_clocking_scheme(fiction::clock_name::ROW); };
 
-        // error case: layout is not AMY-clocked
-        if (const auto is_amy_clocked = std::visit(check_clocking_scheme_pattern, lyt); !is_amy_clocked)
+        if (const auto is_correctly_clocked = std::visit(check_clocking_scheme_pattern, lyt); !is_correctly_clocked)
         {
-            env->out() << "[e] layout has to be AMY-clocked" << std::endl;
+            env->out() << "[e] layout has to be clocked with one of the following schemes: AMY, ROW" << std::endl;
             return;
         }
 
         const auto apply_supertilezation = [](auto&& lyt_ptr) -> std::optional<fiction::hex_even_row_gate_clk_lyt>
         {
-            using Lyt = typename std::decay_t<decltype(lyt_ptr)>::element_type const&; //TODO find out why the const& worked and was required
+            using Lyt = typename std::decay_t<decltype(lyt_ptr)>::element_type;
 
             if constexpr (fiction::is_hexagonal_layout_v<Lyt>)
             {
-                return fiction::supertilezation<fiction::hex_even_row_gate_clk_lyt>(*lyt_ptr);
+                if constexpr (fiction::has_even_row_hex_arrangement_v<Lyt>)
+                {
+                    return fiction::supertilezation<fiction::hex_even_row_gate_clk_lyt>(*lyt_ptr);
+                }
+                else
+                {
+                    std::cout << "[e] layout has to be even_row" << std::endl;
+                }
             }
             else
             {

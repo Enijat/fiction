@@ -36,7 +36,7 @@ class cell_command : public command
             command(e, "Compiles the current gate layout in store down to a cell-level layout. A gate library must be "
                        "specified in order to instruct the algorithm how to map gate tiles to cell blocks.")
     {
-        add_option("--library,-l", library, "Gate library to use for mapping {QCA-ONE, ToPoliNano, Bestagon}", true);
+        add_option("--library,-l", library, "Gate library to use for mapping {QCA-ONE, ToPoliNano, Bestagon, Extendagon}", true);
     }
 
   protected:

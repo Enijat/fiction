@@ -170,6 +170,7 @@ inline constexpr const char* RIPPLE        = "RIPPLE";
 inline constexpr const char* BANCS         = "BANCS";
 inline constexpr const char* AMY           = "AMY";
 inline constexpr const char* AMY_SUPER     = "AMYSUPER";
+inline constexpr const char* ROW_SUPER     = "ROWSUPER";
 
 }  // namespace clock_name
 
@@ -742,6 +743,96 @@ static auto amy_clocking() noexcept
                             4u,
                             true};
 }
+
+//TODO description + explanation
+template <typename HexLyt>
+static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_even_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
+{
+    static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
+    //static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout"); //TODO why does this fail?
+    //static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number d = scheme(clock_zone<HexLyt>{3, 0});
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number e = scheme(clock_zone<HexLyt>{0, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number f = scheme(clock_zone<HexLyt>{1, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number g = scheme(clock_zone<HexLyt>{2, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number h = scheme(clock_zone<HexLyt>{3, 1});
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number i = scheme(clock_zone<HexLyt>{0, 2});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number j = scheme(clock_zone<HexLyt>{1, 2});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number k = scheme(clock_zone<HexLyt>{2, 2});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number l = scheme(clock_zone<HexLyt>{3, 2});
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number m = scheme(clock_zone<HexLyt>{0, 3});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number n = scheme(clock_zone<HexLyt>{1, 3});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number o = scheme(clock_zone<HexLyt>{2, 3});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number p = scheme(clock_zone<HexLyt>{3, 3});
+    
+    // clang-format off
+
+    const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> even_slice{{
+    a, a,
+    n, n, o, o, o, p, p, l, l,
+    i, i, i, j, j, g, g, h, h, h,
+    e, e, a, a, b, b, b, c, c,
+    p, p,
+    m, m, m, n, n, j, j, k, k, k, l, l,
+    e, e, f, f, f, g, g, c, c, d, d, d
+    }};
+
+    // clang-format on
+
+    return even_slice;
+}
+
+//TODO description + explanation
+template <typename HexLyt>
+static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_odd_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
+{
+    static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
+    //static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout"); //TODO why does this fail?
+    //static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number d = scheme(clock_zone<HexLyt>{3, 0});
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number e = scheme(clock_zone<HexLyt>{0, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number f = scheme(clock_zone<HexLyt>{1, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number g = scheme(clock_zone<HexLyt>{2, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number h = scheme(clock_zone<HexLyt>{3, 1});
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number i = scheme(clock_zone<HexLyt>{0, 2});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number j = scheme(clock_zone<HexLyt>{1, 2});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number k = scheme(clock_zone<HexLyt>{2, 2});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number l = scheme(clock_zone<HexLyt>{3, 2});
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number m = scheme(clock_zone<HexLyt>{0, 3});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number n = scheme(clock_zone<HexLyt>{1, 3});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number o = scheme(clock_zone<HexLyt>{2, 3});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number p = scheme(clock_zone<HexLyt>{3, 3});
+    
+    // clang-format off
+
+    const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> odd_slice{{
+        a, a, a, b, b,
+        o, o, p, p, p,
+        m, m, i, i, j, j, j, k, k, h, h,
+        e, e, e, f, f, b, b, c, c, c, d, d,
+        m, m, n, n, n, o, o, k, k, l, l, l,
+        i, i, f, f, g, g, g, h, h, d, d
+        }};
+
+    // clang-format on
+
+    return odd_slice;
+}
+
 /**
  * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
  * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
@@ -791,7 +882,8 @@ static auto amy_supertile_clocking() noexcept
 {
     // clang-format off
 
-    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 56u> even_slice{{
+    //TODO remove if it worked
+    /*static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 56u> even_slice{{
         0, 0,
         3, 3, 1, 1, 1, 0, 0, 2, 2,
         1, 1, 1, 2, 2, 0, 0, 3, 3, 3,
@@ -808,20 +900,37 @@ static auto amy_supertile_clocking() noexcept
         2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 3, 3,
         0, 0, 3, 3, 3, 1, 1, 3, 3, 2, 2, 2,
         1, 1, 1, 1, 0, 0, 0, 3, 3, 3, 3
-        }};
+        }};*/
 
     // clang-format on
 
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
         {
-            return super_4x4_group_lookup<typename clocking_scheme<clock_zone<Lyt>>::clock_number>(cz.x, cz.y, even_slice, odd_slice);
+            return super_4x4_group_lookup<typename clocking_scheme<clock_zone<Lyt>>::clock_number>(cz.x, cz.y, generate_even_slice<Lyt>(amy_clocking<Lyt>()), generate_odd_slice<Lyt>(amy_clocking<Lyt>()));
         };
 
     return clocking_scheme{clock_name::AMY_SUPER,
                             even_row_amy_supertile_4_clock_function,
                             std::min(Lyt::max_fanin_size, 3u),
                             3u,
+                            4u,
+                            true};
+}
+
+template <typename Lyt>
+static auto row_supertile_clocking() noexcept
+{
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_row_supertile_4_clock_function =
+    [](const clock_zone<Lyt>& cz) noexcept
+        {
+            return super_4x4_group_lookup<typename clocking_scheme<clock_zone<Lyt>>::clock_number>(cz.x, cz.y, generate_even_slice<Lyt>(row_clocking<Lyt>(num_clks::FOUR)), generate_odd_slice<Lyt>(row_clocking<Lyt>(num_clks::FOUR)));
+        };
+
+    return clocking_scheme{clock_name::ROW_SUPER,
+                            even_row_row_supertile_4_clock_function,
+                            std::min(Lyt::max_fanin_size, 2u),
+                            2u,
                             4u,
                             true};
 }
@@ -906,7 +1015,8 @@ std::optional<clocking_scheme<clock_zone<Lyt>>> get_clocking_scheme(const std::s
         {clock_name::RIPPLE, ripple_clocking<Lyt>()},
         {clock_name::BANCS, bancs_clocking<Lyt>()},
         {clock_name::AMY, amy_clocking<Lyt>()},
-        {clock_name::AMY_SUPER, amy_supertile_clocking<Lyt>()}};
+        {clock_name::AMY_SUPER, amy_supertile_clocking<Lyt>()},
+        {clock_name::ROW_SUPER, row_supertile_clocking<Lyt>()}};
 
     std::string upper_name = name.data();
     std::transform(upper_name.begin(), upper_name.end(), upper_name.begin(), ::toupper);

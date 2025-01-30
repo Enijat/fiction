@@ -427,6 +427,10 @@ class gate_level_layout : public ClockedLayout
 #pragma endregion
 
 #pragma region Create function tiles
+    signal create_unconnected_buf(const tile& t = {})
+    {
+        return create_node_from_literal({}, 2, t);
+    }
 
     signal create_buf(signal const& a, const tile& t = {})
     {
