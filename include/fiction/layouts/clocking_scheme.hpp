@@ -6,6 +6,7 @@
 #define FICTION_CLOCKING_SCHEME_HPP
 
 #include "fiction/layouts/coordinates.hpp"
+#include "fiction/utils/math_utils.hpp"
 #include "fiction/traits.hpp"
 
 #include <phmap.h>
@@ -844,29 +845,25 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
  * @return looked up value from provided arrays
  */
 template <typename ArrayType>
-static constexpr const ArrayType super_4x4_group_lookup(uint64_t x, uint64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
+static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
 {
     // reduce to repeating block coordinates
-    uint8_t reduced_x = static_cast<uint8_t>(x % 56);
-    uint8_t reduced_y = static_cast<uint8_t>(y % 112);
+    uint8_t reduced_x = static_cast<uint8_t>(positive_mod(x, 56));
+    uint8_t reduced_y = static_cast<uint8_t>(positive_mod(y, 112));
 
-    // translate into top row coordinates
-    reduced_x = static_cast<uint8_t>((reduced_x - 10u * static_cast<uint8_t>(reduced_y / 4)) % 56);
-    reduced_x = reduced_x >= 0 ? reduced_x : reduced_x + 56;
-    reduced_y = reduced_y % 4;
+    // translate into top two rows coordinates
+    uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);
+    reduced_x = static_cast<uint8_t>(reduced_x + 23 * reductions) % 56;
+    reduced_y = reduced_y % 2;
 
-    // look up by traversing one super tile clocking block
-    switch (reduced_y)
+    // look up by traversing one super tile block
+    if (reduced_y == 0)
     {
-        default: // to get rid of compiler warning
-        case 0:
-            return even_slice[reduced_x];
-        case 1:
-            return odd_slice[reduced_x];
-        case 2:
-            return even_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
-        case 3:
-            return odd_slice[(reduced_x + 23/*to compensate the shift in the array*/) % 56];
+        return even_slice[reduced_x];
+    }
+    else
+    {
+        return odd_slice[reduced_x];
     }
 }
 /**

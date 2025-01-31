@@ -13,6 +13,9 @@
 #include "fiction/utils/placement_utils.hpp"
 #include "fiction/layouts/clocking_scheme.hpp"
 
+//FORME I know I need these:
+#include "fiction/utils/math_utils.hpp"
+
 //#include <mockturtle/traits.hpp>
 //#include <mockturtle/views/topo_view.hpp>
 
@@ -30,29 +33,6 @@ namespace fiction
 namespace detail
 {
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion" 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
-/**
- * A modulo operation that will return the least positive residue instead of the remainder of the division.
- * 
- * `a mod b = c` <=> `c = mod(a,b)`
- * 
- * @param a number to be "divided"
- * @param b "dividend"
- * @return least positive residue 
- */
-[[nodiscard]] inline static constexpr uint8_t mod(uint8_t a, uint8_t b) noexcept
-{
-    int8_t remainder = a % b;
-    return remainder >= 0 ? remainder : remainder + b;
-}
-
-#pragma GCC diagnostic pop
-#pragma GCC diagnostic pop
-
 /**
  * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
  * Offset will simple be added to the coordinates.
@@ -65,7 +45,7 @@ namespace detail
  * @return Coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-[[nodiscard]] constexpr tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, uint64_t z) noexcept
+[[nodiscard]] constexpr std::array<int64_t,3> super_arraytype(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, uint64_t z) noexcept
 {
     // position a tile at 0,0 would have in the supertile hex layout
     int64_t new_x = 1 + offset_x;
@@ -81,79 +61,69 @@ template <typename HexLyt>
         new_y += (static_cast<int64_t>(original_tile.y) >> 2) * 10;
         
         // fine traversion (traverse the 0 - 3 steps that are left)
-        if (static_cast<int64_t>(original_tile.x) % 2 == 0)
+        if (static_cast<uint64_t>(original_tile.x) % 2 == 0)
         {
-            switch (static_cast<int64_t>(original_tile.y) % 4)
+            switch (static_cast<uint64_t>(original_tile.y) % 4)
             {
                 default:
                 case 0:
                     break;
                 case 1:
-                    new_x += -2;
+                    new_x -= 2;
                     new_y += 2;
                     break;
                 case 2:
-                    new_x += -2;
+                    new_x -= 2;
                     new_y += 5;
                     break;
                 case 3:
-                    new_x += -4;
+                    new_x -= 4;
                     new_y += 7;
                     break;
             }
         } else {
-            switch (static_cast<int64_t>(original_tile.y) % 4)
+            switch (static_cast<uint64_t>(original_tile.y) % 4)
             {
                 default:
                 case 0:
                     break;
                 case 1:
-                    new_x += -2;
+                    new_x -= 2;
                     new_y += 2;
                     break;
                 case 2:
-                    new_x += -1;
+                    new_x -= 1;
                     new_y += 5;
                     break;
                 case 3:
-                    new_x += -3;
+                    new_x -= 3;
                     new_y += 7;
                     break;
             }
         }
+
+    return {{new_x, new_y, z}};
+}
+
+//TODO description and also change the description above
+//TODO maybe I can make this inline?
+template <typename HexLyt>
+[[nodiscard]] constexpr tile<HexLyt> super(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, uint64_t z) noexcept
+{
+    std::array<int64_t,3> result = super_arraytype<HexLyt>(original_tile, offset_x, offset_y, z);
+
+    const tile<HexLyt> temp{result[0], result[1], result[2]}; //TODO compact back again
+
+    std::cout << "[i] Super translated tile " << static_cast<uint64_t>(original_tile.x) << "," << static_cast<uint64_t>(original_tile.y) << "," << static_cast<uint64_t>(original_tile.z) << " to " << static_cast<uint64_t>(temp.x) << "," << static_cast<uint64_t>(temp.y) << "," << static_cast<uint64_t>(temp.z) << std::endl;
     
-    return tile<HexLyt>{new_x, new_y, z};
+    return temp;
 }
 
-/**
- * Utility function to translate the original hex coodrinates into the new supertile hex coordinates.
- * Offset will simple be added to the coordinates. z coordinate will stay stay the same.
- * 
- * @tparam HexLyt Even-row hexagonal gate-level layout return type.
- * @param tile Original position.
- * @param offset_x Offset that is added to the x coordinate.
- * @param offset_y Offset that is added to the y coordinate.
- * @return Coodrinates which are translated into the supertile hex layout.
- */
+//TODO description
 template <typename HexLyt>
-[[nodiscard]] inline constexpr tile<HexLyt> super(tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y) noexcept
+[[nodiscard]] inline constexpr std::array<int64_t,3> super_arraytype(const tile<HexLyt> original_tile) noexcept
 {
-    return super<HexLyt>(original_tile, offset_x, offset_y, original_tile.z);
-}
-
-/**
- * Utility function to translate the original hex coodrinates into the new supertile hex coordinates. z coordinate will stay the same.
- * If one already knows the target coordinates would be negative or if they should be moved closer to the border of the layout,
- * the super() function with offsets should be used.
- * 
- * @tparam HexLyt Even-row hexagonal gate-level layout return type.
- * @param original_tile Original position.
- * @return Coodrinates which are translated into the supertile hex layout.
- */
-template <typename HexLyt>
-[[nodiscard]] inline constexpr tile<HexLyt> super(tile<HexLyt> original_tile)
-{
-    return super<HexLyt>(original_tile, 0, 0, original_tile.z);
+    return super_arraytype<HexLyt>(original_tile, 0, 0, static_cast<uint64_t>(original_tile.z));
 }
 
 #pragma GCC diagnostic push
@@ -174,7 +144,7 @@ enum hex_direction {
     X = 6 // represents invalid direction, used for spacing / filling
 };
 
-using namespace detail;
+using namespace detail; //TODO For what did I need this again? -> put description here
 
 /**
  * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
@@ -185,10 +155,11 @@ using namespace detail;
  * @param C Can reflect either of the two inputs in a 2-in 1-out logic gate or either of the two oupputs of a fanout.
  * @return Hash result to be used in the respective lookup table.
  */
-[[nodiscard]] constexpr uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C) noexcept
+[[nodiscard]] uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C) noexcept //TODO put the constexpr back here
 {
-    uint8_t b = mod((B - A), 6);
-    uint8_t c = mod((C - A), 6);
+    uint8_t b = positive_mod((B - A), 6);
+    uint8_t c = positive_mod((C - A), 6);
+
     if ((b + c) == 9)
     {
         return 10*A + (12 - 5);
@@ -254,25 +225,24 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
         {
             const auto tile = lyt.get_tile(node);
 
-                #pragma GCC diagnostic push
-                #pragma GCC diagnostic ignored "-Wsign-conversion" // has been checked at the beginning of this function
-            const auto pos = super<HexLyt>(tile);
-                #pragma GCC diagnostic pop
+            const std::array<int64_t,3> pos = super_arraytype<HexLyt>(tile);
 
-            if (pos.x < leftmost_core_tile_x)
-                {leftmost_core_tile_x = pos.x;}
-            if (pos.x > rightmost_core_tile_x)
-                {rightmost_core_tile_x = pos.x;}
-            if (pos.y < top_core_tile_y)
-                {top_core_tile_y = pos.y;}
-            if (pos.y > bottom_core_tile_y)
-                {bottom_core_tile_y = pos.y;}
+            if (pos[0] < leftmost_core_tile_x)
+                {leftmost_core_tile_x = pos[0];}
+            if (pos[0] > rightmost_core_tile_x)
+                {rightmost_core_tile_x = pos[0];}
+            if (pos[1] < top_core_tile_y)
+                {top_core_tile_y = pos[1];}
+            if (pos[1] > bottom_core_tile_y)
+                {bottom_core_tile_y = pos[1];}
         });
 
-    if (leftmost_core_tile_x > rightmost_core_tile_x)
+    if (leftmost_core_tile_x > rightmost_core_tile_x) //TODO I could just remove this
     {
         std::cout << "[w] didn't find any nodes in layout" << std::endl;
     }
+
+    std::cout << "[i] Extreme position values: " << leftmost_core_tile_x << ", " << rightmost_core_tile_x << ", " << top_core_tile_y << ", " << bottom_core_tile_y << ", " << std::endl; //TODO remove
 
     /*
     * calculate the offset that
@@ -282,7 +252,7 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
     */
     // clang-format off
 
-    static constexpr std::array<std::array<int8_t, 2u>, 56u> even_coord_slice{{
+    static constexpr std::array<std::array<int8_t,2>,56> even_coord_slice{{
             {{0,0}},{{1,0}},
             {{-1,10}},{{0,10}},{{1,10}},{{2,10}},{{3,10}},{{4,10}},{{5,10}},{{6,10}},{{7,10}},
             {{-2,6}},{{-1,6}},{{0,6}},{{1,6}},{{2,6}},{{3,6}},{{4,6}},{{5,6}},{{6,6}},{{7,6}},
@@ -292,7 +262,7 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
             {{-2,4}},{{-1,4}},{{0,4}},{{1,4}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{6,4}},{{7,4}},{{8,4}},{{9,4}}
             }};
 
-    static constexpr std::array<std::array<int8_t, 2u>, 56u> odd_coord_slice{{
+    static constexpr std::array<std::array<int8_t,2>,56> odd_coord_slice{{
             {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
             {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
             {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
@@ -304,10 +274,12 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
     // clang-format on
 
     // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
-    std::array<int8_t, 2u> relative_position = fiction::super_4x4_group_lookup<std::array<int8_t, 2u>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
+    std::array<int8_t,2> relative_position = fiction::super_4x4_group_lookup<std::array<int8_t,2>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
     
     int8_t relative_x = relative_position[0];
     int8_t relative_y = relative_position[1];
+
+    std::cout << "[i] Relative values bevore: " << static_cast<int>(relative_x) << ", " << static_cast<int>(relative_y) << std::endl; //TODO remove
 
     // check if offset needs to be moved to ...
     if (relative_x < 1/*1 instead of 0 to include future surrounding wires*/) // ... the next right super clock zone group (to stay in the positive coordinates)
@@ -321,12 +293,14 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
         relative_y -= 10;
     }
 
+    std::cout << "[i] Relative values after: " << static_cast<int>(relative_x) << ", " << static_cast<int>(relative_y) << std::endl; //TODO remove
+
     // calculate offset for translated tiles
     int64_t x_offset = static_cast<int64_t>(relative_x) - leftmost_core_tile_x;
     int64_t y_offset = static_cast<int64_t>(relative_y) - top_core_tile_y;
 
-    *size_x = rightmost_core_tile_x + 1 + x_offset;
-    *size_y = bottom_core_tile_y + 1 + y_offset;
+    *size_x = static_cast<uint64_t>(rightmost_core_tile_x + 1 + x_offset);
+    *size_y = static_cast<uint64_t>(bottom_core_tile_y + 1 + y_offset);
     *offset_x = x_offset;
     *offset_y = y_offset;
 }
@@ -462,13 +436,16 @@ template <typename HexLyt>
     {
         if (input_node == 0) // the tile from which the signal should be coming is empty, so a unfinished wire will be placed there that will later be connected
         {
+            std::cout << "[i] Creating unconneted wire at " << static_cast<int>(position.x) << "," << static_cast<int>(position.y) << "," << static_cast<int>(position.z) << " (x,y,z)" << std::endl; //TODO remove
             lyt.create_buf(lyt.create_unconnected_buf(input_position), position);
         } else {
+            std::cout << "[i] Creating normal wire at " << static_cast<int>(position.x) << "," << static_cast<int>(position.y) << "," << static_cast<int>(position.z) << " (x,y,z)" << std::endl; //TODO remove
             lyt.create_buf(lyt.make_signal(input_node), position);
         }
     }
     else // the wire already exists, it only needs it's incoming signal
-    {
+    {   
+        std::cout << "[i] Wire at " << static_cast<int>(position.x) << "," << static_cast<int>(position.y) << "," << static_cast<int>(position.z) << " (x,y,z) already existed, only connecting it" << std::endl; //TODO remove
         lyt.connect(lyt.make_signal(input_node), current_node);
         return true;
     }
@@ -546,11 +523,11 @@ template <typename HexLyt, std::size_t table_size>
         table_position++;
     }
     const auto last_output_wire_position = get_near_position<HexLyt>(core, lookup_table[table_position][0], 0);
-    if (!place_wire<HexLyt>(lyt, last_output_wire_position, get_near_position<HexLyt>(last_output_wire_position, lookup_table[table_position][1], last_z_position)))
+    if (place_wire<HexLyt>(lyt, last_output_wire_position, get_near_position<HexLyt>(last_output_wire_position, lookup_table[table_position][1], last_z_position)))
     {
         *found_wire = true;
     }
-    return table_position + static_cast<unsigned char>(2); // to skip the last placed wire and a potential spacer
+    return static_cast<uint8_t>(table_position + 2); // to skip the last placed wire and a potential spacer
 }
 
 //TODO note about where they are from and how to create them
@@ -732,8 +709,6 @@ template <typename HexLyt>
     const auto incoming_signals = original_lyt.incoming_data_flow(original_tile);
     const auto outgoing_signals = original_lyt.outgoing_data_flow(original_tile);
 
-    using signal = uint64_t;
-
     if (incoming_signals.size() == 1)
     {
         if (original_lyt.is_po(original_node))
@@ -751,10 +726,10 @@ template <typename HexLyt>
             #pragma GCC diagnostic pop
 
             // place output
-            super_lyt.create_po(static_cast<signal>(input_wire_position), original_lyt.get_name(original_node), core_tile);
+            super_lyt.create_po(super_lyt.make_signal(super_lyt.get_node(input_wire_position)), original_lyt.get_name(original_node), core_tile);
 
         }
-        else if (original_lyt.is_wire(original_node))
+        else if (original_lyt.is_wire(original_node) and !original_lyt.is_fanout(original_node))
         {
             hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
             hex_direction out = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
@@ -797,7 +772,7 @@ template <typename HexLyt>
             const auto last_wire = get_near_position<HexLyt>(core_tile, lookup_table[table_position - 2][0], last_z_position);
 
             // place inverter core
-            super_lyt.create_not(static_cast<signal>(last_wire), core_tile);
+            super_lyt.create_not(super_lyt.make_signal(super_lyt.get_node(last_wire)), core_tile);
 
             // place output wires
             bool found_wire = false;
@@ -807,8 +782,9 @@ template <typename HexLyt>
                 *output_a = out;
             }
         }
-        else if (outgoing_signals.size() == 2) // original_node is fanout
+        else if (original_lyt.is_fanout(original_node) and outgoing_signals.size() == 2) // original_node is 2out fanout
         {
+
             hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
             hex_direction out1 = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
             hex_direction out2 = get_near_direction<HexLyt>(original_tile, outgoing_signals[1]);
@@ -825,13 +801,14 @@ template <typename HexLyt>
             const auto last_wire = get_near_position<HexLyt>(core_tile, lookup_table[table_position - 2][0], last_z_position);
 
             // place fanout core
-            super_lyt.create_buf(static_cast<signal>(last_wire), core_tile);
+            super_lyt.create_buf(super_lyt.make_signal(super_lyt.get_node(last_wire)), core_tile);
 
             // place output wires 1
             bool found_wire = false;
             table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
             if (!found_wire)
             {
+                std::cout << "[i] writing " << static_cast<int>(lookup_table[table_position - 2][0]) << " too output_a in populate_supertile" << std::endl; //TODO remove
                 *output_a = lookup_table[table_position - 2][0];
             }
             // place output wires 2
@@ -839,6 +816,7 @@ template <typename HexLyt>
             table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
             if (!found_wire)
             {
+                std::cout << "[i] writing " << static_cast<int>(lookup_table[table_position - 2][0]) << " too output_b in populate_supertile" << std::endl; //TODO remove
                 *output_b = lookup_table[table_position - 2][0];
             }
         }
@@ -857,7 +835,8 @@ template <typename HexLyt>
 
         std::array<std::array<hex_direction,2>,9> lookup_table = lookup_table_2in1out[perfectHashFunction21(out, in1, in2)];
         
-        std::cout << "[i] detected 2in1out gate and choose lookuptable entry " << static_cast<int>(perfectHashFunction21(out, in1, in2)) << std::endl;
+        std::cout << "[i] detected 2in1out gate and choose lookuptable entry " << static_cast<int>(perfectHashFunction21(out, in1, in2)) << std::endl; //TODO delete
+        std::cout << "    -> in1/in2/out = " << static_cast<int>(in1) << "/" << static_cast<int>(in2) << "/" << static_cast<int>(out) << std::endl; //TODO delete
 
         uint8_t table_position = 0;
         uint8_t last_z_position = 0;
@@ -871,35 +850,37 @@ template <typename HexLyt>
         const auto last_wire_2 = get_near_position<HexLyt>(core_tile, lookup_table[table_position - 2][0], last_z_position);
 
         // place core
+        const auto last_signal_1 = super_lyt.make_signal(super_lyt.get_node(last_wire_1));
+        const auto last_signal_2 = super_lyt.make_signal(super_lyt.get_node(last_wire_2));
         if (original_lyt.is_and(original_node))
         {
-            super_lyt.create_and(static_cast<signal>(last_wire_1), static_cast<signal>(last_wire_2), core_tile);
+            super_lyt.create_and(last_signal_1, last_signal_2, core_tile);
         }
         else if (original_lyt.is_nand(original_node))
         {
-            super_lyt.create_nand(static_cast<signal>(last_wire_1), static_cast<signal>(last_wire_2), core_tile);
+            super_lyt.create_nand(last_signal_1, last_signal_2, core_tile);
         }
         else if (original_lyt.is_or(original_node))
         {
-            super_lyt.create_or(static_cast<signal>(last_wire_1), static_cast<signal>(last_wire_2), core_tile);
+            super_lyt.create_or(last_signal_1, last_signal_2, core_tile);
         }
         else if (original_lyt.is_nor(original_node))
         {
-            super_lyt.create_nor(static_cast<signal>(last_wire_1), static_cast<signal>(last_wire_2), core_tile);
+            super_lyt.create_nor(last_signal_1, last_signal_2, core_tile);
         }
         else if (original_lyt.is_xor(original_node))
         {
-            super_lyt.create_xor(static_cast<signal>(last_wire_1), static_cast<signal>(last_wire_2), core_tile);
+            super_lyt.create_xor(last_signal_1, last_signal_2, core_tile);
         }
         else if (original_lyt.is_xnor(original_node))
         {
-            super_lyt.create_xnor(static_cast<signal>(last_wire_1), static_cast<signal>(last_wire_2), core_tile);
+            super_lyt.create_xnor(last_signal_1, last_signal_2, core_tile);
         }
         else if (original_lyt.is_function(original_node))
         {
             const auto original_node_fun = original_lyt.node_function(original_node);
 
-            super_lyt.create_node({static_cast<signal>(last_wire_1), static_cast<signal>(last_wire_2)}, original_node_fun, core_tile);
+            super_lyt.create_node({last_signal_1, last_signal_2}, original_node_fun, core_tile);
         }
 
         // place output wires
@@ -907,7 +888,7 @@ template <typename HexLyt>
         place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
         if (!found_wire)
         {
-            *output_a = lookup_table[table_position - 2][0];
+            *output_a = out;
         }
     }
     else
@@ -950,13 +931,14 @@ void add_unique(std::vector<tile<HexLyt>>& vector, const tile<HexLyt> new_tile) 
  * @param original_lyt the gate-level layout that is to be transformed.
  * @return Either to new supertile gate-level layout or the original layout if something went wrong.
  */
+//TODO throw the right errors in this method instead of just returning the original layout
 template <typename HexLyt>
 [[nodiscard]] HexLyt supertilezation(const HexLyt& original_lyt) noexcept
 {
     static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
     static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-    assert(original_lyt.z() == 0);
+    assert(original_lyt.z() == 0); //TODO remove because it doesn't work anyways and I have to add wire crossings + maybe add check for 1 instead of 2 ?
 
     uint64_t size_x;
     uint64_t size_y;
@@ -966,13 +948,13 @@ template <typename HexLyt>
     HexLyt super_lyt{{size_x, size_y, 1}, original_lyt.is_clocking_scheme(clock_name::AMY) ? fiction::amy_supertile_clocking<HexLyt>() : fiction::row_supertile_clocking<HexLyt>(), original_lyt.get_layout_name()};
     std::vector<tile<HexLyt>> path_beginnings;
 
-    std::cout << "[i] size_x: " << size_x << ", size_y: " << size_y << ", offset_x: " << offset_x << ", offset_y: "<< offset_y << std::endl; //TODO remove
+    //std::cout << "[i] size_x: " << size_x << ", size_y: " << size_y << ", offset_x: " << offset_x << ", offset_y: "<< offset_y << std::endl; //TODO remove
 
     // replace all inputs and save their output tile
     original_lyt.foreach_pi(
             [&original_lyt, &super_lyt, offset_x, offset_y, &path_beginnings](const auto& original_node)
             {
-                //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich das handlen?
+                //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich das handlen? -> aparently nicht weil exact das nicht produziert, aber ich sollte es evtl trotzdem einfach abfangen
                 const tile<HexLyt> original_tile = original_lyt.get_tile(original_node);
                 const tile<HexLyt> super_tile = detail::super<HexLyt>(original_tile, offset_x, offset_y, 0);
                 const auto super_signal = super_lyt.create_pi(original_lyt.get_name(original_lyt.get_node(original_tile)), super_tile);
@@ -989,13 +971,13 @@ template <typename HexLyt>
 
         std::cout << "[i] Starting path at tile " << static_cast<int>(current_original_tile.x) << "," << static_cast<int>(current_original_tile.y) << " (x,y)" << std::endl; //TODO remove
 
-
         while (true)
         {
             detail::hex_direction output_a = detail::hex_direction::X;
             detail::hex_direction output_b = detail::hex_direction::X;
             if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b))
             {
+                std::cout << "[e] found unknown gate while populating supertile, abort translation" << std::endl; //TODO remove
                 return original_lyt; // Error, so the process was aborted
             }
             if (output_a == detail::hex_direction::X) // path is finished
@@ -1005,12 +987,14 @@ template <typename HexLyt>
             }
             else if (output_b == detail::hex_direction::X) // path continues on one path
             {
+                std::cout << "[i] continuing path like normal" << std::endl; //TODO remove
                 current_original_tile = detail::get_near_position<HexLyt>(current_original_tile, output_a, 0);
             }
             else // path splits up
             {
-                current_original_tile = detail::get_near_position<HexLyt>(current_original_tile, output_a, 0);
+                std::cout << "[i detected path splitting" << std::endl; //TODO remove
                 detail::add_unique<HexLyt>(path_beginnings, detail::get_near_position<HexLyt>(current_original_tile, output_b, 0));
+                current_original_tile = detail::get_near_position<HexLyt>(current_original_tile, output_a, 0);
             }
         }
     }

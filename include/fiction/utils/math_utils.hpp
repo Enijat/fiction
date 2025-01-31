@@ -195,6 +195,29 @@ cartesian_combinations(const std::vector<std::vector<VectorDataType>>& sets) noe
     return chi;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion" 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
+/**
+ * A modulo operation that will return the least positive residue instead of the remainder of the division.
+ * 
+ * `a mod b = c` <=> `c = mod(a,b)`
+ * 
+ * @param a number to be "divided"
+ * @param b "dividend"
+ * @return least positive residue 
+ */
+[[nodiscard]] inline constexpr uint64_t positive_mod(int64_t a, int64_t b) noexcept
+{
+    int64_t remainder = a % b;
+    return remainder >= 0 ? remainder : remainder + b;
+}
+
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+
 }  // namespace fiction
 
 #endif  // FICTION_MATH_UTILS_HPP
