@@ -1010,7 +1010,7 @@ template <typename HexLyt>
             else // path splits up
             {
                 std::cout << "[i detected path splitting" << std::endl; //TODO remove
-                detail::add_unique<HexLyt>(path_beginnings, detail::detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_b));
+                detail::add_unique<HexLyt>(path_beginnings, detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_b));
                 current_original_tile = detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
             }
         }
