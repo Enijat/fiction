@@ -906,7 +906,7 @@ template <typename HexLyt>
  * @param new_tile Tile to be added.
  */
 template <typename HexLyt>
-void add_unique(std::vector<tile<HexLyt>>& vector, const tile<HexLyt> new_tile) noexcept
+[[nodiscard]] void add_unique(std::vector<tile<HexLyt>>& vector, const tile<HexLyt> new_tile) noexcept
 {
     const auto pos = std::find_if(vector.begin(), vector.end(), 
         [new_tile](const tile<HexLyt> existing_tile) noexcept
@@ -919,6 +919,22 @@ void add_unique(std::vector<tile<HexLyt>>& vector, const tile<HexLyt> new_tile) 
         std::cout << "[i] added tile at position: " << static_cast<int>(new_tile.x) << "," << static_cast<int>(new_tile.y) << " (x,y) to vector" << std::endl; //TODO remove
         vector.push_back(new_tile);
     }
+}
+
+//TODO description (mainly used to copy z)
+template <typename HexLyt>
+[[nodiscard]] tile<HexLyt> get_outgoing_from_direction(const std::vector<tile<HexLyt>> outgoing_tiles, const tile<HexLyt> refference, hex_direction direction) noexcept
+{
+    const auto sample = get_near_position<HexLyt>(refference, direction, 0);
+    for (tile<HexLyt> outgoing : outgoing_tiles)
+    {
+        if (sample.x == outgoing.x and sample.y == outgoing.y)
+        {
+            return outgoing;
+        }
+    }
+    std::cout << "[w] couldn't find tile in vector from the given direction" << std::endl; //TODO maybe there is a better / prettier solution
+    return sample;
 }
 }
 
@@ -939,6 +955,7 @@ template <typename HexLyt>
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
     static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
     assert(original_lyt.z() == 0); //TODO remove because it doesn't work anyways and I have to add wire crossings + maybe add check for 1 instead of 2 ?
+    //TODO instead check for max fanout that is used!
 
     uint64_t size_x;
     uint64_t size_y;
@@ -988,13 +1005,13 @@ template <typename HexLyt>
             else if (output_b == detail::hex_direction::X) // path continues on one path
             {
                 std::cout << "[i] continuing path like normal" << std::endl; //TODO remove
-                current_original_tile = detail::get_near_position<HexLyt>(current_original_tile, output_a, 0);
+                current_original_tile = detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
             }
             else // path splits up
             {
                 std::cout << "[i detected path splitting" << std::endl; //TODO remove
-                detail::add_unique<HexLyt>(path_beginnings, detail::get_near_position<HexLyt>(current_original_tile, output_b, 0));
-                current_original_tile = detail::get_near_position<HexLyt>(current_original_tile, output_a, 0);
+                detail::add_unique<HexLyt>(path_beginnings, detail::detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_b));
+                current_original_tile = detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
             }
         }
     }

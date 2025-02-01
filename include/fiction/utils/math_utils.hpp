@@ -211,8 +211,7 @@ cartesian_combinations(const std::vector<std::vector<VectorDataType>>& sets) noe
  */
 [[nodiscard]] inline constexpr uint64_t positive_mod(int64_t a, int64_t b) noexcept
 {
-    int64_t remainder = a % b;
-    return remainder >= 0 ? remainder : remainder + b;
+    return static_cast<uint64_t>(((a %= b) < 0) ? a + b : a);
 }
 
 #pragma GCC diagnostic pop

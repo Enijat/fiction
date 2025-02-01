@@ -749,10 +749,6 @@ static auto amy_clocking() noexcept
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_even_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
-    static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
-    //static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout"); //TODO why does this fail?
-    //static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -794,10 +790,6 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_odd_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
-    static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
-    //static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout"); //TODO why does this fail?
-    //static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -877,30 +869,6 @@ static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, co
 template <typename Lyt>
 static auto amy_supertile_clocking() noexcept
 {
-    // clang-format off
-
-    //TODO remove if it worked
-    /*static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 56u> even_slice{{
-        0, 0,
-        3, 3, 1, 1, 1, 0, 0, 2, 2,
-        1, 1, 1, 2, 2, 0, 0, 3, 3, 3,
-        2, 2, 0, 0, 1, 1, 1, 2, 2,
-        0, 0,
-        0, 0, 0, 3, 3, 2, 2, 3, 3, 3, 2, 2,
-        2, 2, 1, 1, 1, 0, 0, 2, 2, 3, 3, 3
-        }};
-
-    static constexpr std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 56u> odd_slice{{
-        0, 0, 0, 1, 1,
-        1, 1, 0, 0, 0,
-        0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 3,
-        2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 3, 3,
-        0, 0, 3, 3, 3, 1, 1, 3, 3, 2, 2, 2,
-        1, 1, 1, 1, 0, 0, 0, 3, 3, 3, 3
-        }};*/
-
-    // clang-format on
-
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
         {
