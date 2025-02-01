@@ -4688,28 +4688,6 @@ static const char *__doc_fiction_detail_convert_network_impl_ntk = R"doc()doc";
 
 static const char *__doc_fiction_detail_convert_network_impl_run = R"doc()doc";
 
-static const char *__doc_fiction_detail_copy_super_translation =
-R"doc(Utility function to copy the translation of a tile that was adjacent
-to a translated tile. If the target tile was not adjacent no
-translation will be applied an the tile itself will be returned.
-
-Parameter ``target_old``:
-    tile that should copy the shift from the source
-
-Parameter ``source_old``:
-    old position of the source
-
-Parameter ``source_super``:
-    new position of the source that has been translated to the super
-    clocking sceme
-
-Parameter ``lyt``:
-    hexagonal layout that houses the tiles
-
-Returns:
-    new position of the target that kept the same relative position to
-    the source tile)doc";
-
 static const char *__doc_fiction_detail_count_gate_types_impl = R"doc()doc";
 
 static const char *__doc_fiction_detail_count_gate_types_impl_count_gate_types_impl = R"doc()doc";
@@ -6330,6 +6308,29 @@ Returns:
     An iterator to the found parameter point in the map, or
     `map.cend()` if not found.)doc";
 
+static const char *__doc_fiction_detail_find_super_layout_size =
+R"doc(Utility function to find the required size of a supertile layout and
+the offset required for copying existing gates and wires, based on the
+original layout that is to be transformed.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``lyt``:
+    Original layout that will should be transformed.
+
+Parameter ``size_x``:
+    Pointer to where to write the required size in the x-dimension.
+
+Parameter ``size_y``:
+    Pointer to where to write the required size in the y-dimension.
+
+Parameter ``offset_x``:
+    Pointer to where to write the required offset in the x-dimension.
+
+Parameter ``offset_y``:
+    Pointer to where to write the required offset in the y-dimension.)doc";
+
 static const char *__doc_fiction_detail_gate_level_drvs_impl = R"doc()doc";
 
 static const char *__doc_fiction_detail_gate_level_drvs_impl_border_io_check =
@@ -6564,6 +6565,46 @@ static const char *__doc_fiction_detail_generate_edge_intersection_graph_impl_ps
 
 static const char *__doc_fiction_detail_generate_edge_intersection_graph_impl_run = R"doc()doc";
 
+static const char *__doc_fiction_detail_get_near_direction =
+R"doc(Utility function that returns the `hex_direction` in which an adjacent
+tile is relative to the refference tile. Z position is ignored.
+Undefined behaviour when the same tile is passed twice.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``refference``:
+    `tile` that gives the position to be refferenced in the hexagonal
+    layout.
+
+Parameter ``position``:
+    Position of the other `tile`, defines the `hex_direction` from the
+    refference tile.
+
+Returns:
+    The requested `hex_direction`.)doc";
+
+static const char *__doc_fiction_detail_get_near_position =
+R"doc(Utility function that returns a tile next to the given one, based on
+the passed direction.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``refference``:
+    `tile` that gives the position to be refferenced in the hexagonal
+    layout.
+
+Parameter ``direction``:
+    Direction in which the requested `tile` is positioned, relative to
+    `refference`.
+
+Parameter ``z``:
+    The z-position that the requested tile shoudl have.
+
+Returns:
+    The requested `tile`.)doc";
+
 static const char *__doc_fiction_detail_get_offset =
 R"doc(Utility function to calculate the offset that has to be subtracted
 from any x-coordinate on the hexagonal layout.
@@ -6593,6 +6634,8 @@ Parameter ``cartesian_layout_height``:
 
 Returns:
     offset.)doc";
+
+static const char *__doc_fiction_detail_get_outgoing_from_direction = R"doc()doc";
 
 static const char *__doc_fiction_detail_get_path =
 R"doc(This helper function computes a path between two coordinates using the
@@ -7039,11 +7082,25 @@ Parameter ``place_info``:
 Parameter ``ssg``:
     The search space graph.)doc";
 
-static const char *__doc_fiction_detail_grow_to_supertiles =
-R"doc(Utility function to inflate a hexagonal layout such that each tile is
-now encased by six new empty tiles. Hexagonal layouts dimensions can't
-be bigger then "std::numeric_limits<int64_t>::max()". TODO inputs und
-outputs beschreibung schreiben)doc";
+static const char *__doc_fiction_detail_hex_direction =
+R"doc(These reflect the possible directions in a pointy-top hexagonal
+layout. They are additionally used to represent the positions in a
+supertile, in which case each value represents the position in the
+direction its name reflects, relative to the central position.)doc";
+
+static const char *__doc_fiction_detail_hex_direction_E = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_NE = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_NW = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_SE = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_SW = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_W = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_X = R"doc()doc";
 
 static const char *__doc_fiction_detail_is_balanced_impl = R"doc()doc";
 
@@ -7587,21 +7644,6 @@ the canvas SiDBs satisfies the criteria for physical validity.)doc";
 
 static const char *__doc_fiction_detail_layout_invalidity_reason_POTENTIAL_POSITIVE_CHARGES = R"doc(Positive SiDBs can potentially occur.)doc";
 
-static const char *__doc_fiction_detail_mod =
-R"doc(A modulo operation that will return the least positive residue instead
-of the remainder of the division.
-
-`a mod b = c` <=> `c = mod(a,b)`
-
-Parameter ``a``:
-    number to be "divided"
-
-Parameter ``b``:
-    "dividend"
-
-Returns:
-    least positive residue)doc";
-
 static const char *__doc_fiction_detail_nested_vector_hash =
 R"doc(This struct defines a hash function for a nested vector of layout
 tiles. It calculates a combined hash value for a vector of tiles based
@@ -8087,9 +8129,43 @@ static const char *__doc_fiction_detail_orthogonal_impl_pst = R"doc()doc";
 
 static const char *__doc_fiction_detail_orthogonal_impl_run = R"doc()doc";
 
-static const char *__doc_fiction_detail_perfectHashFunction11 = R"doc()doc";
+static const char *__doc_fiction_detail_perfectHashFunction11 =
+R"doc(Hash function that maps the input values (if they follow the
+constrains outlined in the in the bachelor thesis "Super-Tile Routing
+for Omnidirectional Information Flow in Silicon Dangling Bond Logic"
+by F. Kiefhaber, 2025) to the range 0 to 29 without gaps and or
+overlaps.
 
-static const char *__doc_fiction_detail_perfectHashFunction21 = R"doc()doc";
+Parameter ``A``:
+    Reflects the input of a wire or inverter.
+
+Parameter ``B``:
+    Reflects the output of a wire or inverter.
+
+Returns:
+    Hash result to be used in the respective lookup table.)doc";
+
+static const char *__doc_fiction_detail_perfectHashFunction21 =
+R"doc(Hash function that maps the input values (if they follow the
+constrains outlined in the in the bachelor thesis "Super-Tile Routing
+for Omnidirectional Information Flow in Silicon Dangling Bond Logic"
+by F. Kiefhaber, 2025) to the range 0 to 59 without gaps and or
+overlaps. The order of the input values `B` and `C` is not relevant.
+
+Parameter ``A``:
+    Can reflect the single output in a 2-in 1-out logic gate or the
+    single input in a fanout.
+
+Parameter ``B``:
+    Can reflect either of the two inputs in a 2-in 1-out logic gate or
+    either of the two oupputs of a fanout.
+
+Parameter ``C``:
+    Can reflect either of the two inputs in a 2-in 1-out logic gate or
+    either of the two oupputs of a fanout.
+
+Returns:
+    Hash result to be used in the respective lookup table.)doc";
 
 static const char *__doc_fiction_detail_physical_population_stability_impl =
 R"doc(This class implements the simulation of the population stability for a
@@ -8222,6 +8298,69 @@ static const char *__doc_fiction_detail_pi_locations_TOP_AND_LEFT =
 R"doc(Flag indicating if primary inputs (PIs) can be placed at the top and
 at the left.)doc";
 
+static const char *__doc_fiction_detail_place_input_wires =
+R"doc(Utility function that places one string of input wires in a supertile,
+whichs position is defined by the core `tile`.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Template parameter ``table_size``:
+    Size of the lookup table that is passed.
+
+Parameter ``lyt``:
+    Hexagonal gate-level supertile layout that will house the wires.
+
+Parameter ``core``:
+    `tile` that represents the central position in a supertile.
+
+Parameter ``lookup_table``:
+    Lookup table that defines the path the wires will take.
+
+Parameter ``table_position``:
+    Position in the lookup table where the start of the current wire
+    string is positioned.
+
+Parameter ``last_z_position``:
+    Pointer to where this function will write the z position of the
+    last wire that was placed.
+
+Returns:
+    Returns the updated position in the lookup table that reflects the
+    position of the next entity in the table.)doc";
+
+static const char *__doc_fiction_detail_place_output_wires =
+R"doc(Utility function that places one string of output wires in a
+supertile, whichs position is defined by the core `tile`.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Template parameter ``table_size``:
+    Size of the lookup table that is passed.
+
+Parameter ``lyt``:
+    Hexagonal gate-level supertile layout that will house the wires.
+
+Parameter ``core``:
+    `tile` that represents the central position in a supertile.
+
+Parameter ``lookup_table``:
+    Lookup table that defines the path the wires will take.
+
+Parameter ``table_position``:
+    Position in the lookup table where the start of the current wire
+    string is positioned.
+
+Parameter ``found_wire``:
+    Pointer to where this method will write `true` if an unfinished
+    wire was already present at the position of the last wire placed
+    by this function.
+
+Returns:
+    Returns the updated position in the lookup table that reflects the
+    position of the next entity in the table.)doc";
+
 static const char *__doc_fiction_detail_place_outputs =
 R"doc(Places the primary outputs (POs) in the layout.
 
@@ -8255,6 +8394,28 @@ Parameter ``node2pos``:
     the fanins. The `mockturtle::node_map` is not updated by this
     function.)doc";
 
+static const char *__doc_fiction_detail_place_wire =
+R"doc(Utility function that tries to place and connect a wire with the given
+positions. Will place another wire without incoming signal if the
+`input_position` has no node. If in it's own `position` a wire already
+exists, it will only connect the input.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``lyt``:
+    Layout that houses the tiles.
+
+Parameter ``position``:
+    Position that the wire should have.
+
+Parameter ``input_position``:
+    Position of the incomming signal to the wire.
+
+Returns:
+    `true` if an unfinished wire was already present at the
+    `position`, else `false`.)doc";
+
 static const char *__doc_fiction_detail_placement_info =
 R"doc(Struct to hold information necessary for gate placement during layout
 generation for one vertex.
@@ -8267,6 +8428,46 @@ static const char *__doc_fiction_detail_placement_info_current_node = R"doc(The 
 static const char *__doc_fiction_detail_placement_info_current_po = R"doc(The index of the current primary output.)doc";
 
 static const char *__doc_fiction_detail_placement_info_node2pos = R"doc(Mapping of nodes to their positions in the layout.)doc";
+
+static const char *__doc_fiction_detail_populate_supertile =
+R"doc(Utility function that populates a supertile by reading in the
+`original_tile`s node and it's inputs and outputs, and then looking up
+the required supertile layout in the respective lookup table.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``origianl_lyt``:
+    Layout that houses the `original_tile`.
+
+Parameter ``super_lyt``:
+    Layout that houses the supertile that is to be populated.
+
+Parameter ``original_tile``:
+    `tile` that should be replaced by the supertile.
+
+Parameter ``offset_x``:
+    Offset in x direction required for the translation of the
+    `original_tile` to the super_lyt.
+
+Parameter ``offset_y``:
+    Offset in y direction required for the translation of the
+    `original_tile` to the super_lyt.
+
+Parameter ``output_a``:
+    If the supertile populated by this function has a ouput to another
+    supertile which isn't populated yet, this function will place the
+    `hex_direction` of this other supertile at the location of this
+    pointer.
+
+Parameter ``output_b``:
+    This pointer has the same functionallity as `output_a` and will
+    only be used if there is a second `hex_output` direction into
+    another unpopulated supertile.
+
+Returns:
+    `true` if a unknown gate/fanout was placed at `original_tile`,
+    else `false`. This includes primary inputs.)doc";
 
 static const char *__doc_fiction_detail_post_layout_optimization_impl = R"doc()doc";
 
@@ -8973,42 +9174,32 @@ left.)doc";
 
 static const char *__doc_fiction_detail_search_space_graph_planar = R"doc(Create planar layouts.)doc";
 
-static const char *__doc_fiction_detail_super =
+static const char *__doc_fiction_detail_super = R"doc()doc";
+
+static const char *__doc_fiction_detail_super_arraytype =
 R"doc(Utility function to translate the original hex coodrinates into the
 new supertile hex coordinates. Offset will simple be added to the
 coordinates.
 
-Parameter ``tile``:
-    original position
-
-Parameter ``x_offset``:
-    offset that is added to the x coordinate
-
-Parameter ``y_offset``:
-    offset that is added to the y coordinate
-
-Returns:
-    coodrinates which are translated into the supertile hex layout)doc";
-
-static const char *__doc_fiction_detail_super_2 =
-R"doc(Utility function to translate the original hex coodrinates into the
-new supertile hex coordinates. If one already knows the target
-coordinates would be negative or if they should be moved closer to the
-border of the layout, the super() method with offsets should be used.
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
 
 Parameter ``tile``:
-    original position
+    Original position.
+
+Parameter ``offset_x``:
+    Offset that is added to the x coordinate.
+
+Parameter ``offset_y``:
+    Offset that is added to the y coordinate.
+
+Parameter ``z``:
+    z coordinate the translated `tile` should have.
 
 Returns:
-    coodrinates which are translated into the supertile hex layout)doc";
+    Coodrinates which are translated into the supertile hex layout.)doc";
 
-static const char *__doc_fiction_detail_supertile_core_and_wire_generation =
-R"doc(Utility function to find a center tile orientation and according wires
-in the outer tiles that represent the functionality and connection
-points of the original center tile, but the new tiles all have
-existing SiDB implementations. TODO inputs and outputs angeben TODO
-mein github hier verlinken um zu dokumentieren wo die layouts her
-kommen)doc";
+static const char *__doc_fiction_detail_super_arraytype_2 = R"doc()doc";
 
 static const char *__doc_fiction_detail_sweep_parameter_to_string =
 R"doc(Converts a sweep parameter to a string representation. This is used to
@@ -10934,6 +11125,27 @@ Parameter ``gates``:
 Returns:
     Merged `fcn_gate`.)doc";
 
+static const char *__doc_fiction_fcn_gate_library_merge_at_compiletime =
+R"doc(Since the `std::vector` used in `merge()` is a `non-literal` but I
+need it to be, this does the exact same as `merge()`, just actually at
+compile time. (by using `std::array`) Also x and y are swappend in
+this method because the SiDB gates are constructed in such a way that
+each row is an array, instead of each array, which is how this class
+intends it to be. TODO -> One could implement a method that changes
+the way a gate is stored (from row arrays in a single column array to
+column array stored in a single row array) so that all the methods
+here are usable again. (method should be true `constexpr`!)
+
+Merges two `fcn_gate`s into one at compile time. This is intended to
+be used for wires. Unexpected behavior can be caused, if more than one
+`fcn_gate` has a cell at the same position.
+
+Parameter ``gates``:
+    Array of gates to be merged.
+
+Returns:
+    Merged `fcn_gate`.)doc";
+
 static const char *__doc_fiction_fcn_gate_library_mirror_horizontal =
 R"doc(Mirrors the given 'fcn_gate' around vertical axis at compile time.
 After mirroring it shifts each value one position to the left. This is
@@ -10948,6 +11160,27 @@ Returns:
 
 static const char *__doc_fiction_fcn_gate_library_reverse_columns =
 R"doc(Reverses the columns of the given `fcn_gate` at compile time.
+
+Parameter ``g``:
+    `fcn_gate` whose columns are to be reversed.
+
+Returns:
+    `fcn_gate` with reversed columns.)doc";
+
+static const char *__doc_fiction_fcn_gate_library_reverse_columns_at_compiletime =
+R"doc(Since the `std::reverse` and `std::for_each` method used in
+`reverse_columns()` isn't a `constexpr` in the C++ version used here
+(17) and I need it to be (would be in 20), this does the exact same as
+`reverse_columns()`, just actually at compile time. Also x and y are
+swappend in this method because the SiDB gates are constructed in such
+a way that each row is an array, instead of each column, which is not
+how this class intends it to be. TODO -> One could implement a method
+that changes the way a gate is stored (from row arrays in a single
+column array to column array stored in a single row array) so that all
+the methods here are usable again. (method should be true
+`constexpr`!)
+
+Reverses the columns of the given `fcn_gate` at compile time.
 
 Parameter ``g``:
     `fcn_gate` whose columns are to be reversed.
@@ -10994,7 +11227,10 @@ Returns:
 static const char *__doc_fiction_fcn_gate_library_shift_left_once =
 R"doc(Shifts each value of the given `fcn_gate` at compile time one to the
 left, overflow is discarded and new places are filled with
-`cell_type::EMPTY`.
+`cell_type::EMPTY`. This method was created for SiDB gates, so the x
+and y coordinate are swapped, since the SiDB gates are constructed in
+such a way that each row is an array, instead of each column, which is
+not how this class intends it to be.
 
 @param `fcn_gate` to shift.
 
@@ -11419,6 +11655,8 @@ static const char *__doc_fiction_gate_level_layout_create_or = R"doc()doc";
 static const char *__doc_fiction_gate_level_layout_create_pi = R"doc()doc";
 
 static const char *__doc_fiction_gate_level_layout_create_po = R"doc()doc";
+
+static const char *__doc_fiction_gate_level_layout_create_unconnected_buf = R"doc()doc";
 
 static const char *__doc_fiction_gate_level_layout_create_xnor = R"doc()doc";
 
@@ -12373,6 +12611,8 @@ static const char *__doc_fiction_generate_edge_intersection_graph_stats_number_o
 R"doc(For each routing objective that cannot be fulfilled in the given
 layout, this counter is incremented.)doc";
 
+static const char *__doc_fiction_generate_even_slice = R"doc()doc";
+
 static const char *__doc_fiction_generate_multiple_random_sidb_layouts =
 R"doc(Generates multiple unique random SiDB layouts by adding them to the
 provided layout skeleton. The layout skeleton serves as the starting
@@ -12389,6 +12629,8 @@ Parameter ``params``:
 
 Returns:
     A vector containing the unique randomly generated SiDB layouts.)doc";
+
+static const char *__doc_fiction_generate_odd_slice = R"doc()doc";
 
 static const char *__doc_fiction_generate_random_sidb_layout =
 R"doc(Generates a random layout of SiDBs by adding them to the provided
@@ -13639,19 +13881,6 @@ Parameter ``c``:
 Returns:
     `true` iff `c` is located in an odd row.)doc";
 
-static const char *__doc_fiction_hexagonal_layout_is_north_east_of =
-R"doc(Returns `true` iff coordinate `c2` is directly north-east of
-coordinate `c1`.
-
-Parameter ``c1``:
-    Base coordinate.
-
-Parameter ``c2``:
-    Coordinate to test for its location in relation to `c1`.
-
-Returns:
-    `true` iff `c2` is directly north-east of `c1`.)doc";
-
 static const char *__doc_fiction_hexagonal_layout_is_north_of =
 R"doc(Returns `true` iff coordinate `c2` is directly north of coordinate
 `c1`.
@@ -13664,19 +13893,6 @@ Parameter ``c2``:
 
 Returns:
     `true` iff `c2` is directly north of `c1`.)doc";
-
-static const char *__doc_fiction_hexagonal_layout_is_north_west_of =
-R"doc(Returns `true` iff coordinate `c2` is directly north-west of
-coordinate `c1`.
-
-Parameter ``c1``:
-    Base coordinate.
-
-Parameter ``c2``:
-    Coordinate to test for its location in relation to `c1`.
-
-Returns:
-    `true` iff `c2` is directly north-west of `c1`.)doc";
 
 static const char *__doc_fiction_hexagonal_layout_is_northwards_of =
 R"doc(Returns `true` iff coordinate `c2` is somewhere north of coordinate
@@ -13691,19 +13907,6 @@ Parameter ``c2``:
 Returns:
     `true` iff `c2` is somewhere north of `c1`.)doc";
 
-static const char *__doc_fiction_hexagonal_layout_is_south_east_of =
-R"doc(Returns `true` iff coordinate `c2` is directly south-east of
-coordinate `c1`.
-
-Parameter ``c1``:
-    Base coordinate.
-
-Parameter ``c2``:
-    Coordinate to test for its location in relation to `c1`.
-
-Returns:
-    `true` iff `c2` is directly south-east of `c1`.)doc";
-
 static const char *__doc_fiction_hexagonal_layout_is_south_of =
 R"doc(Returns `true` iff coordinate `c2` is directly south of coordinate
 `c1`.
@@ -13716,19 +13919,6 @@ Parameter ``c2``:
 
 Returns:
     `true` iff `c2` is directly south of `c1`.)doc";
-
-static const char *__doc_fiction_hexagonal_layout_is_south_west_of =
-R"doc(Returns `true` iff coordinate `c2` is directly south-west of
-coordinate `c1`.
-
-Parameter ``c1``:
-    Base coordinate.
-
-Parameter ``c2``:
-    Coordinate to test for its location in relation to `c1`.
-
-Returns:
-    `true` iff `c2` is directly south-west of `c1`.)doc";
 
 static const char *__doc_fiction_hexagonal_layout_is_southwards_of =
 R"doc(Returns `true` iff coordinate `c2` is somewhere south of coordinate
@@ -16409,6 +16599,21 @@ static const char *__doc_fiction_port_position_x = R"doc(Positions.)doc";
 
 static const char *__doc_fiction_port_position_y = R"doc()doc";
 
+static const char *__doc_fiction_positive_mod =
+R"doc(A modulo operation that will return the least positive residue instead
+of the remainder of the division.
+
+`a mod b = c` <=> `c = mod(a,b)`
+
+Parameter ``a``:
+    number to be "divided"
+
+Parameter ``b``:
+    "dividend"
+
+Returns:
+    least positive residue)doc";
+
 static const char *__doc_fiction_post_layout_optimization =
 R"doc(A post-layout optimization algorithm as originally proposed in \"Post-
 Layout Optimization for Field-coupled Nanotechnologies\" by S.
@@ -17477,6 +17682,8 @@ Parameter ``n``:
 
 Returns:
     Row-based clocking scheme.)doc";
+
+static const char *__doc_fiction_row_supertile_clocking = R"doc()doc";
 
 static const char *__doc_fiction_searchable_priority_queue =
 R"doc(An extension of `std::priority_queue` that allows searching the
@@ -18638,7 +18845,23 @@ Parameter ``odd_slice``:
 Returns:
     looked up value from provided arrays)doc";
 
-static const char *__doc_fiction_supertilezation = R"doc()doc";
+static const char *__doc_fiction_supertilezation =
+R"doc(Transform a AMY-clocked hexagonal even-row gate-level layout into a
+AMYSUPER-clocked hexagonal even-row gate-level layout that only
+contains gates that can be realised with gates/wires from the SiDB
+extendagon gate library. This algorithm was proposed in the bachelor
+thesis "Super-Tile Routing for Omnidirectional Information Flow in
+Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``original_lyt``:
+    the gate-level layout that is to be transformed.
+
+Returns:
+    Either to new supertile gate-level layout or the original layout
+    if something went wrong.)doc";
 
 static const char *__doc_fiction_sweep_parameter = R"doc(Possible sweep parameters for the operational domain computation.)doc";
 
