@@ -157,7 +157,7 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
  * @param C Can reflect either of the two inputs in a 2-in 1-out logic gate or either of the two oupputs of a fanout.
  * @return Hash result to be used in the respective lookup table.
  */
-[[nodiscard]] constexpr uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C) noexcept //TODO put the constexpr back here
+[[nodiscard]] constexpr uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C) noexcept
 {
     uint8_t b = positive_mod((B - A), 6);
     uint8_t c = positive_mod((C - A), 6);
@@ -502,7 +502,7 @@ template <typename HexLyt>
  * @param core `tile` that represents the central position in a supertile.
  * @param lookup_table Lookup table that defines the path the wires will take.
  * @param table_position Position in the lookup table where the start of the current wire string is positioned.
- * @param last_z_position Pointer to where this function will write the z position of the last wire that was placed. TODO rework comment
+ * @param last_wire Pointer to where this function will write the `tile` of the last wire that was placed.
  * @return Returns the updated position in the lookup table that reflects the position of the next entity in the table.
  */
 template <typename HexLyt, std::size_t table_size>
@@ -894,6 +894,7 @@ template <typename HexLyt>
         }
         else if (original_lyt.is_wire(original_node) and !original_lyt.is_fanout(original_node))
         {
+            if
             hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
             hex_direction out = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
 
@@ -970,7 +971,7 @@ template <typename HexLyt>
             if (!found_wire)
             {
                 //std::cout << "[i] writing " << static_cast<int>(lookup_table[table_position - 2][0]) << " too output_a in populate_supertile" << std::endl; //TODO remove
-                *output_a = lookup_table[table_position - 2]; //TODO Fix due to changed lookuptable size
+                *output_a = lookup_table[table_position - 2];
             }
             // place output wires 2
             found_wire = false;
@@ -978,7 +979,7 @@ template <typename HexLyt>
             if (!found_wire)
             {
                 //std::cout << "[i] writing " << static_cast<int>(lookup_table[table_position - 2][0]) << " too output_b in populate_supertile" << std::endl; //TODO remove
-                *output_b = lookup_table[table_position - 2]; //TODO Fix due to changed lookuptable size
+                *output_b = lookup_table[table_position - 2];
             }
         }
         else
