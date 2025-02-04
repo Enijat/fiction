@@ -13,6 +13,7 @@
 #include "fiction/utils/array_utils.hpp"
 #include "fiction/utils/hash.hpp"
 #include "fiction/utils/truth_table_utils.hpp"
+
 #include "fiction/technology/sidb_bestagon_library.hpp"
 
 #include <phmap.h>
@@ -171,7 +172,9 @@ class sidb_extendagon_library : public sidb_bestagon_library
               // double wires (both bend)
               EAST_SOUTH_EAST_AND_SOUTH_WEST_WEST_WIRE, SOUTH_WEST_WEST_AND_NORTH_EAST_NORTH_WEST_WIRE, WEST_NORTH_WEST_AND_NORTH_EAST_EAST_WIRE, NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE,
               // fanouts
-              NORTH_EAST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT, NORTH_WEST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT, SOUTH_EAST_TO_NORTH_EAST_NORTH_WEST_FANOUT, SOUTH_WEST_TO_NORTH_EAST_NORTH_WEST_FANOUT}},
+              NORTH_EAST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT, NORTH_WEST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT, SOUTH_EAST_TO_NORTH_EAST_NORTH_WEST_FANOUT, SOUTH_WEST_TO_NORTH_EAST_NORTH_WEST_FANOUT,
+              // crossing wire
+              NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING}},
              {create_not_tt(),
               {NORTH_EAST_SOUTH_EAST_NOT, NORTH_EAST_SOUTH_WEST_NOT, SOUTH_EAST_NORTH_WEST_NOT, SOUTH_WEST_NORTH_WEST_NOT}},
              {create_and_tt(),
@@ -265,53 +268,53 @@ class sidb_extendagon_library : public sidb_bestagon_library
         port_list<port_direction> ports{};
 
         // determine incoming connector ports
-        if (lyt.has_north_eastern_incoming_signal<false>(t))
+        if (lyt.has_north_eastern_incoming_signal(t))
         {
             ports.inp.emplace(port_direction::cardinal::NORTH_EAST);
         }
-        if (lyt.has_eastern_incoming_signal<false>(t))
+        if (lyt.has_eastern_incoming_signal(t))
         {
             ports.inp.emplace(port_direction::cardinal::EAST);
         }
-        if (lyt.has_south_eastern_incoming_signal<false>(t))
+        if (lyt.has_south_eastern_incoming_signal(t))
         {
             ports.inp.emplace(port_direction::cardinal::SOUTH_EAST);
         }
-        if (lyt.has_south_western_incoming_signal<false>(t))
+        if (lyt.has_south_western_incoming_signal(t))
         {
             ports.inp.emplace(port_direction::cardinal::SOUTH_WEST);
         }
-        if (lyt.has_western_incoming_signal<false>(t))
+        if (lyt.has_western_incoming_signal(t))
         {
             ports.inp.emplace(port_direction::cardinal::WEST);
         }
-        if (lyt.has_north_western_incoming_signal<false>(t))
+        if (lyt.has_north_western_incoming_signal(t))
         {
             ports.inp.emplace(port_direction::cardinal::NORTH_WEST);
         }
 
         // determine outgoing connector ports
-        if (lyt.has_north_eastern_outgoing_signal<false>(t))
+        if (lyt.has_north_eastern_outgoing_signal(t))
         {
             ports.out.emplace(port_direction::cardinal::NORTH_EAST);
         }
-        if (lyt.has_eastern_outgoing_signal<false>(t))
+        if (lyt.has_eastern_outgoing_signal(t))
         {
             ports.out.emplace(port_direction::cardinal::EAST);
         }
-        if (lyt.has_south_eastern_outgoing_signal<false>(t))
+        if (lyt.has_south_eastern_outgoing_signal(t))
         {
             ports.out.emplace(port_direction::cardinal::SOUTH_EAST);
         }
-        if (lyt.has_south_western_outgoing_signal<false>(t))
+        if (lyt.has_south_western_outgoing_signal(t))
         {
             ports.out.emplace(port_direction::cardinal::SOUTH_WEST);
         }
-        if (lyt.has_western_outgoing_signal<false>(t))
+        if (lyt.has_western_outgoing_signal(t))
         {
             ports.out.emplace(port_direction::cardinal::WEST);
         }
-        if (lyt.has_north_western_outgoing_signal<false>(t))
+        if (lyt.has_north_western_outgoing_signal(t))
         {
             ports.out.emplace(port_direction::cardinal::NORTH_WEST);
         }
@@ -698,6 +701,9 @@ class sidb_extendagon_library : public sidb_bestagon_library
     static constexpr const fcn_gate WEST_NORTH_WEST_AND_NORTH_EAST_EAST_WIRE{merge_at_compiletime({WEST_NORTH_WEST_WIRE, NORTH_EAST_EAST_WIRE})};
 
     static constexpr const fcn_gate NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{merge_at_compiletime({NORTH_EAST_EAST_WIRE, SOUTH_EAST_SOUTH_WEST_WIRE})};
+
+    // crossing wires
+    static constexpr const fcn_gate NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING = CROSSING_WIRE;
 
     // fanouts
     static constexpr const fcn_gate NORTH_EAST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT = MIRRORED_FANOUT_1_2;
@@ -1424,7 +1430,28 @@ class sidb_extendagon_library : public sidb_bestagon_library
            {port_direction(port_direction::cardinal::NORTH_EAST)}},
           {{port_direction(port_direction::cardinal::SOUTH_WEST)},
            {port_direction(port_direction::cardinal::SOUTH_EAST)}}},
-         NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE}};
+         NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE},
+         // NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING
+        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_EAST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_WEST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
+         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_EAST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_WEST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
+         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_EAST)}},
+          {{port_direction(port_direction::cardinal::NORTH_WEST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
+         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_EAST)}},
+          {{port_direction(port_direction::cardinal::NORTH_WEST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
+         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING}};
     /**
      * Lookup table for fanouts.  Maps ports to corresponding wires.
      */

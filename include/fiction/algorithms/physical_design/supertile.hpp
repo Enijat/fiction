@@ -490,6 +490,7 @@ template <typename HexLyt>
         else
             {return false;}
     }
+    return false; // is just here to get rid of the controll warning
 }
 
 /**
@@ -770,7 +771,7 @@ template <typename HexLyt>
                 if (is_crossing(in1, out1, in2, out2)) //TODO delete
                     {std::cout << "[i] detected crossing" << std::endl;}
                 else //TODO delete
-                    {std::cout << "[i] detected bypass" << std::endl;}
+                    {std::cout << "[W] detected bypass, which is not implemented yet" << std::endl;}
 
                 std::array<hex_direction,10> lookup_table = is_crossing(in1, out1, in2, out2) ? lookup_table_2in2out_CROSSING[perfectHashFunction22(in1, out1, in2, out2)] : lookup_table_2in2out_BYPASS[perfectHashFunction22(in1, out1, in2, out2)];
 
