@@ -258,14 +258,11 @@ class sidb_extendagon_library : public sidb_bestagon_library
         return ports;
     }
 
-
   private:
     template <typename Lyt>
     [[nodiscard]] static port_list<port_direction> determine_port_routing(const Lyt& lyt, const tile<Lyt>& t) noexcept
     {
         port_list<port_direction> ports{};
-        
-        using 
 
         // determine incoming connector ports
         if (lyt.has_north_eastern_incoming_signal<false>(t))

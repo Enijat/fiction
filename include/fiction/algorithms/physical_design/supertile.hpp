@@ -542,7 +542,7 @@ template <typename HexLyt, std::size_t table_size>
     #pragma GCC diagnostic pop
 
     table_position++;
-    while (table_position + 1 < table_size and lookup_table[table_position + 1] != X)
+    while (table_position + 1u < table_size and lookup_table[table_position + 1u] != X)
     {
         last_placed_wire_position = wire_position;
         wire_position = get_near_position<HexLyt>(core, lookup_table[table_position], 1);
@@ -564,7 +564,7 @@ template <typename HexLyt, std::size_t table_size>
         *found_wire = true;
     }
 
-    return table_position + 2; // to skip the last placed wire and a potential spacer
+    return static_cast<uint8_t>(table_position + 2u); // to skip the last placed wire and a potential spacer
 }
 
 /**
@@ -620,11 +620,11 @@ template <typename HexLyt, std::size_t table_size>
  * @param found_wire Pointer to where this method will write `true` if an unfinished wire was already present at the position of the last wire placed by this function.
  * @return Returns the updated position in the lookup table that reflects the position of the next entity in the table.
  */
-template <typename HexLyt, std::size_t table_size>
+template <typename HexLyt, std::uint8_t table_size>
 [[nodiscard]] uint8_t place_output_wires(HexLyt& lyt, const tile<HexLyt> core, const std::array<hex_direction,table_size>& lookup_table, uint8_t table_position, bool* found_wire) noexcept //This one also needs a pointer to a bool where it can write if it found a existing wire
 {
     auto last_placed_wire_position = core;
-    while (table_position + 1 < table_size and lookup_table[table_position + 1] != X)
+    while (table_position + 1u < table_size and lookup_table[table_position + 1u] != X)
     {
         const auto output_wire_position = get_near_position<HexLyt>(core, lookup_table[table_position], 1);
 
@@ -642,7 +642,7 @@ template <typename HexLyt, std::size_t table_size>
     {
         *found_wire = true;
     }
-    return table_position + 2; // to skip the last placed wire and a potential spacer
+    return static_cast<uint8_t>(table_position + 2u); // to skip the last placed wire and a potential spacer
 }
 
 //TODO note about where they are from and how to create them (link to github ?!)
