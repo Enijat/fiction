@@ -157,6 +157,7 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
  * @param C Can reflect either of the two inputs in a 2-in 1-out logic gate or either of the two oupputs of a fanout.
  * @return Hash result to be used in the respective lookup table.
  */
+// TODO change name to include _ instead of camel casing
 [[nodiscard]] constexpr uint8_t perfectHashFunction21(hex_direction A, hex_direction B, hex_direction C) noexcept
 {
     uint8_t b = positive_mod((B - A), 6);
@@ -180,6 +181,7 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
  * @param B Reflects the output of a wire or inverter.
  * @return Hash result to be used in the respective lookup table.
  */
+// TODO change name to include _ instead of camel casing
 [[nodiscard]] constexpr uint8_t perfectHashFunction11(hex_direction A, hex_direction B) noexcept
 {
     uint8_t base = A > B ? 15 : 0;
@@ -207,6 +209,7 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
  * @param out2 Second crossing/bypass output.
  * @return Hash result to be used in the respective lookup table.
  */
+// TODO change name to include _ instead of camel casing
 [[nodiscrad]] constexpr uint8_t perfectHashFunction22(hex_direction in1, hex_direction out1, hex_direction in2, hex_direction out2) noexcept
 {
     out1 = static_cast<hex_direction>(positive_mod((out1 - in1), 6));
@@ -573,282 +576,67 @@ template <typename HexLyt, std::size_t table_size>
 
 //TODO note about where they are from and how to create them (link to github ?!)
 constexpr const std::array<std::array<hex_direction,9>,60> lookup_table_2in1out = {{
-{{E, SE, X, SE, SW, X, NE, X, X}},
-{{E, SE, X, SW, X, NE, X, X, X}},
-{{E, SE, X, W, SW, X, NE, X, X}},
-{{E, SE, X, NW, W, SW, X, NE, X}},
-{{SE, X, SW, X, NE, X, X, X, X}},
-{{SE, X, W, SW, X, NE, X, X, X}},
-{{SE, X, NW, W, SW, X, NE, X, X}},
-{{W, NW, X, NW, NE, X, SE, E, NE}},
-{{SW, SE, X, W, SW, X, NE, X, X}},
-{{SW, SE, X, NW, W, SW, X, NE, X}},
-{{SE, X, SW, X, NE, E, X, X, X}},
-{{SE, X, W, SW, X, NE, E, X, X}},
-{{SE, X, NW, W, SW, X, NE, E, X}},
-{{NE, X, SE, SW, W, NW, X, SE, E}},
-{{SW, SE, X, W, SW, X, NE, E, X}},
-{{SW, SE, X, NW, W, SW, X, NE, E}},
-{{NE, X, SW, W, NW, X, SE, E, X}},
-{{NE, X, NW, X, SE, E, X, X, X}},
-{{W, NW, X, NW, NE, X, SE, E, X}},
-{{NE, X, W, NW, X, SE, E, X, X}},
-{{SW, SE, X, W, SW, X, NE, E, SE}},
-{{SW, W, NW, X, NW, NE, X, SE, X}},
-{{NE, X, SW, W, NW, X, SE, X, X}},
-{{E, NE, X, SW, W, NW, X, SE, X}},
-{{W, NW, X, NW, NE, X, SE, X, X}},
-{{NE, X, W, NW, X, SE, X, X, X}},
-{{E, NE, X, W, NW, X, SE, X, X}},
-{{NE, NW, X, E, NE, X, SE, X, X}},
-{{NE, X, NW, X, SE, X, X, X, X}},
-{{E, NE, X, NW, X, SE, X, X, X}},
-{{W, NW, X, NW, NE, X, SW, X, X}},
-{{NE, X, W, NW, X, SW, X, X, X}},
-{{E, NE, X, W, NW, X, SW, X, X}},
-{{SE, E, NE, X, W, NW, X, SW, X}},
-{{NE, X, NW, X, SW, X, X, X, X}},
-{{E, NE, X, NW, X, SW, X, X, X}},
-{{SE, E, NE, X, NW, X, SW, X, X}},
-{{E, SE, X, SE, SW, X, NW, W, SW}},
-{{NE, NW, X, E, NE, X, SW, X, X}},
-{{NE, NW, X, SE, E, NE, X, SW, X}},
-{{NE, X, NW, X, SW, W, X, X, X}},
-{{E, NE, X, NW, X, SW, W, X, X}},
-{{SE, E, NE, X, NW, X, SW, W, X}},
-{{SW, SE, E, NE, X, NW, X, SW, W}},
-{{NE, NW, X, E, NE, X, SW, W, X}},
-{{NE, E, SE, X, SE, SW, X, NW, W}},
-{{NE, E, SE, X, SW, X, NW, W, X}},
-{{SE, X, SW, X, NW, W, X, X, X}},
-{{E, SE, X, SE, SW, X, NW, W, X}},
-{{E, SE, X, SW, X, NW, W, X, X}},
-{{NE, NW, X, E, NE, X, SW, W, NW}},
-{{NE, E, SE, X, SE, SW, X, NW, X}},
-{{NE, E, SE, X, SW, X, NW, X, X}},
-{{NE, E, SE, X, W, SW, X, NW, X}},
-{{E, SE, X, SE, SW, X, NW, X, X}},
-{{E, SE, X, SW, X, NW, X, X, X}},
-{{E, SE, X, W, SW, X, NW, X, X}},
-{{SW, SE, X, W, SW, X, NW, X, X}},
-{{SE, X, SW, X, NW, X, X, X, X}},
-{{SE, X, W, SW, X, NW, X, X, X}}}};
+{{E, SE, X, SE, SW, X, NE, X, X}},{{E, SE, X, SW, X, NE, X, X, X}},{{E, SE, X, W, SW, X, NE, X, X}},{{E, SE, X, NW, W, SW, X, NE, X}},{{SE, X, SW, X, NE, X, X, X, X}},
+{{SE, X, W, SW, X, NE, X, X, X}},{{SE, X, NW, W, SW, X, NE, X, X}},{{W, NW, X, NW, NE, X, SE, E, NE}},{{SW, SE, X, W, SW, X, NE, X, X}},{{SW, SE, X, NW, W, SW, X, NE, X}},
+{{SE, X, SW, X, NE, E, X, X, X}},{{SE, X, W, SW, X, NE, E, X, X}},{{SE, X, NW, W, SW, X, NE, E, X}},{{NE, X, SE, SW, W, NW, X, SE, E}},{{SW, SE, X, W, SW, X, NE, E, X}},
+{{SW, SE, X, NW, W, SW, X, NE, E}},{{NE, X, SW, W, NW, X, SE, E, X}},{{NE, X, NW, X, SE, E, X, X, X}},{{W, NW, X, NW, NE, X, SE, E, X}},{{NE, X, W, NW, X, SE, E, X, X}},
+{{SW, SE, X, W, SW, X, NE, E, SE}},{{SW, W, NW, X, NW, NE, X, SE, X}},{{NE, X, SW, W, NW, X, SE, X, X}},{{E, NE, X, SW, W, NW, X, SE, X}},{{W, NW, X, NW, NE, X, SE, X, X}},
+{{NE, X, W, NW, X, SE, X, X, X}},{{E, NE, X, W, NW, X, SE, X, X}},{{NE, NW, X, E, NE, X, SE, X, X}},{{NE, X, NW, X, SE, X, X, X, X}},{{E, NE, X, NW, X, SE, X, X, X}},
+{{W, NW, X, NW, NE, X, SW, X, X}},{{NE, X, W, NW, X, SW, X, X, X}},{{E, NE, X, W, NW, X, SW, X, X}},{{SE, E, NE, X, W, NW, X, SW, X}},{{NE, X, NW, X, SW, X, X, X, X}},
+{{E, NE, X, NW, X, SW, X, X, X}},{{SE, E, NE, X, NW, X, SW, X, X}},{{E, SE, X, SE, SW, X, NW, W, SW}},{{NE, NW, X, E, NE, X, SW, X, X}},{{NE, NW, X, SE, E, NE, X, SW, X}},
+{{NE, X, NW, X, SW, W, X, X, X}},{{E, NE, X, NW, X, SW, W, X, X}},{{SE, E, NE, X, NW, X, SW, W, X}},{{SW, SE, E, NE, X, NW, X, SW, W}},{{NE, NW, X, E, NE, X, SW, W, X}},
+{{NE, E, SE, X, SE, SW, X, NW, W}},{{NE, E, SE, X, SW, X, NW, W, X}},{{SE, X, SW, X, NW, W, X, X, X}},{{E, SE, X, SE, SW, X, NW, W, X}},{{E, SE, X, SW, X, NW, W, X, X}},
+{{NE, NW, X, E, NE, X, SW, W, NW}},{{NE, E, SE, X, SE, SW, X, NW, X}},{{NE, E, SE, X, SW, X, NW, X, X}},{{NE, E, SE, X, W, SW, X, NW, X}},{{E, SE, X, SE, SW, X, NW, X, X}},
+{{E, SE, X, SW, X, NW, X, X, X}},{{E, SE, X, W, SW, X, NW, X, X}},{{SW, SE, X, W, SW, X, NW, X, X}},{{SE, X, SW, X, NW, X, X, X, X}},{{SE, X, W, SW, X, NW, X, X, X}}}};
 
 constexpr const std::array<std::array<hex_direction,9>,60> lookup_table_1in2out = {{
-{{NE, X, SE, E, X, SW, SE, X, X}},
-{{NE, X, SE, E, X, SW, X, X, X}},
-{{NE, X, SE, E, X, SW, W, X, X}},
-{{NE, X, SE, E, X, SW, W, NW, X}},
-{{NE, X, SE, X, SW, X, X, X, X}},
-{{NE, X, SE, X, SW, W, X, X, X}},
-{{NE, X, SE, X, SW, W, NW, X, X}},
-{{NE, E, SE, X, NE, NW, X, NW, W}},
-{{NE, X, SE, SW, X, SW, W, X, X}},
-{{NE, X, SE, SW, X, SW, W, NW, X}},
-{{E, NE, X, SE, X, SW, X, X, X}},
-{{E, NE, X, SE, X, SW, W, X, X}},
-{{E, NE, X, SE, X, SW, W, NW, X}},
-{{E, SE, X, NE, X, NW, W, SW, SE}},
-{{E, NE, X, SE, SW, X, SW, W, X}},
-{{E, NE, X, SE, SW, X, SW, W, NW}},
-{{E, SE, X, NE, X, NW, W, SW, X}},
-{{E, SE, X, NE, X, NW, X, X, X}},
-{{E, SE, X, NE, NW, X, NW, W, X}},
-{{E, SE, X, NE, X, NW, W, X, X}},
-{{SE, E, NE, X, SE, SW, X, SW, W}},
-{{SE, X, NE, NW, X, NW, W, SW, X}},
-{{SE, X, NE, X, NW, W, SW, X, X}},
-{{SE, X, NE, E, X, NW, W, SW, X}},
-{{SE, X, NE, NW, X, NW, W, X, X}},
-{{SE, X, NE, X, NW, W, X, X, X}},
-{{SE, X, NE, E, X, NW, W, X, X}},
-{{SE, X, NE, E, X, NW, NE, X, X}},
-{{SE, X, NE, X, NW, X, X, X, X}},
-{{SE, X, NE, E, X, NW, X, X, X}},
-{{SW, X, NE, NW, X, NW, W, X, X}},
-{{SW, X, NE, X, NW, W, X, X, X}},
-{{SW, X, NE, E, X, NW, W, X, X}},
-{{SW, X, NE, E, SE, X, NW, W, X}},
-{{SW, X, NE, X, NW, X, X, X, X}},
-{{SW, X, NE, E, X, NW, X, X, X}},
-{{SW, X, NE, E, SE, X, NW, X, X}},
-{{SW, W, NW, X, SE, E, X, SW, SE}},
-{{SW, X, NE, E, X, NW, NE, X, X}},
-{{SW, X, NE, E, SE, X, NW, NE, X}},
-{{W, SW, X, NE, X, NW, X, X, X}},
-{{W, SW, X, NE, E, X, NW, X, X}},
-{{W, SW, X, NE, E, SE, X, NW, X}},
-{{W, SW, X, NE, E, SE, SW, X, NW}},
-{{W, SW, X, NE, E, X, NW, NE, X}},
-{{W, NW, X, SE, E, NE, X, SW, SE}},
-{{W, NW, X, SE, E, NE, X, SW, X}},
-{{W, NW, X, SE, X, SW, X, X, X}},
-{{W, NW, X, SE, E, X, SW, SE, X}},
-{{W, NW, X, SE, E, X, SW, X, X}},
-{{NW, W, SW, X, NE, E, X, NW, NE}},
-{{NW, X, SE, E, NE, X, SW, SE, X}},
-{{NW, X, SE, E, NE, X, SW, X, X}},
-{{NW, X, SE, E, NE, X, SW, W, X}},
-{{NW, X, SE, E, X, SW, SE, X, X}},
-{{NW, X, SE, E, X, SW, X, X, X}},
-{{NW, X, SE, E, X, SW, W, X, X}},
-{{NW, X, SE, SW, X, SW, W, X, X}},
-{{NW, X, SE, X, SW, X, X, X, X}},
-{{NW, X, SE, X, SW, W, X, X, X}}}};
+{{NE, X, SE, E, X, SW, SE, X, X}},{{NE, X, SE, E, X, SW, X, X, X}},{{NE, X, SE, E, X, SW, W, X, X}},{{NE, X, SE, E, X, SW, W, NW, X}},{{NE, X, SE, X, SW, X, X, X, X}},
+{{NE, X, SE, X, SW, W, X, X, X}},{{NE, X, SE, X, SW, W, NW, X, X}},{{NE, E, SE, X, NE, NW, X, NW, W}},{{NE, X, SE, SW, X, SW, W, X, X}},{{NE, X, SE, SW, X, SW, W, NW, X}},
+{{E, NE, X, SE, X, SW, X, X, X}},{{E, NE, X, SE, X, SW, W, X, X}},{{E, NE, X, SE, X, SW, W, NW, X}},{{E, SE, X, NE, X, NW, W, SW, SE}},{{E, NE, X, SE, SW, X, SW, W, X}},
+{{E, NE, X, SE, SW, X, SW, W, NW}},{{E, SE, X, NE, X, NW, W, SW, X}},{{E, SE, X, NE, X, NW, X, X, X}},{{E, SE, X, NE, NW, X, NW, W, X}},{{E, SE, X, NE, X, NW, W, X, X}},
+{{SE, E, NE, X, SE, SW, X, SW, W}},{{SE, X, NE, NW, X, NW, W, SW, X}},{{SE, X, NE, X, NW, W, SW, X, X}},{{SE, X, NE, E, X, NW, W, SW, X}},{{SE, X, NE, NW, X, NW, W, X, X}},
+{{SE, X, NE, X, NW, W, X, X, X}},{{SE, X, NE, E, X, NW, W, X, X}},{{SE, X, NE, E, X, NW, NE, X, X}},{{SE, X, NE, X, NW, X, X, X, X}},{{SE, X, NE, E, X, NW, X, X, X}},
+{{SW, X, NE, NW, X, NW, W, X, X}},{{SW, X, NE, X, NW, W, X, X, X}},{{SW, X, NE, E, X, NW, W, X, X}},{{SW, X, NE, E, SE, X, NW, W, X}},{{SW, X, NE, X, NW, X, X, X, X}},
+{{SW, X, NE, E, X, NW, X, X, X}},{{SW, X, NE, E, SE, X, NW, X, X}},{{SW, W, NW, X, SE, E, X, SW, SE}},{{SW, X, NE, E, X, NW, NE, X, X}},{{SW, X, NE, E, SE, X, NW, NE, X}},
+{{W, SW, X, NE, X, NW, X, X, X}},{{W, SW, X, NE, E, X, NW, X, X}},{{W, SW, X, NE, E, SE, X, NW, X}},{{W, SW, X, NE, E, SE, SW, X, NW}},{{W, SW, X, NE, E, X, NW, NE, X}},
+{{W, NW, X, SE, E, NE, X, SW, SE}},{{W, NW, X, SE, E, NE, X, SW, X}},{{W, NW, X, SE, X, SW, X, X, X}},{{W, NW, X, SE, E, X, SW, SE, X}},{{W, NW, X, SE, E, X, SW, X, X}},
+{{NW, W, SW, X, NE, E, X, NW, NE}},{{NW, X, SE, E, NE, X, SW, SE, X}},{{NW, X, SE, E, NE, X, SW, X, X}},{{NW, X, SE, E, NE, X, SW, W, X}},{{NW, X, SE, E, X, SW, SE, X, X}},
+{{NW, X, SE, E, X, SW, X, X, X}},{{NW, X, SE, E, X, SW, W, X, X}},{{NW, X, SE, SW, X, SW, W, X, X}},{{NW, X, SE, X, SW, X, X, X, X}},{{NW, X, SE, X, SW, W, X, X, X}}}};
 
 constexpr const std::array<std::array<hex_direction,5>,30> lookup_table_1in1out_INVERTER = {{
-{{W, SW, X, NW, X}},
-{{NE, X, SE, E, X}},
-{{NE, X, SE, X, X}},
-{{NE, X, SW, X, X}},
-{{NE, X, SW, W, X}},
-{{NE, E, SE, X, NW}},
-{{E, NE, X, SW, X}},
-{{E, SE, X, NW, W}},
-{{E, SE, X, NW, X}},
-{{SE, E, NE, X, SW}},
-{{SE, X, NW, W, X}},
-{{SE, X, NW, X, X}},
-{{E, NE, X, SE, X}},
-{{SW, X, NW, W, X}},
-{{SW, X, NW, X, X}},
-{{NW, X, SW, W, X}},
-{{E, SE, X, NE, X}},
-{{SE, X, NE, X, X}},
-{{SW, X, NE, X, X}},
-{{W, SW, X, NE, X}},
-{{NW, W, SW, X, NE}},
-{{SW, X, NE, E, X}},
-{{W, SW, X, NE, E}},
-{{NW, X, SE, E, X}},
-{{SW, W, NW, X, SE}},
-{{W, NW, X, SE, X}},
-{{NW, X, SE, X, X}},
-{{SE, X, NE, E, X}},
-{{W, NW, X, SW, X}},
-{{NW, X, SW, X, X}}}};
+{{W, SW, X, NW, X}},{{NE, X, SE, E, X}},{{NE, X, SE, X, X}},{{NE, X, SW, X, X}},{{NE, X, SW, W, X}},
+{{NE, E, SE, X, NW}},{{E, NE, X, SW, X}},{{E, SE, X, NW, W}},{{E, SE, X, NW, X}},{{SE, E, NE, X, SW}},
+{{SE, X, NW, W, X}},{{SE, X, NW, X, X}},{{E, NE, X, SE, X}},{{SW, X, NW, W, X}},{{SW, X, NW, X, X}},
+{{NW, X, SW, W, X}},{{E, SE, X, NE, X}},{{SE, X, NE, X, X}},{{SW, X, NE, X, X}},{{W, SW, X, NE, X}},
+{{NW, W, SW, X, NE}},{{SW, X, NE, E, X}},{{W, SW, X, NE, E}},{{NW, X, SE, E, X}},{{SW, W, NW, X, SE}},
+{{W, NW, X, SE, X}},{{NW, X, SE, X, X}},{{SE, X, NE, E, X}},{{W, NW, X, SW, X}},{{NW, X, SW, X, X}}}};
 
+// This size could easily be halved in theory, just a more sophisticated lookup function is required
 constexpr const std::array<std::array<hex_direction,10>,120> lookup_table_2in2out_CROSSING = {{
-{{NE, NW, C, SE, X, E, NE, C, SW, X}},
-{{NE, C, SW, SE, X, E, SE, C, NW, W}},
-{{NE, C, SW, SE, X, E, SE, C, NW, X}},
-{{NE, C, SW, X, E, SE, C, NW, W, X}},
-{{NE, C, SW, X, E, SE, C, NW, X, X}},
-{{NE, C, SW, X, SE, C, NW, X, X, X}},
-{{NE, C, SW, W, X, E, SE, C, NW, X}},
-{{NE, C, SW, W, X, SE, C, NW, X, X}},
-{{NE, C, SW, W, X, SW, SE, C, NW, X}},
-{{NE, C, SW, X, SE, C, NW, W, X, X}},
-{{NE, NW, C, SE, X, SW, C, NE, E, X}},
-{{NE, C, SW, SE, X, W, NW, C, SE, E}},
-{{NE, C, SW, SE, X, NW, C, SE, E, X}},
-{{NE, C, SW, X, W, NW, C, SE, E, X}},
-{{NE, C, SW, X, NW, C, SE, E, X, X}},
-{{NE, C, SW, X, NW, C, SE, X, X, X}},
-{{NE, C, SW, W, X, NW, C, SE, E, X}},
-{{NE, C, SW, W, X, NW, C, SE, X, X}},
-{{NE, C, SW, W, X, NW, C, SE, SW, X}},
-{{NE, C, SW, X, W, NW, C, SE, X, X}},
-{{E, NE, C, SW, X, SE, C, NW, W, X}},
-{{E, NE, C, SW, X, SE, C, NW, X, X}},
-{{E, NE, C, SW, X, SE, C, NW, NE, X}},
-{{E, NE, C, SW, W, X, SE, C, NW, X}},
-{{E, NE, C, SW, W, X, SE, C, NW, NE}},
-{{E, SE, C, NW, W, X, SW, C, NE, X}},
-{{E, SE, C, NW, X, SE, SW, C, NE, X}},
-{{E, SE, C, NW, X, SW, C, NE, X, X}},
-{{E, SE, C, NW, X, W, SW, C, NE, X}},
-{{E, SE, C, NW, W, X, SW, C, NE, NW}},
-{{E, NE, C, SW, X, W, NW, C, SE, X}},
-{{E, NE, C, SW, X, NW, C, SE, X, X}},
-{{E, NE, C, SW, X, NE, NW, C, SE, X}},
-{{E, NE, C, SW, W, X, NW, C, SE, X}},
-{{E, SE, C, NW, W, X, NE, C, SW, SE}},
-{{E, SE, C, NW, W, X, NE, C, SW, X}},
-{{E, SE, C, NW, X, NE, C, SW, SE, X}},
-{{E, SE, C, NW, X, NE, C, SW, X, X}},
-{{E, SE, C, NW, X, NE, C, SW, W, X}},
-{{E, NE, C, SW, W, X, NW, C, SE, SW}},
-{{SE, C, NW, W, X, SW, C, NE, NW, X}},
-{{SE, C, NW, W, X, SW, C, NE, X, X}},
-{{SE, C, NW, W, X, SW, C, NE, E, X}},
-{{SE, C, NW, X, SW, C, NE, X, X, X}},
-{{SE, C, NW, X, SW, C, NE, E, X, X}},
-{{SE, C, NW, X, W, SW, C, NE, E, X}},
-{{SE, C, NW, NE, X, SW, C, NE, E, X}},
-{{SE, C, NW, NE, X, W, SW, C, NE, E}},
-{{SE, SW, C, NE, X, NW, C, SE, E, X}},
-{{SE, C, NW, X, W, SW, C, NE, X, X}},
-{{SE, C, NW, W, X, NW, NE, C, SW, X}},
-{{SE, C, NW, W, X, NE, C, SW, X, X}},
-{{SE, C, NW, W, X, E, NE, C, SW, X}},
-{{SE, C, NW, X, NE, C, SW, X, X, X}},
-{{SE, C, NW, X, E, NE, C, SW, X, X}},
-{{SE, C, NW, X, E, NE, C, SW, W, X}},
-{{SE, C, NW, NE, X, E, NE, C, SW, X}},
-{{SE, C, NW, NE, X, E, NE, C, SW, W}},
-{{SE, SW, C, NE, X, E, SE, C, NW, X}},
-{{SE, C, NW, X, NE, C, SW, W, X, X}},
-{{SW, SE, C, NW, X, W, SW, C, NE, X}},
-{{SW, C, NE, NW, X, W, NW, C, SE, E}},
-{{SW, C, NE, NW, X, W, NW, C, SE, X}},
-{{SW, C, NE, X, W, NW, C, SE, E, X}},
-{{SW, C, NE, X, W, NW, C, SE, X, X}},
-{{SW, C, NE, X, NW, C, SE, X, X, X}},
-{{SW, C, NE, E, X, W, NW, C, SE, X}},
-{{SW, C, NE, E, X, NW, C, SE, X, X}},
-{{SW, C, NE, E, X, NE, NW, C, SE, X}},
-{{SW, C, NE, X, NW, C, SE, E, X, X}},
-{{SW, SE, C, NW, X, NE, C, SW, W, X}},
-{{SW, C, NE, NW, X, E, SE, C, NW, W}},
-{{SW, C, NE, NW, X, SE, C, NW, W, X}},
-{{SW, C, NE, X, E, SE, C, NW, W, X}},
-{{SW, C, NE, X, SE, C, NW, W, X, X}},
-{{SW, C, NE, X, SE, C, NW, X, X, X}},
-{{SW, C, NE, E, X, SE, C, NW, W, X}},
-{{SW, C, NE, E, X, SE, C, NW, X, X}},
-{{SW, C, NE, E, X, SE, C, NW, NE, X}},
-{{SW, C, NE, X, E, SE, C, NW, X, X}},
-{{W, SW, C, NE, X, NW, C, SE, E, X}},
-{{W, SW, C, NE, X, NW, C, SE, X, X}},
-{{W, SW, C, NE, X, NW, C, SE, SW, X}},
-{{W, SW, C, NE, E, X, NW, C, SE, X}},
-{{W, SW, C, NE, E, X, NW, C, SE, SW}},
-{{W, NW, C, SE, E, X, NE, C, SW, X}},
-{{W, NW, C, SE, X, NW, NE, C, SW, X}},
-{{W, NW, C, SE, X, NE, C, SW, X, X}},
-{{W, NW, C, SE, X, E, NE, C, SW, X}},
-{{W, NW, C, SE, E, X, NE, C, SW, SE}},
-{{W, SW, C, NE, X, E, SE, C, NW, X}},
-{{W, SW, C, NE, X, SE, C, NW, X, X}},
-{{W, SW, C, NE, X, SW, SE, C, NW, X}},
-{{W, SW, C, NE, E, X, SE, C, NW, X}},
-{{W, NW, C, SE, E, X, SW, C, NE, NW}},
-{{W, NW, C, SE, E, X, SW, C, NE, X}},
-{{W, NW, C, SE, X, SW, C, NE, NW, X}},
-{{W, NW, C, SE, X, SW, C, NE, X, X}},
-{{W, NW, C, SE, X, SW, C, NE, E, X}},
-{{W, SW, C, NE, E, X, SE, C, NW, NE}},
-{{NW, C, SE, E, X, NE, C, SW, SE, X}},
-{{NW, C, SE, E, X, NE, C, SW, X, X}},
-{{NW, C, SE, E, X, NE, C, SW, W, X}},
-{{NW, C, SE, X, NE, C, SW, X, X, X}},
-{{NW, C, SE, X, NE, C, SW, W, X, X}},
-{{NW, C, SE, X, E, NE, C, SW, W, X}},
-{{NW, C, SE, SW, X, NE, C, SW, W, X}},
-{{NW, C, SE, SW, X, E, NE, C, SW, W}},
-{{NW, NE, C, SW, X, SE, C, NW, W, X}},
-{{NW, C, SE, X, E, NE, C, SW, X, X}},
-{{NW, C, SE, E, X, SE, SW, C, NE, X}},
-{{NW, C, SE, E, X, SW, C, NE, X, X}},
-{{NW, C, SE, E, X, W, SW, C, NE, X}},
-{{NW, C, SE, X, SW, C, NE, X, X, X}},
-{{NW, C, SE, X, W, SW, C, NE, X, X}},
-{{NW, C, SE, X, W, SW, C, NE, E, X}},
-{{NW, C, SE, SW, X, W, SW, C, NE, X}},
-{{NW, C, SE, SW, X, W, SW, C, NE, E}},
-{{NW, NE, C, SW, X, W, NW, C, SE, X}},
-{{NW, C, SE, X, SW, C, NE, E, X, X}}}};
+{{NE, NW, C, SE, X, E, NE, C, SW, X}},{{NE, C, SW, SE, X, E, SE, C, NW, W}},{{NE, C, SW, SE, X, E, SE, C, NW, X}},{{NE, C, SW, X, E, SE, C, NW, W, X}},{{NE, C, SW, X, E, SE, C, NW, X, X}},
+{{NE, C, SW, X, SE, C, NW, X, X, X}},{{NE, C, SW, W, X, E, SE, C, NW, X}},{{NE, C, SW, W, X, SE, C, NW, X, X}},{{NE, C, SW, W, X, SW, SE, C, NW, X}},{{NE, C, SW, X, SE, C, NW, W, X, X}},
+{{NE, NW, C, SE, X, SW, C, NE, E, X}},{{NE, C, SW, SE, X, W, NW, C, SE, E}},{{NE, C, SW, SE, X, NW, C, SE, E, X}},{{NE, C, SW, X, W, NW, C, SE, E, X}},{{NE, C, SW, X, NW, C, SE, E, X, X}},
+{{NE, C, SW, X, NW, C, SE, X, X, X}},{{NE, C, SW, W, X, NW, C, SE, E, X}},{{NE, C, SW, W, X, NW, C, SE, X, X}},{{NE, C, SW, W, X, NW, C, SE, SW, X}},{{NE, C, SW, X, W, NW, C, SE, X, X}},
+{{E, NE, C, SW, X, SE, C, NW, W, X}},{{E, NE, C, SW, X, SE, C, NW, X, X}},{{E, NE, C, SW, X, SE, C, NW, NE, X}},{{E, NE, C, SW, W, X, SE, C, NW, X}},{{E, NE, C, SW, W, X, SE, C, NW, NE}},
+{{E, SE, C, NW, W, X, SW, C, NE, X}},{{E, SE, C, NW, X, SE, SW, C, NE, X}},{{E, SE, C, NW, X, SW, C, NE, X, X}},{{E, SE, C, NW, X, W, SW, C, NE, X}},{{E, SE, C, NW, W, X, SW, C, NE, NW}},
+{{E, NE, C, SW, X, W, NW, C, SE, X}},{{E, NE, C, SW, X, NW, C, SE, X, X}},{{E, NE, C, SW, X, NE, NW, C, SE, X}},{{E, NE, C, SW, W, X, NW, C, SE, X}},{{E, SE, C, NW, W, X, NE, C, SW, SE}},
+{{E, SE, C, NW, W, X, NE, C, SW, X}},{{E, SE, C, NW, X, NE, C, SW, SE, X}},{{E, SE, C, NW, X, NE, C, SW, X, X}},{{E, SE, C, NW, X, NE, C, SW, W, X}},{{E, NE, C, SW, W, X, NW, C, SE, SW}},
+{{SE, C, NW, W, X, SW, C, NE, NW, X}},{{SE, C, NW, W, X, SW, C, NE, X, X}},{{SE, C, NW, W, X, SW, C, NE, E, X}},{{SE, C, NW, X, SW, C, NE, X, X, X}},{{SE, C, NW, X, SW, C, NE, E, X, X}},
+{{SE, C, NW, X, W, SW, C, NE, E, X}},{{SE, C, NW, NE, X, SW, C, NE, E, X}},{{SE, C, NW, NE, X, W, SW, C, NE, E}},{{SE, SW, C, NE, X, NW, C, SE, E, X}},{{SE, C, NW, X, W, SW, C, NE, X, X}},
+{{SE, C, NW, W, X, NW, NE, C, SW, X}},{{SE, C, NW, W, X, NE, C, SW, X, X}},{{SE, C, NW, W, X, E, NE, C, SW, X}},{{SE, C, NW, X, NE, C, SW, X, X, X}},{{SE, C, NW, X, E, NE, C, SW, X, X}},
+{{SE, C, NW, X, E, NE, C, SW, W, X}},{{SE, C, NW, NE, X, E, NE, C, SW, X}},{{SE, C, NW, NE, X, E, NE, C, SW, W}},{{SE, SW, C, NE, X, E, SE, C, NW, X}},{{SE, C, NW, X, NE, C, SW, W, X, X}},
+{{SW, SE, C, NW, X, W, SW, C, NE, X}},{{SW, C, NE, NW, X, W, NW, C, SE, E}},{{SW, C, NE, NW, X, W, NW, C, SE, X}},{{SW, C, NE, X, W, NW, C, SE, E, X}},{{SW, C, NE, X, W, NW, C, SE, X, X}},
+{{SW, C, NE, X, NW, C, SE, X, X, X}},{{SW, C, NE, E, X, W, NW, C, SE, X}},{{SW, C, NE, E, X, NW, C, SE, X, X}},{{SW, C, NE, E, X, NE, NW, C, SE, X}},{{SW, C, NE, X, NW, C, SE, E, X, X}},
+{{SW, SE, C, NW, X, NE, C, SW, W, X}},{{SW, C, NE, NW, X, E, SE, C, NW, W}},{{SW, C, NE, NW, X, SE, C, NW, W, X}},{{SW, C, NE, X, E, SE, C, NW, W, X}},{{SW, C, NE, X, SE, C, NW, W, X, X}},
+{{SW, C, NE, X, SE, C, NW, X, X, X}},{{SW, C, NE, E, X, SE, C, NW, W, X}},{{SW, C, NE, E, X, SE, C, NW, X, X}},{{SW, C, NE, E, X, SE, C, NW, NE, X}},{{SW, C, NE, X, E, SE, C, NW, X, X}},
+{{W, SW, C, NE, X, NW, C, SE, E, X}},{{W, SW, C, NE, X, NW, C, SE, X, X}},{{W, SW, C, NE, X, NW, C, SE, SW, X}},{{W, SW, C, NE, E, X, NW, C, SE, X}},{{W, SW, C, NE, E, X, NW, C, SE, SW}},
+{{W, NW, C, SE, E, X, NE, C, SW, X}},{{W, NW, C, SE, X, NW, NE, C, SW, X}},{{W, NW, C, SE, X, NE, C, SW, X, X}},{{W, NW, C, SE, X, E, NE, C, SW, X}},{{W, NW, C, SE, E, X, NE, C, SW, SE}},
+{{W, SW, C, NE, X, E, SE, C, NW, X}},{{W, SW, C, NE, X, SE, C, NW, X, X}},{{W, SW, C, NE, X, SW, SE, C, NW, X}},{{W, SW, C, NE, E, X, SE, C, NW, X}},{{W, NW, C, SE, E, X, SW, C, NE, NW}},
+{{W, NW, C, SE, E, X, SW, C, NE, X}},{{W, NW, C, SE, X, SW, C, NE, NW, X}},{{W, NW, C, SE, X, SW, C, NE, X, X}},{{W, NW, C, SE, X, SW, C, NE, E, X}},{{W, SW, C, NE, E, X, SE, C, NW, NE}},
+{{NW, C, SE, E, X, NE, C, SW, SE, X}},{{NW, C, SE, E, X, NE, C, SW, X, X}},{{NW, C, SE, E, X, NE, C, SW, W, X}},{{NW, C, SE, X, NE, C, SW, X, X, X}},{{NW, C, SE, X, NE, C, SW, W, X, X}},
+{{NW, C, SE, X, E, NE, C, SW, W, X}},{{NW, C, SE, SW, X, NE, C, SW, W, X}},{{NW, C, SE, SW, X, E, NE, C, SW, W}},{{NW, NE, C, SW, X, SE, C, NW, W, X}},{{NW, C, SE, X, E, NE, C, SW, X, X}},
+{{NW, C, SE, E, X, SE, SW, C, NE, X}},{{NW, C, SE, E, X, SW, C, NE, X, X}},{{NW, C, SE, E, X, W, SW, C, NE, X}},{{NW, C, SE, X, SW, C, NE, X, X, X}},{{NW, C, SE, X, W, SW, C, NE, X, X}},
+{{NW, C, SE, X, W, SW, C, NE, E, X}},{{NW, C, SE, SW, X, W, SW, C, NE, X}},{{NW, C, SE, SW, X, W, SW, C, NE, E}},{{NW, NE, C, SW, X, W, NW, C, SE, X}},{{NW, C, SE, X, SW, C, NE, E, X, X}}}};
 
 /**
  * Utility function that populates a supertile by reading in the `original_tile`s node and it's inputs and outputs,
@@ -894,29 +682,60 @@ template <typename HexLyt>
         }
         else if (original_lyt.is_wire(original_node) and !original_lyt.is_fanout(original_node))
         {
-            if
-            hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
-            hex_direction out = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
-
-            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
-
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wunused-result"
-
-            // place input wire
-            const auto input_wire_position = get_near_position<HexLyt>(core_tile, in, 0);
-            place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position<HexLyt>(input_wire_position, static_cast<hex_direction>((in + 1) % 6), 0));
-
-            // place core wire
-            place_wire<HexLyt>(super_lyt, core_tile, get_near_position<HexLyt>(core_tile, in, 0));
-
-            #pragma GCC diagnostic pop
-
-            // place output wire
-            const auto output_wire_position = get_near_position<HexLyt>(core_tile, out, 0);
-            if (!place_wire<HexLyt>(super_lyt, output_wire_position, core_tile))
+            if (const auto other_wire = (original_lyt.is_ground_layer(original_tile)) ? (original_lyt.above(original_tile)) : (original_lyt.below(original_tile));
+                (other_wire != original_tile) and (original_lyt.is_wire_tile(other_wire))) // wire crossing
             {
-                *output_a = out; 
+                hex_direction in1 = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
+                hex_direction out1 = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
+                hex_direction in2 = get_near_direction<HexLyt>(other_wire, original_lyt.incoming_data_flow(other_wire)[0]);
+                hex_direction out2 = get_near_direction<HexLyt>(other_wire, original_lyt.outgoing_data_flow(other_wire[0]));
+                
+                const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+
+                std::array<hex_direction,10> lookup_table = lookup_table_2in2out_CROSSING[perfectHasFunction22(in1, out1, in2, out2)];
+
+                uint8_t table_position = 0;
+
+                // place first wire
+                bool found_wire = false;
+                table_position = place_crossing_wires<HexLyt>(super_lyt, core_tile, lookup_table, table_position, &found_wire); //TODO continue with implementing place_crossing_wires
+                if (!found_wire)
+                {
+                    *output_a = lookup_table[table_position - 2];
+                }
+                // place second wire
+                found_wire = false;
+                place_crossing_wires<HexLyt>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+                if (!found_wire)
+                {
+                    *output_b = lookup_table[table_position - 2];
+                }
+            }
+            else // single wire
+            {
+                hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
+                hex_direction out = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
+
+                const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+
+                #pragma GCC diagnostic push
+                #pragma GCC diagnostic ignored "-Wunused-result"
+
+                // place input wire
+                const auto input_wire_position = get_near_position<HexLyt>(core_tile, in, 0);
+                place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position<HexLyt>(input_wire_position, static_cast<hex_direction>((in + 1) % 6), 0));
+
+                // place core wire
+                place_wire<HexLyt>(super_lyt, core_tile, get_near_position<HexLyt>(core_tile, in, 0));
+
+                #pragma GCC diagnostic pop
+
+                // place output wire
+                const auto output_wire_position = get_near_position<HexLyt>(core_tile, out, 0);
+                if (!place_wire<HexLyt>(super_lyt, output_wire_position, core_tile))
+                {
+                    *output_a = out; 
+                }
             }
         }
         else if (original_lyt.is_inv(original_node))
@@ -983,9 +802,7 @@ template <typename HexLyt>
             }
         }
         else
-        {
-            return true; // unknown core gate
-        }
+            {return true;}
     }
     else if (incoming_signals.size() == 2 and outgoing_signals.size() == 1) //FORME original_node is on of the following logic gates: OR, NOR, AND, NAND, XOR, XNOR
     {
@@ -1052,14 +869,8 @@ template <typename HexLyt>
             *output_a = out;
         }
     }
-    //else if ( /*check for crossing*/ ) TODO actually check for crossing first ? or make sure crossings aren't mistaken for wires 
-    //{
-        // TODO don't forget to write second outgoing direction too
-    //}
     else
-    {
-        return true;
-    }
+        {return true;}
     return false;
 }
 
@@ -1086,7 +897,7 @@ void add_unique(std::vector<tile<HexLyt>>& vector, const tile<HexLyt> new_tile) 
     }
 }
 
-//TODO description (mainly used to copy z)
+//TODO description (mainly used to copy z) (mention that it's intended behaviour to return the sample, which is usefull in case of wire crossings)
 template <typename HexLyt>
 [[nodiscard]] tile<HexLyt> get_outgoing_from_direction(const std::vector<tile<HexLyt>> outgoing_tiles, const tile<HexLyt> refference, hex_direction direction) noexcept
 {
@@ -1098,7 +909,7 @@ template <typename HexLyt>
             return outgoing;
         }
     }
-    std::cout << "[w] couldn't find tile in vector from the given direction" << std::endl; //TODO maybe there is a better / prettier solution
+    std::cout << "[i] used the sample because to outgoing tile in that direction was found" << std::endl; //TODO maybe there is a better / prettier solution
     return sample;
 }
 }
@@ -1172,9 +983,9 @@ template <typename HexLyt>
                 std::cout << "[i] continuing path like normal" << std::endl; //TODO remove
                 current_original_tile = detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
             }
-            else // path splits up
+            else // path splits up or contained a wire crossing
             {
-                std::cout << "[i detected path splitting" << std::endl; //TODO remove
+                std::cout << "[i] detected path splitting or wire crossing" << std::endl; //TODO remove
                 detail::add_unique<HexLyt>(path_beginnings, detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_b));
                 current_original_tile = detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
             }
