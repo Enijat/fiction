@@ -265,54 +265,56 @@ class sidb_extendagon_library : public sidb_bestagon_library
     {
         port_list<port_direction> ports{};
         
+        using 
+
         // determine incoming connector ports
-        if (lyt.has_north_eastern_incoming_signal(t))
+        if (lyt.has_north_eastern_incoming_signal<false>(t))
         {
             ports.inp.emplace(port_direction::cardinal::NORTH_EAST);
         }
-        if (lyt.has_eastern_incoming_signal(t))
+        if (lyt.has_eastern_incoming_signal<false>(t))
         {
             ports.inp.emplace(port_direction::cardinal::EAST);
         }
-        if (lyt.has_south_eastern_incoming_signal(t))
+        if (lyt.has_south_eastern_incoming_signal<false>(t))
         {
             ports.inp.emplace(port_direction::cardinal::SOUTH_EAST);
         }
-        if (lyt.has_south_western_incoming_signal(t))
+        if (lyt.has_south_western_incoming_signal<false>(t))
         {
             ports.inp.emplace(port_direction::cardinal::SOUTH_WEST);
         }
-        if (lyt.has_western_incoming_signal(t))
+        if (lyt.has_western_incoming_signal<false>(t))
         {
             ports.inp.emplace(port_direction::cardinal::WEST);
         }
-        if (lyt.has_north_western_incoming_signal(t))
+        if (lyt.has_north_western_incoming_signal<false>(t))
         {
             ports.inp.emplace(port_direction::cardinal::NORTH_WEST);
         }
 
         // determine outgoing connector ports
-        if (lyt.has_north_eastern_outgoing_signal(t))
+        if (lyt.has_north_eastern_outgoing_signal<false>(t))
         {
             ports.out.emplace(port_direction::cardinal::NORTH_EAST);
         }
-        if (lyt.has_eastern_outgoing_signal(t))
+        if (lyt.has_eastern_outgoing_signal<false>(t))
         {
             ports.out.emplace(port_direction::cardinal::EAST);
         }
-        if (lyt.has_south_eastern_outgoing_signal(t))
+        if (lyt.has_south_eastern_outgoing_signal<false>(t))
         {
             ports.out.emplace(port_direction::cardinal::SOUTH_EAST);
         }
-        if (lyt.has_south_western_outgoing_signal(t))
+        if (lyt.has_south_western_outgoing_signal<false>(t))
         {
             ports.out.emplace(port_direction::cardinal::SOUTH_WEST);
         }
-        if (lyt.has_western_outgoing_signal(t))
+        if (lyt.has_western_outgoing_signal<false>(t))
         {
             ports.out.emplace(port_direction::cardinal::WEST);
         }
-        if (lyt.has_north_western_outgoing_signal(t))
+        if (lyt.has_north_western_outgoing_signal<false>(t))
         {
             ports.out.emplace(port_direction::cardinal::NORTH_WEST);
         }

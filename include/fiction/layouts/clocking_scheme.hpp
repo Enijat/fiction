@@ -840,8 +840,8 @@ template <typename ArrayType>
 static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
 {
     // reduce to repeating block coordinates
-    uint8_t reduced_x = static_cast<uint8_t>(positive_mod(x, 56));
-    uint8_t reduced_y = static_cast<uint8_t>(positive_mod(y, 112));
+    uint8_t reduced_x = static_cast<uint8_t>(positive_mod(x, 56l));
+    uint8_t reduced_y = static_cast<uint8_t>(positive_mod(y, 112l));
 
     // translate into top two rows coordinates
     uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);

@@ -205,13 +205,15 @@ cartesian_combinations(const std::vector<std::vector<VectorDataType>>& sets) noe
  * 
  * `a mod b = c` <=> `c = mod(a,b)`
  * 
+ * @tparam Size of the provided and returned integers, standard is int64_t
  * @param a number to be "divided"
  * @param b "dividend"
  * @return least positive residue 
  */
-[[nodiscard]] inline constexpr uint64_t positive_mod(int64_t a, int64_t b) noexcept
+template<typename integer_size = int64_t>
+[[nodiscard]] inline constexpr integer_size positive_mod(integer_size a, integer_size b) noexcept
 {
-    return static_cast<uint64_t>(((a %= b) < 0) ? a + b : a);
+    return static_cast<integer_size>(((a %= b) < 0) ? a + b : a);
 }
 
 #pragma GCC diagnostic pop
