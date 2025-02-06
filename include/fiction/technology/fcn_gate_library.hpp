@@ -362,8 +362,8 @@ class fcn_gate_library
             for (auto x = 0ul; x < GateSizeX / 2; x++)
             {
                 auto temp = rev_cols[y][x];
-                rev_cols[y][x] = rev_cols[y][GateSizeY-1-x];
-                rev_cols[y][GateSizeY-1-x] = temp;
+                rev_cols[y][x] = rev_cols[y][GateSizeX-1-x];
+                rev_cols[y][GateSizeX-1-x] = temp;
             }
         }
 
