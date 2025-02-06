@@ -178,6 +178,7 @@ class synchronization_element_layout : public ClockedLayout
      * @return `true` iff `cz2`'s clock number is lower by 1 modulo `num_clocks()` or if `cz1` or `cz2` are
      * synchronization elements.
      */
+    template <bool allowSameClockInfoFlow = false>
     [[nodiscard]] bool is_incoming_clocked(const clock_zone<ClockedLayout>& cz1,
                                            const clock_zone<ClockedLayout>& cz2) const noexcept
     {
@@ -186,7 +187,7 @@ class synchronization_element_layout : public ClockedLayout
             return false;
         }
 
-        return ClockedLayout::is_incoming_clocked(cz1, cz2) || is_synchronization_element(cz1) ||
+        return ClockedLayout::template is_incoming_clocked<allowSameClockInfoFlow>(cz1, cz2) || is_synchronization_element(cz1) ||
                is_synchronization_element(cz2);
     }
     /**

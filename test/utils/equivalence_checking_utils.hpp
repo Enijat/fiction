@@ -9,10 +9,10 @@
 
 #include <fiction/algorithms/verification/equivalence_checking.hpp>
 
-template <typename Spec, typename Impl>
+template <typename Spec, typename Impl, bool allowSameClockInfoFlow = false>
 void check_eq(const Spec& spec, const Impl& impl)
 {
-    CHECK(fiction::equivalence_checking(spec, impl) != fiction::eq_type::NO);
+    CHECK(fiction::equivalence_checking<Spec, Impl, allowSameClockInfoFlow>(spec, impl) != fiction::eq_type::NO);
 }
 
 #endif  // FICTION_EQUIVALENCE_CHECKING_UTILS_HPP

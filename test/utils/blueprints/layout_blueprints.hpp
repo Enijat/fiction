@@ -764,7 +764,7 @@ template <typename Lyt>
     lyt.assign_cell_type({24, 0, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 /**
  * This layout represents the AND Gate, as proposed in the paper
  * titled \"SiQAD: A Design and Simulation Tool for Atomic Silicon Quantum Dot Circuits\" by Samuel Sze Hang Ng, Jacob
@@ -798,7 +798,7 @@ Lyt siqad_and_gate() noexcept
     lyt.assign_cell_type({10, 9, 1}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 /**
  * This layout represents the OR Gate, as proposed in the paper
  * titled \"SiQAD: A Design and Simulation Tool for Atomic Silicon Quantum Dot Circuits\" by Samuel Sze Hang Ng, Jacob
@@ -832,7 +832,7 @@ Lyt siqad_or_gate() noexcept
     lyt.assign_cell_type({8, 8, 1}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 /**
  * This layout represents the NAND Gate, as proposed in the paper titled \"SiQAD: A Design and Simulation Tool for
  * Atomic Silicon Quantum Dot Circuits\" by Samuel Sze Hang Ng, Jacob Retallick, Hsi Nien Chiu, Robert Lupoiu, Lucian
@@ -869,7 +869,7 @@ Lyt siqad_nand_gate() noexcept
     lyt.assign_cell_type({10, 12, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 /**
  * This layout represents the AND Gate, as proposed in the paper
  * titled \"Hexagons are the Bestagons: Design Automation for Silicon Dangling Bond Logic\" by
@@ -916,7 +916,7 @@ Lyt bestagon_and_gate() noexcept
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 /**
  * This layout represents the AND Gate implemented on the H-Si(111)-1x1 surface, as proposed in the paper
  * titled \"Unlocking Flexible Silicon Dangling Bond Logic Designs on Alternative Silicon Orientations\" by
@@ -968,7 +968,7 @@ Lyt and_gate_111() noexcept
     lyt.assign_cell_type({23, 29, 1}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 template <typename Lyt>
 Lyt and_gate_111_mirrored_on_the_x_axis() noexcept
@@ -1012,7 +1012,7 @@ Lyt and_gate_111_mirrored_on_the_x_axis() noexcept
     lyt.assign_cell_type({23, -30, 1}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 /**
  * This layout represents a crossing gate, as proposed in the paper titled \"Hexagons are the Bestagons: Design
  * Automation for Silicon Dangling Bond Logic\" authored by Marcel Walter, Samuel Sze Hang Ng, Konrad Walus, and Robert
@@ -1072,7 +1072,7 @@ template <typename Lyt>
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 template <typename Lyt>
 Lyt crossing_bestagon_shape_input_down_output_up() noexcept
@@ -1124,7 +1124,7 @@ Lyt crossing_bestagon_shape_input_down_output_up() noexcept
     lyt.assign_cell_type({38, 20, 0}, Lyt::cell_type::INPUT);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents an AND gate, as proposed in the paper titled \"Hexagons are the Bestagons: Design
@@ -1175,7 +1175,7 @@ template <typename Lyt>
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents a FO2 gate, as proposed in the paper titled \"Hexagons are the Bestagons: Design
@@ -1223,7 +1223,7 @@ Lyt bestagon_fo2() noexcept
     lyt.assign_cell_type({2, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents an 2-input-2-output Bestagon skeleton, as proposed in the paper titled \"Hexagons are the
@@ -1277,7 +1277,7 @@ template <typename Lyt>
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents an 2-input-2-output Bestagon skeleton with output at the top and input at the bottom.
@@ -1329,7 +1329,7 @@ template <typename Lyt>
     lyt.assign_cell_type({38, 20, 0}, Lyt::cell_type::INPUT);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents an 2-input-1-output Bestagon skeleton, as proposed in the paper titled \"Hexagons are the
@@ -1376,7 +1376,7 @@ template <typename Lyt>
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 template <typename Lyt>
 [[nodiscard]] Lyt bestagon_xor() noexcept
@@ -1422,7 +1422,7 @@ template <typename Lyt>
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents an AND gate with the typical Bestagon skeleton. However, it shows kinks in the I/O pins for
@@ -1471,7 +1471,7 @@ template <typename Lyt>
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents an SiDB skeleton with a Bestagon shape.
@@ -1511,7 +1511,7 @@ Lyt two_input_left_one_output_right_top_skeleton() noexcept
     lyt.assign_cell_type({38, 1, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents the double wire, as proposed in the paper titled \"Hexagons are the
@@ -1578,7 +1578,7 @@ Lyt bestagon_double_wire() noexcept
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents the half adder gate, as proposed in the paper titled \"Hexagons are the
@@ -1638,7 +1638,7 @@ template <typename Lyt>
     lyt.assign_cell_type({36, 19, 0}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 /**
  * This layout represents a 2-input-1-output skeleton, where one input and output wire have a port direction to the
@@ -1684,7 +1684,7 @@ Lyt two_input_one_output_skeleton_west_west() noexcept
     lyt.assign_cell_type({60, 9, 1}, Lyt::cell_type::NORMAL);
 
     return lyt;
-};
+}
 
 }  // namespace blueprints
 

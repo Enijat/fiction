@@ -89,20 +89,21 @@ class equivalence_checking_impl
             pst{st}
     {}
 
+    template <bool allowSameClockInfoFlow = false>
     eq_type run() noexcept
     {
         mockturtle::stopwatch stop{pst.runtime};
 
         if constexpr (is_gate_level_layout_v<Spec>)
         {
-            if (has_drvs(spec, &pst.spec_drv_stats))
+            if (has_drvs<Spec, allowSameClockInfoFlow>(spec, &pst.spec_drv_stats))
             {
                 return eq_type::NO;
             }
         }
         if constexpr (is_gate_level_layout_v<Impl>)
         {
-            if (has_drvs(impl, &pst.impl_drv_stats))
+            if (has_drvs<Impl, allowSameClockInfoFlow>(impl, &pst.impl_drv_stats))
             {
                 return eq_type::NO;
             }
@@ -180,7 +181,7 @@ class equivalence_checking_impl
 
     equivalence_checking_stats& pst;
 
-    template <typename NtkOrLyt>
+    template <typename NtkOrLyt, bool allowSameClockInfoFlow = false>
     bool has_drvs(const NtkOrLyt& ntk_or_lyt, gate_level_drv_stats* stats) const noexcept
     {
         fiction::gate_level_drv_params drv_ps{};
@@ -189,7 +190,7 @@ class equivalence_checking_impl
         std::ostringstream null_stream{};
         drv_ps.out = &null_stream;
 
-        gate_level_drvs(ntk_or_lyt, drv_ps, stats);
+        gate_level_drvs<NtkOrLyt, allowSameClockInfoFlow>(ntk_or_lyt, drv_ps, stats);
 
         return stats->drvs != 0;
     }
@@ -225,7 +226,7 @@ class equivalence_checking_impl
  * @param pst Statistics.
  * @return The equivalence type of `spec` and `impl`.
  */
-template <typename Spec, typename Impl>
+template <typename Spec, typename Impl, bool allowSameClockInfoFlow = false>
 eq_type equivalence_checking(const Spec& spec, const Impl& impl, equivalence_checking_stats* pst = nullptr)
 {
     static_assert(mockturtle::is_network_type_v<Spec>, "Spec is not a network type");
@@ -234,7 +235,7 @@ eq_type equivalence_checking(const Spec& spec, const Impl& impl, equivalence_che
     equivalence_checking_stats        st{};
     detail::equivalence_checking_impl p{spec, impl, st};
 
-    const auto result = p.run();
+    const auto result = p.template run<allowSameClockInfoFlow>();
 
     if (pst)
     {

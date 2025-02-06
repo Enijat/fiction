@@ -197,11 +197,15 @@ class clocked_layout : public CoordinateLayout
      * @param cz2 Clock zone to check whether its clock number is lower by 1.
      * @return `true` iff `cz2` can feed information to `cz1`.
      */
+    template <bool allowSameClockInfoFlow = false>
     [[nodiscard]] bool is_incoming_clocked(const clock_zone& cz1, const clock_zone& cz2) const noexcept
     {
         if (cz1 == cz2)
-        {
-            return false;
+        {   
+            if constexpr (allowSameClockInfoFlow)
+                {return true;}
+            else
+                {return false;}
         }
 
         return static_cast<clock_number_t>((get_clock_number(cz2) + static_cast<clock_number_t>(1)) % num_clocks()) ==

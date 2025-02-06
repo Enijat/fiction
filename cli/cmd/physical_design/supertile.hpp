@@ -82,7 +82,7 @@ class supertile_command : public command
 
         try
         {
-            if (const auto hex_lyt = std::visit(apply_supertilezation, lyt); hex_lyt.has_value())
+            if (const auto hex_lyt = std::visit(apply_supertilezation, lyt); hex_lyt.has_value() /*&& hex_lyt != lyt*/) // TODO check if the hex_lyt != lyt works / get it working
             {
                 gls.extend() = std::make_shared<fiction::hex_even_row_gate_clk_lyt>(*hex_lyt);
             }

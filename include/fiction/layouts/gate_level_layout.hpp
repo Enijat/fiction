@@ -919,9 +919,10 @@ class gate_level_layout : public ClockedLayout
      * @param n Node to check.
      * @return `true` iff `n` is a fanout gate.
      */
+    template <bool RespectClocking = true>
     [[nodiscard]] bool is_fanout(const node n) const noexcept
     {
-        return is_wire(n) && fanout_size(n) > 1;
+        return is_wire(n) && fanout_size<RespectClocking>(n) > 1;
     }
     /**
      * Returns whether `n`ode `n` computes a function. That is, this function returns `true` iff `n` is not a constant.

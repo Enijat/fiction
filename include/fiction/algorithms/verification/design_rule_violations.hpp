@@ -131,6 +131,7 @@ class gate_level_drvs_impl
      *   - Non-wire I/O
      *   - Non-border I/O
      */
+    template <bool allowSameClockInfoFlow = false>
     void run()
     {
         *ps.out << "[i] Topology:\n";
@@ -159,7 +160,7 @@ class gate_level_drvs_impl
         *ps.out << "[i] Clocking:\n";
         if (ps.clocked_data_flow)
         {
-            *ps.out << "[i]" << clocked_data_flow_check() << '\n';
+            *ps.out << "[i]" << clocked_data_flow_check<allowSameClockInfoFlow>() << '\n';
         }
         *ps.out << '\n';
 
@@ -470,6 +471,7 @@ class gate_level_drvs_impl
      *
      * @return Check summary as a one liner.
      */
+    template <bool allowSameClockInfoFlow = false>
     std::string clocked_data_flow_check()
     {
         nlohmann::json data_flow_report{};
@@ -491,7 +493,7 @@ class gate_level_drvs_impl
                     for (const auto& child : lyt.strg->nodes[n].children)
                     {
                         const auto ct = lyt.get_tile(lyt.get_node(child.index));
-                        if (!lyt.is_incoming_clocked(t, ct))
+                        if (!lyt.template is_incoming_clocked<allowSameClockInfoFlow>(t, ct))
                         {
                             data_flow_respected = false;
                             log_tile(ct, data_flow_report);
@@ -664,7 +666,7 @@ class gate_level_drvs_impl
  * @param ps Parameters.
  * @param pst Statistics.
  */
-template <typename Lyt>
+template <typename Lyt, bool allowSameClockInfoFlow = false>
 void gate_level_drvs(const Lyt& lyt, const gate_level_drv_params& ps = {}, gate_level_drv_stats* pst = nullptr)
 {
     static_assert(is_gate_level_layout_v<Lyt>, "Lyt is not a gate-level layout");
@@ -678,7 +680,7 @@ void gate_level_drvs(const Lyt& lyt, const gate_level_drv_params& ps = {}, gate_
     gate_level_drv_stats              st{};
     detail::gate_level_drvs_impl<Lyt> p{lyt, ps, st};
 
-    p.run();
+    p.template run<allowSameClockInfoFlow>();
 
     if (pst)
     {

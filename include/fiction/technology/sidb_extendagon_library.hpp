@@ -56,9 +56,9 @@ class sidb_extendagon_library : public sidb_bestagon_library
         {
             if constexpr (fiction::has_is_fanout_v<GateLyt>)
             {
-                if (lyt.is_fanout(n))
+                if (lyt.template is_fanout<false>(n))
                 {
-                    if (lyt.fanout_size(n) == 2)
+                    if (lyt.template fanout_size<false>(n) == 2)
                     {
                         return FANOUT_MAP.at(p);
                     }
