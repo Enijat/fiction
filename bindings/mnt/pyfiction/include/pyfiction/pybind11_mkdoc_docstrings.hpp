@@ -6635,7 +6635,29 @@ Parameter ``cartesian_layout_height``:
 Returns:
     offset.)doc";
 
-static const char *__doc_fiction_detail_get_outgoing_from_direction = R"doc()doc";
+static const char *__doc_fiction_detail_get_outgoing_from_direction =
+R"doc(Utility function that searches through a vector of `tile`s, that house
+outgoing signals from the refference `tile`, based on the given
+direction. (Main usage of the function is to copy the z position of
+the existing `tile`, since x and y are already defined.)
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``outgoing_tiles``:
+    Vector to search through.
+
+Parameter ``refference``:
+    `tile` from which the outgoing tiles originate.
+
+Parameter ``direction``:
+    Direction of the requested `tile`, relative to the refference
+    `tile`.
+
+Returns:
+    The `tile` in the given direction, or, if no correct tile was
+    found, a tile in the right x and y position with the z coordinate
+    0.)doc";
 
 static const char *__doc_fiction_detail_get_path =
 R"doc(This helper function computes a path between two coordinates using the
@@ -7088,6 +7110,8 @@ layout. They are additionally used to represent the positions in a
 supertile, in which case each value represents the position in the
 direction its name reflects, relative to the central position.)doc";
 
+static const char *__doc_fiction_detail_hex_direction_C = R"doc()doc";
+
 static const char *__doc_fiction_detail_hex_direction_E = R"doc()doc";
 
 static const char *__doc_fiction_detail_hex_direction_NE = R"doc()doc";
@@ -7115,6 +7139,25 @@ static const char *__doc_fiction_detail_is_balanced_impl_ntk_depth = R"doc()doc"
 static const char *__doc_fiction_detail_is_balanced_impl_ps = R"doc()doc";
 
 static const char *__doc_fiction_detail_is_balanced_impl_run = R"doc()doc";
+
+static const char *__doc_fiction_detail_is_crossing =
+R"doc(Utility function that checks wether the given combination of inputs do
+result in crossing paths or not.
+
+Parameter ``in1``:
+    First input.
+
+Parameter ``out1``:
+    First output.
+
+Parameter ``in2``:
+    Second input.
+
+Parameter ``out2``:
+    Second output.
+
+Returns:
+    true if the paths cross each other, false otherwise)doc";
 
 static const char *__doc_fiction_detail_is_east_south_colored = R"doc()doc";
 
@@ -8129,7 +8172,7 @@ static const char *__doc_fiction_detail_orthogonal_impl_pst = R"doc()doc";
 
 static const char *__doc_fiction_detail_orthogonal_impl_run = R"doc()doc";
 
-static const char *__doc_fiction_detail_perfectHashFunction11 =
+static const char *__doc_fiction_detail_perfect_hash_function_1to1 =
 R"doc(Hash function that maps the input values (if they follow the
 constrains outlined in the in the bachelor thesis "Super-Tile Routing
 for Omnidirectional Information Flow in Silicon Dangling Bond Logic"
@@ -8145,7 +8188,7 @@ Parameter ``B``:
 Returns:
     Hash result to be used in the respective lookup table.)doc";
 
-static const char *__doc_fiction_detail_perfectHashFunction21 =
+static const char *__doc_fiction_detail_perfect_hash_function_2to1 =
 R"doc(Hash function that maps the input values (if they follow the
 constrains outlined in the in the bachelor thesis "Super-Tile Routing
 for Omnidirectional Information Flow in Silicon Dangling Bond Logic"
@@ -8163,6 +8206,28 @@ Parameter ``B``:
 Parameter ``C``:
     Can reflect either of the two inputs in a 2-in 1-out logic gate or
     either of the two oupputs of a fanout.
+
+Returns:
+    Hash result to be used in the respective lookup table.)doc";
+
+static const char *__doc_fiction_detail_perfect_hash_function_2to2 =
+R"doc(Hash function that maps the input values (if they follow the
+constrains outlined in the in the bachelor thesis "Super-Tile Routing
+for Omnidirectional Information Flow in Silicon Dangling Bond Logic"
+by F. Kiefhaber, 2025) to the range 0 to 119 without gaps and or
+overlaps. Designed for wire crossings and bypasses
+
+Parameter ``in1``:
+    First crossing/bypass input.
+
+Parameter ``out1``:
+    First crossing/bypass output.
+
+Parameter ``in2``:
+    Second crossing/bypass input.
+
+Parameter ``out2``:
+    Second crossing/bypass output.
 
 Returns:
     Hash result to be used in the respective lookup table.)doc";
@@ -8298,6 +8363,39 @@ static const char *__doc_fiction_detail_pi_locations_TOP_AND_LEFT =
 R"doc(Flag indicating if primary inputs (PIs) can be placed at the top and
 at the left.)doc";
 
+static const char *__doc_fiction_detail_place_in_out_wires =
+R"doc(Utility function that places one string of wires in a supertile,
+whichs position is definded by the core `tile`. Used for wire
+crossings an bypasses.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Template parameter ``table_size``:
+    Size of the passed lookup table.
+
+Parameter ``lyt``:
+    Hexagonal gate-level supertile layout that will house the wires.
+
+Parameter ``core``:
+    `tile` that represents the central position in a supertile.
+
+Parameter ``lookup_table``:
+    Lookup table that defines the path the wires will take.
+
+Parameter ``table_position``:
+    Position in the lookup table where the start of the current wire
+    string is positioned.
+
+Parameter ``found_wire``:
+    Pointer to where this method will write `true` if an unfinished
+    wire was already present at the position of the last wire placed
+    by this function.
+
+Returns:
+    Returns the updated position in the lookup table that reflects the
+    position of the next entity in the table.)doc";
+
 static const char *__doc_fiction_detail_place_input_wires =
 R"doc(Utility function that places one string of input wires in a supertile,
 whichs position is defined by the core `tile`.
@@ -8321,9 +8419,9 @@ Parameter ``table_position``:
     Position in the lookup table where the start of the current wire
     string is positioned.
 
-Parameter ``last_z_position``:
-    Pointer to where this function will write the z position of the
-    last wire that was placed.
+Parameter ``last_wire``:
+    Pointer to where this function will write the `tile` of the last
+    wire that was placed.
 
 Returns:
     Returns the updated position in the lookup table that reflects the
@@ -9174,9 +9272,7 @@ left.)doc";
 
 static const char *__doc_fiction_detail_search_space_graph_planar = R"doc(Create planar layouts.)doc";
 
-static const char *__doc_fiction_detail_super = R"doc()doc";
-
-static const char *__doc_fiction_detail_super_arraytype =
+static const char *__doc_fiction_detail_super =
 R"doc(Utility function to translate the original hex coodrinates into the
 new supertile hex coordinates. Offset will simple be added to the
 coordinates.
@@ -9184,7 +9280,7 @@ coordinates.
 Template parameter ``HexLyt``:
     Even-row hexagonal gate-level layout return type.
 
-Parameter ``tile``:
+Parameter ``original_tile``:
     Original position.
 
 Parameter ``offset_x``:
@@ -9197,9 +9293,46 @@ Parameter ``z``:
     z coordinate the translated `tile` should have.
 
 Returns:
-    Coodrinates which are translated into the supertile hex layout.)doc";
+    `tile` with the coodrinates which are translated into the
+    supertile hex layout.)doc";
 
-static const char *__doc_fiction_detail_super_arraytype_2 = R"doc()doc";
+static const char *__doc_fiction_detail_super_arraytype =
+R"doc(Utility function to translate the original hex coodrinates into the
+new supertile hex coordinates. Offset will simple be added to the
+coordinates.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``original_tile``:
+    Original position.
+
+Parameter ``offset_x``:
+    Offset that is added to the x coordinate.
+
+Parameter ``offset_y``:
+    Offset that is added to the y coordinate.
+
+Parameter ``z``:
+    z coordinate the translated `tile` should have.
+
+Returns:
+    Array with the coodrinates which are translated into the supertile
+    hex layout.)doc";
+
+static const char *__doc_fiction_detail_super_arraytype_2 =
+R"doc(Utility function to translate the original hex coodrinates into the
+new supertile hex coordinates.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``original_tile``:
+    Original position.
+
+Returns:
+    Array with the coodrinates which are translated into the supertile
+    hex layout.)doc";
 
 static const char *__doc_fiction_detail_sweep_parameter_to_string =
 R"doc(Converts a sweep parameter to a string representation. This is used to
@@ -16604,6 +16737,9 @@ R"doc(A modulo operation that will return the least positive residue instead
 of the remainder of the division.
 
 `a mod b = c` <=> `c = mod(a,b)`
+
+Template parameter ``Size``:
+    of the provided and returned integers, standard is int64_t
 
 Parameter ``a``:
     number to be "divided"
