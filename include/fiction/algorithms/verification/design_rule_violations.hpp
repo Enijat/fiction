@@ -149,7 +149,7 @@ class gate_level_drvs_impl
         }
         if (ps.missing_connections)
         {
-            *ps.out << "[i]" << missing_connections_check() << '\n';
+            *ps.out << "[i]" << missing_connections_check<!allowSameClockInfoFlow>() << '\n';
         }
         if (ps.crossing_gates)
         {
@@ -400,6 +400,7 @@ class gate_level_drvs_impl
      *
      * @return Check summary as a one liner.
      */
+    template <bool RespectClocking = true>
     std::string missing_connections_check()
     {
         nlohmann::json connections_report{};
@@ -418,8 +419,8 @@ class gate_level_drvs_impl
 
                     const auto n = lyt.get_node(t);
 
-                    const bool dangling_inp_connection = lyt.fanin_size(n) == 0 && !lyt.is_pi_tile(t);
-                    const bool dangling_out_connection = lyt.fanout_size(n) == 0 && !lyt.is_po_tile(t);
+                    const bool dangling_inp_connection = lyt.template fanin_size<RespectClocking>(n) == 0 && !lyt.is_pi_tile(t);
+                    const bool dangling_out_connection = lyt.template fanout_size<RespectClocking>(n) == 0 && !lyt.is_po_tile(t);
 
                     if (dangling_out_connection || dangling_inp_connection)
                     {

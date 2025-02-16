@@ -46,7 +46,7 @@ namespace detail
  * @return Array with the coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-[[nodiscard]] constexpr std::array<int64_t,3> super_arraytype(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, uint64_t z) noexcept
+[[nodiscard]] constexpr std::array<int64_t,3> super_arraytype(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z) noexcept
 {
     // position a tile at 0,0 would have in the supertile hex layout
     int64_t new_x = 1 + offset_x;
@@ -62,9 +62,9 @@ template <typename HexLyt>
         new_y += (static_cast<int64_t>(original_tile.y) >> 2) * 10;
         
         // fine traversion (traverse the 0 - 3 steps that are left)
-        if (static_cast<uint64_t>(original_tile.x) % 2 == 0)
+        if (original_tile.x % 2 == 0)
         {
-            switch (static_cast<uint64_t>(original_tile.y) % 4)
+            switch (original_tile.y % 4)
             {
                 default:
                 case 0:
@@ -83,7 +83,7 @@ template <typename HexLyt>
                     break;
             }
         } else {
-            switch (static_cast<uint64_t>(original_tile.y) % 4)
+            switch (original_tile.y % 4)
             {
                 default:
                 case 0:
@@ -119,7 +119,7 @@ template <typename HexLyt>
  * @return `tile` with the coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-[[nodiscard]] inline constexpr tile<HexLyt> super(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, uint64_t z) noexcept
+[[nodiscard]] inline constexpr tile<HexLyt> super(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z) noexcept
 {
     std::array<int64_t,3> result = super_arraytype<HexLyt>(original_tile, offset_x, offset_y, z);
     return tile<HexLyt>{result[0], result[1], result[2]};
@@ -135,7 +135,7 @@ template <typename HexLyt>
 template <typename HexLyt>
 [[nodiscard]] inline constexpr std::array<int64_t,3> super_arraytype(const tile<HexLyt> original_tile) noexcept
 {
-    return super_arraytype<HexLyt>(original_tile, 0, 0, static_cast<uint64_t>(original_tile.z));
+    return super_arraytype<HexLyt>(original_tile, 0, 0, original_tile.z);
 }
 
 #pragma GCC diagnostic push
@@ -218,7 +218,7 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
  * @param out2 Second crossing/bypass output.
  * @return Hash result to be used in the respective lookup table.
  */
-[[nodiscrad]] constexpr int8_t perfect_hash_function_2to2(hex_direction in1, hex_direction out1, hex_direction in2, hex_direction out2) noexcept
+[[nodiscard]] constexpr int8_t perfect_hash_function_2to2(hex_direction in1, hex_direction out1, hex_direction in2, hex_direction out2) noexcept
 {
     out1 = static_cast<hex_direction>(positive_mod<int8_t>((out1 - in1), 6));
     in2 = static_cast<hex_direction>(positive_mod<int8_t>((in2 - in1), 6));
@@ -328,6 +328,9 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
     int8_t relative_x = relative_position[0];
     int8_t relative_y = relative_position[1];
 
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wconversion"
+
     // check if offset needs to be moved to ...
     if (relative_x < 1/*1 instead of 0 to include future surrounding wires*/) // ... the next right super clock zone group (to stay in the positive coordinates)
     {
@@ -339,6 +342,8 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
         relative_x += 3;
         relative_y -= 10;
     }
+
+    #pragma GCC diagnostic pop
 
     // calculate offset for translated tiles
     int64_t x_offset = static_cast<int64_t>(relative_x) - leftmost_core_tile_x;
@@ -365,8 +370,8 @@ template <typename HexLyt>
     assert(refference.x > 0);
     assert(refference.y > 0);
 
-    uint64_t x = refference.x;
-    uint64_t y = refference.y;
+    int64_t x = refference.x;
+    int64_t y = refference.y;
 
     switch (direction)
     {
@@ -402,7 +407,7 @@ template <typename HexLyt>
         break;
     }
 
-    return tile<HexLyt>{x, y, static_cast<uint64_t>(z)};
+    return tile<HexLyt>{x, y, z};
 }
 
 /**
@@ -793,7 +798,7 @@ template <typename HexLyt>
                 if (!is_crossing(in1, out1, in2, out2))
                     {std::cout << "[W] detected bypass, which is not implemented yet, this will lead to undefined behaviour" << std::endl;} // TODO handle this and then remove it
 
-                std::array<hex_direction,10> lookup_table = is_crossing(in1, out1, in2, out2) ? lookup_table_2in2out_CROSSING[perfect_hash_function_2to2(in1, out1, in2, out2)] : lookup_table_2in2out_BYPASS[perfect_hash_function_2to2(in1, out1, in2, out2)];
+                std::array<hex_direction,10> lookup_table = is_crossing(in1, out1, in2, out2) ? lookup_table_2in2out_CROSSING[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out1, in2, out2))] : lookup_table_2in2out_BYPASS[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out1, in2, out2))];
 
                 uint8_t table_position = 0;
 
@@ -802,14 +807,14 @@ template <typename HexLyt>
                 table_position = place_in_out_wires<HexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
                 if (!found_wire)
                 {
-                    *output_a = lookup_table[table_position - 2];
+                    *output_a = lookup_table[static_cast<uint64_t>(table_position - 2)];
                 }
                 // place second wire
                 found_wire = false;
                 table_position = place_in_out_wires<HexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
                 if (!found_wire)
                 {
-                    *output_b = lookup_table[table_position - 2];
+                    *output_b = lookup_table[static_cast<uint64_t>(table_position - 2)];
                 }
             }
             else // single wire
@@ -846,7 +851,7 @@ template <typename HexLyt>
 
             const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
 
-            std::array<hex_direction,5> lookup_table = lookup_table_1in1out_INVERTER[perfect_hash_function_1to1(in, out)];
+            std::array<hex_direction,5> lookup_table = lookup_table_1in1out_INVERTER[static_cast<uint64_t>(perfect_hash_function_1to1(in, out))];
 
             uint8_t table_position = 0;
             tile<HexLyt> last_wire;
@@ -857,6 +862,9 @@ template <typename HexLyt>
             // place inverter core
             super_lyt.create_not(super_lyt.make_signal(super_lyt.get_node(last_wire)), core_tile);
 
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wunused-result"
+
             // place output wires
             bool found_wire = false;
             place_output_wires<HexLyt,5>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
@@ -864,6 +872,8 @@ template <typename HexLyt>
             {
                 *output_a = out;
             }
+
+            #pragma GCC diagnostic pop
         }
         else if (original_lyt.is_fanout(original_node) and outgoing_signals.size() == 2) // original_node is 2out fanout
         {
@@ -874,7 +884,7 @@ template <typename HexLyt>
 
             const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
 
-            std::array<hex_direction,9> lookup_table = lookup_table_1in2out[perfect_hash_function_2to1(in, out1, out2)];
+            std::array<hex_direction,9> lookup_table = lookup_table_1in2out[static_cast<uint64_t>(perfect_hash_function_2to1(in, out1, out2))];
 
             uint8_t table_position = 0;
             tile<HexLyt> last_wire;
@@ -890,14 +900,14 @@ template <typename HexLyt>
             table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
             if (!found_wire)
             {
-                *output_a = lookup_table[table_position - 2];
+                *output_a = lookup_table[static_cast<uint64_t>(table_position - 2)];
             }
             // place output wires 2
             found_wire = false;
             table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
             if (!found_wire)
             {
-                *output_b = lookup_table[table_position - 2];
+                *output_b = lookup_table[static_cast<uint64_t>(table_position - 2)];
             }
         }
         else
@@ -911,7 +921,7 @@ template <typename HexLyt>
 
         const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
 
-        std::array<hex_direction,9> lookup_table = lookup_table_2in1out[perfect_hash_function_2to1(out, in1, in2)];
+        std::array<hex_direction,9> lookup_table = lookup_table_2in1out[static_cast<uint64_t>(perfect_hash_function_2to1(out, in1, in2))];
         
         uint8_t table_position = 0;
         tile<HexLyt> last_wire_1;
@@ -956,6 +966,9 @@ template <typename HexLyt>
 
             super_lyt.create_node({last_signal_1, last_signal_2}, original_node_fun, core_tile);
         }
+        
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wunused-result"
 
         // place output wires
         bool found_wire = false;
@@ -964,6 +977,8 @@ template <typename HexLyt>
         {
             *output_a = out;
         }
+
+        #pragma GCC diagnostic pop
     }
     else
         {return true;}

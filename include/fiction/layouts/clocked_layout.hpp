@@ -201,15 +201,20 @@ class clocked_layout : public CoordinateLayout
     [[nodiscard]] bool is_incoming_clocked(const clock_zone& cz1, const clock_zone& cz2) const noexcept
     {
         if (cz1 == cz2)
-        {   
-            if constexpr (allowSameClockInfoFlow)
-                {return true;}
-            else
-                {return false;}
+        {
+            return false;
         }
 
-        return static_cast<clock_number_t>((get_clock_number(cz2) + static_cast<clock_number_t>(1)) % num_clocks()) ==
+        if constexpr (allowSameClockInfoFlow)
+        {
+            return (static_cast<clock_number_t>((get_clock_number(cz2) + static_cast<clock_number_t>(1)) % num_clocks()) ==
+                get_clock_number(cz1)) || (get_clock_number(cz2) == get_clock_number(cz1));
+        }
+        else
+        {
+            return static_cast<clock_number_t>((get_clock_number(cz2) + static_cast<clock_number_t>(1)) % num_clocks()) ==
                get_clock_number(cz1);
+        }
     }
     /**
      * Evaluates whether clock zone `cz2` accepts information from clock zone `cz1`, i.e., whether `cz2` is clocked with
