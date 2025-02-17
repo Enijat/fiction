@@ -22,4 +22,5 @@ void check_mapping_equiv_layout(const hex_even_row_gate_clk_lyt& lyt)
 TEST_CASE("Layout equivalence", "[supertilezation]")
 {
     check_mapping_equiv_layout(blueprints::row_clocked_and_xor_gate_layout<hex_even_row_gate_clk_lyt>());
+    check_mapping_equiv_layout(blueprints::amy_clocked_path_balanced_and_xor_gate_layout<hex_even_row_gate_clk_lyt>());
 }
