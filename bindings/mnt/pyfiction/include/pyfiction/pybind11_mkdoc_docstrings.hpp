@@ -21291,8 +21291,13 @@ extendagon gate library. This algorithm was proposed in the bachelor
 thesis "Super-Tile Routing for Omnidirectional Information Flow in
 Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
 
-Template parameter ``HexLyt``:
-    Even-row hexagonal gate-level layout return type.
+Template parameter ``OutHexLyt``:
+    Even-row hexagonal gate-level layout return type,
+    RespectClockingAll set to false.
+
+Template parameter ``InHexLyt``:
+    Even-row hexagonal gate-level layout return type,
+    RespectClockingAll set to true.
 
 Parameter ``original_lyt``:
     the gate-level layout that is to be transformed.
