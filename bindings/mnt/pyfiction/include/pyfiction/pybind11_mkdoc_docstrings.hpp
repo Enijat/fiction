@@ -7153,6 +7153,48 @@ static const char *__doc_fiction_detail_fanout_substitution_impl_ps = R"doc()doc
 
 static const char *__doc_fiction_detail_fanout_substitution_impl_run = R"doc()doc";
 
+static const char *__doc_fiction_detail_find_key_with_tolerance =
+R"doc(This function searches for a floating-point value specified by the
+`key` in the provided map `map`, applying a tolerance specified by
+`fiction::physical_constants::POP_STABILITY_ERR`. Each key in the map
+is compared to the specified key within this tolerance.
+
+Template parameter ``MapType``:
+    The type of the map containing parameter points as keys.
+
+Parameter ``map``:
+    The map containing parameter points as keys and associated values.
+
+Parameter ``key``:
+    The parameter point to search for in the map.
+
+Returns:
+    An iterator to the found parameter point in the map, or
+    `map.cend()` if not found.)doc";
+
+static const char *__doc_fiction_detail_find_super_layout_size =
+R"doc(Utility function to find the required size of a supertile layout and
+the offset required for copying existing gates and wires, based on the
+original layout that is to be transformed.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``lyt``:
+    Original layout that will should be transformed.
+
+Parameter ``size_x``:
+    Pointer to where to write the required size in the x-dimension.
+
+Parameter ``size_y``:
+    Pointer to where to write the required size in the y-dimension.
+
+Parameter ``offset_x``:
+    Pointer to where to write the required offset in the x-dimension.
+
+Parameter ``offset_y``:
+    Pointer to where to write the required offset in the y-dimension.)doc";
+
 static const char *__doc_fiction_detail_gate_level_drvs_impl = R"doc()doc";
 
 static const char *__doc_fiction_detail_gate_level_drvs_impl_border_io_check =
@@ -8313,6 +8355,28 @@ Parameter ``network``:
 Returns:
     The network with virtual primary inputs removed, or the original
     network if unsupported.)doc";
+
+static const char *__doc_fiction_detail_hex_direction =
+R"doc(These reflect the possible directions in a pointy-top hexagonal
+layout. They are additionally used to represent the positions in a
+supertile, in which case each value represents the position in the
+direction its name reflects, relative to the central position.)doc";
+
+static const char *__doc_fiction_detail_hex_direction_C = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_E = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_NE = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_NW = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_SE = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_SW = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_W = R"doc()doc";
+
+static const char *__doc_fiction_detail_hex_direction_X = R"doc()doc";
 
 static const char *__doc_fiction_detail_is_balanced_impl = R"doc()doc";
 
