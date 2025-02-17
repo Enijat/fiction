@@ -1009,7 +1009,7 @@ std::optional<clocking_scheme<clock_zone<Lyt>>> get_clocking_scheme(const std::s
         {clock_name::CFE, cfe_clocking<Lyt>()},
         {clock_name::RIPPLE, ripple_clocking<Lyt>()},
         {clock_name::SRS, srs_clocking<Lyt>()},
-        {clock_name::BANCS, bancs_clocking<Lyt>()}},
+        {clock_name::BANCS, bancs_clocking<Lyt>()},
         {clock_name::AMY, amy_clocking<Lyt>()},
         {clock_name::AMY_SUPER, amy_supertile_clocking<Lyt>()},
         {clock_name::ROW_SUPER, row_supertile_clocking<Lyt>()}};
