@@ -756,8 +756,8 @@ constexpr const std::array<std::array<hex_direction,10>,120> lookup_table_2in2ou
  * @param output_b This pointer has the same functionallity as `output_a` and will only be used if there is a second `hex_output` direction into another unpopulated supertile. 
  * @return `true` if a unknown gate/fanout was placed at `original_tile`, else `false`. This includes primary inputs.
  */
-template <typename HexLyt>
-[[nodiscard]] bool populate_supertile(const HexLyt& original_lyt, HexLyt& super_lyt, const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, hex_direction* output_a, hex_direction* output_b) noexcept
+template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei ersten Argumente wechseln (ist intuitiver)
+[[nodiscard]] bool populate_supertile(const InHexLyt& original_lyt, OutHexLyt& super_lyt, const tile<InHexLyt> original_tile, int64_t offset_x, int64_t offset_y, hex_direction* output_a, hex_direction* output_b) noexcept
 {
     const auto original_node = original_lyt.get_node(original_tile);
     const auto incoming_signals = original_lyt.incoming_data_flow(original_tile);
@@ -767,16 +767,16 @@ template <typename HexLyt>
     {
         if (original_lyt.is_po(original_node))
         {
-            hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
+            hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
             
-            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+            const auto core_tile = super<InHexLyt>(original_tile, offset_x, offset_y, 0);
 
             // place input wire
-            const auto input_wire_position = get_near_position<HexLyt>(core_tile, in, 0);
+            const auto input_wire_position = get_near_position<OutHexLyt>(core_tile, in, 0);
 
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wunused-result"
-            place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position<HexLyt>(input_wire_position, static_cast<hex_direction>((in + 1) % 6), 0));
+            place_wire<OutHexLyt>(super_lyt, input_wire_position, get_near_position<OutHexLyt>(input_wire_position, static_cast<hex_direction>((in + 1) % 6), 0));
             #pragma GCC diagnostic pop
 
             // place output
@@ -788,12 +788,12 @@ template <typename HexLyt>
             if (const auto other_wire = (original_lyt.is_ground_layer(original_tile)) ? (original_lyt.above(original_tile)) : (original_lyt.below(original_tile));
                 (other_wire != original_tile) and (original_lyt.is_wire_tile(other_wire))) // wire crossing or bypass
             {
-                hex_direction in1 = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
-                hex_direction out1 = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
-                hex_direction in2 = get_near_direction<HexLyt>(other_wire, original_lyt.incoming_data_flow(other_wire)[0]);
-                hex_direction out2 = get_near_direction<HexLyt>(other_wire, original_lyt.outgoing_data_flow(other_wire)[0]);
+                hex_direction in1 = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
+                hex_direction out1 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
+                hex_direction in2 = get_near_direction<InHexLyt>(other_wire, original_lyt.incoming_data_flow(other_wire)[0]);
+                hex_direction out2 = get_near_direction<InHexLyt>(other_wire, original_lyt.outgoing_data_flow(other_wire)[0]);
                 
-                const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+                const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
                 if (!is_crossing(in1, out1, in2, out2))
                     {std::cout << "[W] detected bypass, which is not implemented yet, this will lead to undefined behaviour" << std::endl;} // TODO handle this and then remove it
@@ -804,14 +804,14 @@ template <typename HexLyt>
 
                 // place first wire
                 bool found_wire = false;
-                table_position = place_in_out_wires<HexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+                table_position = place_in_out_wires<OutHexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
                 if (!found_wire)
                 {
                     *output_a = lookup_table[static_cast<uint64_t>(table_position - 2)];
                 }
                 // place second wire
                 found_wire = false;
-                table_position = place_in_out_wires<HexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+                table_position = place_in_out_wires<OutHexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
                 if (!found_wire)
                 {
                     *output_b = lookup_table[static_cast<uint64_t>(table_position - 2)];
@@ -819,26 +819,26 @@ template <typename HexLyt>
             }
             else // single wire
             {
-                hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
-                hex_direction out = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
+                hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
+                hex_direction out = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
 
-                const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+                const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
                 #pragma GCC diagnostic push
                 #pragma GCC diagnostic ignored "-Wunused-result"
 
                 // place input wire
-                const auto input_wire_position = get_near_position<HexLyt>(core_tile, in, 0);
-                place_wire<HexLyt>(super_lyt, input_wire_position, get_near_position<HexLyt>(input_wire_position, static_cast<hex_direction>((in + 1) % 6), 0));
+                const auto input_wire_position = get_near_position<OutHexLyt>(core_tile, in, 0);
+                place_wire<OutHexLyt>(super_lyt, input_wire_position, get_near_position<OutHexLyt>(input_wire_position, static_cast<hex_direction>((in + 1) % 6), 0));
 
                 // place core wire
-                place_wire<HexLyt>(super_lyt, core_tile, get_near_position<HexLyt>(core_tile, in, 0));
+                place_wire<OutHexLyt>(super_lyt, core_tile, get_near_position<OutHexLyt>(core_tile, in, 0));
 
                 #pragma GCC diagnostic pop
 
                 // place output wire
-                const auto output_wire_position = get_near_position<HexLyt>(core_tile, out, 0);
-                if (!place_wire<HexLyt>(super_lyt, output_wire_position, core_tile))
+                const auto output_wire_position = get_near_position<OutHexLyt>(core_tile, out, 0);
+                if (!place_wire<OutHexLyt>(super_lyt, output_wire_position, core_tile))
                 {
                     *output_a = out; 
                 }
@@ -846,18 +846,18 @@ template <typename HexLyt>
         }
         else if (original_lyt.is_inv(original_node))
         {
-            hex_direction in = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(incoming_signals[0]));
-            hex_direction out = get_near_direction<HexLyt>(original_tile, static_cast<tile<HexLyt>>(outgoing_signals[0]));
+            hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
+            hex_direction out = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
 
-            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+            const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
             std::array<hex_direction,5> lookup_table = lookup_table_1in1out_INVERTER[static_cast<uint64_t>(perfect_hash_function_1to1(in, out))];
 
             uint8_t table_position = 0;
-            tile<HexLyt> last_wire;
+            tile<OutHexLyt> last_wire;
 
             // place input wires
-            table_position = place_input_wires<HexLyt,5>(super_lyt, core_tile, lookup_table, table_position, &last_wire);
+            table_position = place_input_wires<OutHexLyt,5>(super_lyt, core_tile, lookup_table, table_position, &last_wire);
 
             // place inverter core
             super_lyt.create_not(super_lyt.make_signal(super_lyt.get_node(last_wire)), core_tile);
@@ -867,7 +867,7 @@ template <typename HexLyt>
 
             // place output wires
             bool found_wire = false;
-            place_output_wires<HexLyt,5>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+            place_output_wires<OutHexLyt,5>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
             if (!found_wire)
             {
                 *output_a = out;
@@ -878,33 +878,33 @@ template <typename HexLyt>
         else if (original_lyt.is_fanout(original_node) and outgoing_signals.size() == 2) // original_node is 2out fanout
         {
 
-            hex_direction in = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
-            hex_direction out1 = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
-            hex_direction out2 = get_near_direction<HexLyt>(original_tile, outgoing_signals[1]);
+            hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
+            hex_direction out1 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
+            hex_direction out2 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[1]);
 
-            const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+            const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
             std::array<hex_direction,9> lookup_table = lookup_table_1in2out[static_cast<uint64_t>(perfect_hash_function_2to1(in, out1, out2))];
 
             uint8_t table_position = 0;
-            tile<HexLyt> last_wire;
+            tile<OutHexLyt> last_wire;
 
             // place input wires
-            table_position = place_input_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &last_wire);
+            table_position = place_input_wires<OutHexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &last_wire);
 
             // place fanout core
             super_lyt.create_buf(super_lyt.make_signal(super_lyt.get_node(last_wire)), core_tile);
 
             // place output wires 1
             bool found_wire = false;
-            table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+            table_position = place_output_wires<OutHexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
             if (!found_wire)
             {
                 *output_a = lookup_table[static_cast<uint64_t>(table_position - 2)];
             }
             // place output wires 2
             found_wire = false;
-            table_position = place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+            table_position = place_output_wires<OutHexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
             if (!found_wire)
             {
                 *output_b = lookup_table[static_cast<uint64_t>(table_position - 2)];
@@ -915,23 +915,23 @@ template <typename HexLyt>
     }
     else if (incoming_signals.size() == 2 and outgoing_signals.size() == 1) //FORME original_node is on of the following logic gates: OR, NOR, AND, NAND, XOR, XNOR
     {
-        hex_direction in1 = get_near_direction<HexLyt>(original_tile, incoming_signals[0]);
-        hex_direction in2 = get_near_direction<HexLyt>(original_tile, incoming_signals[1]);
-        hex_direction out = get_near_direction<HexLyt>(original_tile, outgoing_signals[0]);
+        hex_direction in1 = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
+        hex_direction in2 = get_near_direction<InHexLyt>(original_tile, incoming_signals[1]);
+        hex_direction out = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
 
-        const auto core_tile = super<HexLyt>(original_tile, offset_x, offset_y, 0);
+        const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
         std::array<hex_direction,9> lookup_table = lookup_table_2in1out[static_cast<uint64_t>(perfect_hash_function_2to1(out, in1, in2))];
         
         uint8_t table_position = 0;
-        tile<HexLyt> last_wire_1;
-        tile<HexLyt> last_wire_2;
+        tile<OutHexLyt> last_wire_1;
+        tile<OutHexLyt> last_wire_2;
 
         // place input wires 1
-        table_position = place_input_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &last_wire_1);
+        table_position = place_input_wires<OutHexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &last_wire_1);
 
         // place input wires 2
-        table_position = place_input_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &last_wire_2);
+        table_position = place_input_wires<OutHexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &last_wire_2);
 
         // place core
         const auto last_signal_1 = super_lyt.make_signal(super_lyt.get_node(last_wire_1));
@@ -972,7 +972,7 @@ template <typename HexLyt>
 
         // place output wires
         bool found_wire = false;
-        place_output_wires<HexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+        place_output_wires<OutHexLyt,9>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
         if (!found_wire)
         {
             *output_a = out;
@@ -1037,48 +1037,50 @@ template <typename HexLyt>
  * that only contains gates that can be realised with gates/wires from the SiDB extendagon gate library.
  * This algorithm was proposed in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
  * 
- * @tparam HexLyt Even-row hexagonal gate-level layout return type.
+ * @tparam OutHexLyt Even-row hexagonal gate-level layout return type, RespectClockingAll set to false.
+ * @tparam InHexLyt Even-row hexagonal gate-level layout return type, RespectClockingAll set to true.
  * @param original_lyt the gate-level layout that is to be transformed.
  * @return Either to new supertile gate-level layout or the original layout if something went wrong.
  */
 //TODO throw the right errors in this method instead of just returning the original layout
-template <typename HexLyt>
-[[nodiscard]] HexLyt supertilezation(const HexLyt& original_lyt) noexcept
+template <typename OutHexLyt, typename InHexLyt>
+[[nodiscard]] OutHexLyt supertilezation(const InHexLyt& original_lyt) noexcept
 {
-    static_assert(is_gate_level_layout_v<HexLyt>, "HexLyt is not a gate-level layout");
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+    static_assert(is_gate_level_layout_v<InHexLyt>, "InHexLyt is not a gate-level layout");
+    static_assert(is_hexagonal_layout_v<InHexLyt>, "InHexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<InHexLyt>, "InHexLyt does not have an even row hexagon arrangement");
+    //TODO somehow check that RespectClockingAll ist set to false?
     if (original_lyt.z() > 1) {
         std::cout << "[e] Given layouts z dimension is bigger then 1, unable to process" << std::endl;
-        return original_lyt;
+        return static_cast<OutHexLyt>(original_lyt);
     }
     
     uint64_t size_x;
     uint64_t size_y;
     int64_t offset_x;
     int64_t offset_y;
-    detail::find_super_layout_size<HexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y);
+    detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y);
     //TODO check if the right clocking scheme is used and maybe add propper supertile clocking?
-    HexLyt super_lyt{{size_x, size_y, 1}, original_lyt.is_clocking_scheme(clock_name::AMY) ? fiction::amy_supertile_clocking<HexLyt>() : fiction::row_supertile_clocking<HexLyt>(), original_lyt.get_layout_name()};
-    std::vector<tile<HexLyt>> path_beginnings;
+    OutHexLyt super_lyt{{size_x, size_y, 1}, original_lyt.is_clocking_scheme(clock_name::AMY) ? fiction::amy_supertile_clocking<OutHexLyt>() : fiction::row_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name()};
+    std::vector<tile<OutHexLyt>> path_beginnings;
 
     // replace all inputs and save their output tile
     original_lyt.foreach_pi(
             [&original_lyt, &super_lyt, offset_x, offset_y, &path_beginnings](const auto& original_node)
             {
                 //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich das handlen? -> aparently nicht weil exact das nicht produziert, aber ich sollte es evtl trotzdem einfach abfangen
-                const tile<HexLyt> original_tile = original_lyt.get_tile(original_node);
-                const tile<HexLyt> super_tile = detail::super<HexLyt>(original_tile, offset_x, offset_y, 0);
+                const auto original_tile = original_lyt.get_tile(original_node);
+                const auto super_tile = detail::super<InHexLyt>(original_tile, offset_x, offset_y, 0);
                 const auto super_signal = super_lyt.create_pi(original_lyt.get_name(original_lyt.get_node(original_tile)), super_tile);
                 const auto original_output_position = original_lyt.outgoing_data_flow(original_tile)[0];
-                const auto super_output_wire_position = detail::get_near_position<HexLyt>(super_tile, detail::get_near_direction<HexLyt>(original_tile, original_output_position), 0);
+                const auto super_output_wire_position = detail::get_near_position<OutHexLyt>(super_tile, detail::get_near_direction<InHexLyt>(original_tile, original_output_position), 0);
                 super_lyt.create_buf(super_signal, super_output_wire_position);
-                detail::add_unique<HexLyt>(path_beginnings, original_output_position);
+                detail::add_unique<OutHexLyt>(path_beginnings, original_output_position);
             });
 
     while (!path_beginnings.empty())
     {
-        tile<HexLyt> current_original_tile = path_beginnings.back();
+        auto current_original_tile = path_beginnings.back();
         path_beginnings.pop_back();
 
         while (true)
@@ -1088,7 +1090,7 @@ template <typename HexLyt>
             if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b))
             {
                 std::cout << "[e] found unknown gate while populating supertile, aborted translation" << std::endl;
-                return original_lyt;
+                return static_cast<OutHexLyt>(original_lyt);
             }
             if (output_a == detail::hex_direction::X) // path is finished
             {
@@ -1096,12 +1098,12 @@ template <typename HexLyt>
             }
             else if (output_b == detail::hex_direction::X) // path continues on one path
             {
-                current_original_tile = detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
+                current_original_tile = detail::get_outgoing_from_direction<InHexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
             }
             else // path splits up or contained a wire crossing
             {
-                detail::add_unique<HexLyt>(path_beginnings, detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_b));
-                current_original_tile = detail::get_outgoing_from_direction<HexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
+                detail::add_unique<OutHexLyt>(path_beginnings, detail::get_outgoing_from_direction<InHexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_b));
+                current_original_tile = detail::get_outgoing_from_direction<InHexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
             }
         }
     }

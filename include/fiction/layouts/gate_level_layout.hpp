@@ -77,7 +77,7 @@ namespace fiction
  *
  * @tparam ClockedLayout The clocked layout that is to be extended by gate functions.
  */
-template <typename ClockedLayout>
+template <typename ClockedLayout, bool RespectClockingAll = true> // TODO check again if RespectClockingAll could be reduced to AllowSameClockInfoFlow)
 class gate_level_layout : public ClockedLayout
 {
   public:
@@ -591,7 +591,7 @@ class gate_level_layout : public ClockedLayout
         uint32_t fin_size{0u};
         auto     fanin_counter = [&fin_size](auto const&) { ++fin_size; };
 
-        foreach_fanin<decltype(fanin_counter), RespectClocking>(n, std::move(fanin_counter));
+        foreach_fanin<decltype(fanin_counter), (RespectClocking and RespectClockingAll)>(n, std::move(fanin_counter));
 
         return fin_size;
     }
@@ -608,7 +608,7 @@ class gate_level_layout : public ClockedLayout
         uint32_t fout_size{0u};
         auto     fanout_counter = [&fout_size](auto const&) { ++fout_size; };
 
-        foreach_fanout<decltype(fanout_counter), RespectClocking>(n, std::move(fanout_counter));
+        foreach_fanout<decltype(fanout_counter), (RespectClocking and RespectClockingAll)>(n, std::move(fanout_counter));
 
         return fout_size;
     }
@@ -922,7 +922,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool is_fanout(const node n) const noexcept
     {
-        return is_wire(n) && fanout_size<RespectClocking>(n) > 1;
+        return is_wire(n) && fanout_size<(RespectClocking and RespectClockingAll)>(n) > 1;
     }
     /**
      * Returns whether `n`ode `n` computes a function. That is, this function returns `true` iff `n` is not a constant.
@@ -1072,7 +1072,7 @@ class gate_level_layout : public ClockedLayout
             {
                 const auto ct = get_tile(get_node(c.index));
 
-                if constexpr (RespectClocking)
+                if constexpr (RespectClocking and RespectClockingAll)
                 {
                     return ClockedLayout::is_adjacent_elevation_of(nt, ct) &&
                            ClockedLayout::is_incoming_clocked(nt, ct);
@@ -1102,7 +1102,7 @@ class gate_level_layout : public ClockedLayout
 
         auto fanin_collector = [&data_flow](const auto& fin) { data_flow.push_back(static_cast<tile>(fin)); };
 
-        foreach_fanin<decltype(fanin_collector), RespectClocking>(get_node(t), std::move(fanin_collector));
+        foreach_fanin<decltype(fanin_collector), (RespectClocking and RespectClockingAll)>(get_node(t), std::move(fanin_collector));
 
         return data_flow;
     }
@@ -1160,7 +1160,7 @@ class gate_level_layout : public ClockedLayout
             }
         };
 
-        if constexpr (RespectClocking)
+        if constexpr (RespectClocking and RespectClockingAll)
         {
             ClockedLayout::foreach_outgoing_clocked_zone(nt, std::move(fanout_collector));
         }
@@ -1183,12 +1183,12 @@ class gate_level_layout : public ClockedLayout
     [[nodiscard]] auto outgoing_data_flow(const tile& t) const noexcept
     {
         std::vector<tile> data_flow{};
-        data_flow.reserve(RespectClocking ? ClockedLayout::get_clocking_scheme().max_out_degree :
+        data_flow.reserve((RespectClocking and RespectClockingAll) ? ClockedLayout::get_clocking_scheme().max_out_degree :
                                             ClockedLayout::max_fanin_size);  // reserve memory
 
         const auto fanout_collector = [this, &data_flow](const auto& fout) { data_flow.push_back(get_tile(fout)); };
 
-        foreach_fanout<decltype(fanout_collector), RespectClocking>(get_node(t), std::move(fanout_collector));
+        foreach_fanout<decltype(fanout_collector), (RespectClocking and RespectClockingAll)>(get_node(t), std::move(fanout_collector));
 
         return data_flow;
     }
@@ -1281,7 +1281,7 @@ class gate_level_layout : public ClockedLayout
             return true;  // keep looping
         };
 
-        foreach_fanin<decltype(in_signal_checker), RespectClocking>(get_node(t), std::move(in_signal_checker));
+        foreach_fanin<decltype(in_signal_checker), (RespectClocking and RespectClockingAll)>(get_node(t), std::move(in_signal_checker));
 
         return incoming_signal;
     }
@@ -1295,7 +1295,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_northern_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::north(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::north(t)));
     }
     /**
      * Checks whether the given tile has an incoming one in north-eastern direction.
@@ -1307,7 +1307,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_north_eastern_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::north_east(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::north_east(t)));
     }
     /**
      * Checks whether the given tile has an incoming one in eastern direction.
@@ -1319,7 +1319,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_eastern_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::east(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::east(t)));
     }
     /**
      * Checks whether the given tile has an incoming one in south-eastern direction.
@@ -1331,7 +1331,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_south_eastern_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::south_east(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::south_east(t)));
     }
     /**
      * Checks whether the given tile has an incoming one in southern direction.
@@ -1343,7 +1343,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_southern_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::south(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::south(t)));
     }
     /**
      * Checks whether the given tile has an incoming one in south-western direction.
@@ -1355,7 +1355,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_south_western_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::south_west(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::south_west(t)));
     }
     /**
      * Checks whether the given tile has an incoming one in western direction.
@@ -1367,7 +1367,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_western_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::west(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::west(t)));
     }
     /**
      * Checks whether the given tile has an incoming one in north-western direction.
@@ -1379,7 +1379,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_north_western_incoming_signal(const tile& t) const noexcept
     {
-        return is_incoming_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::north_west(t)));
+        return is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::north_west(t)));
     }
     /**
      * Checks whether the given tile has no incoming tiles.
@@ -1391,7 +1391,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_no_incoming_signal(const tile& t) const noexcept
     {
-        return fanin_size<RespectClocking>(get_node(t)) == 0u;
+        return fanin_size<(RespectClocking and RespectClockingAll)>(get_node(t)) == 0u;
     }
     /**
      * Checks whether signal `s` is outgoing from tile `t`. That is, whether tile `t` hosts a node that has a fanout
@@ -1417,7 +1417,7 @@ class gate_level_layout : public ClockedLayout
             return true;  // keep looping
         };
 
-        foreach_fanout<decltype(out_signal_checker), RespectClocking>(get_node(t), std::move(out_signal_checker));
+        foreach_fanout<decltype(out_signal_checker), (RespectClocking and RespectClockingAll)>(get_node(t), std::move(out_signal_checker));
 
         return outgoing_signal;
     }
@@ -1431,7 +1431,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_northern_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::north(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::north(t)));
     }
     /**
      * Checks whether the given tile has an outgoing one in north-eastern direction.
@@ -1443,7 +1443,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_north_eastern_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::north_east(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::north_east(t)));
     }
     /**
      * Checks whether the given tile has an outgoing one in eastern direction.
@@ -1455,7 +1455,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_eastern_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::east(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::east(t)));
     }
     /**
      * Checks whether the given tile has an outgoing one in south-eastern direction.
@@ -1467,7 +1467,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_south_eastern_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::south_east(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::south_east(t)));
     }
     /**
      * Checks whether the given tile has an outgoing one in southern direction.
@@ -1479,7 +1479,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_southern_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::south(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::south(t)));
     }
     /**
      * Checks whether the given tile has an outgoing one in south-western direction.
@@ -1491,7 +1491,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_south_western_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::south_west(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::south_west(t)));
     }
     /**
      * Checks whether the given tile has an outgoing one in western direction.
@@ -1503,7 +1503,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_western_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::west(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::west(t)));
     }
     /**
      * Checks whether the given tile has an outgoing one in north-western direction.
@@ -1515,7 +1515,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_north_western_outgoing_signal(const tile& t) const noexcept
     {
-        return is_outgoing_signal<RespectClocking>(t, static_cast<signal>(ClockedLayout::north_west(t)));
+        return is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, static_cast<signal>(ClockedLayout::north_west(t)));
     }
     /**
      * Checks whether the given tile has no outgoing tiles.
@@ -1527,7 +1527,7 @@ class gate_level_layout : public ClockedLayout
     template <bool RespectClocking = true>
     [[nodiscard]] bool has_no_outgoing_signal(const tile& t) const noexcept
     {
-        return fanout_size<RespectClocking>(get_node(t)) == 0u;
+        return fanout_size<(RespectClocking and RespectClockingAll)>(get_node(t)) == 0u;
     }
     /**
      * Checks whether the given tile `t` has its incoming and outgoing signals on opposite sides of the tile. For this
@@ -1552,8 +1552,8 @@ class gate_level_layout : public ClockedLayout
             {
                 const auto s1 = static_cast<signal>(std::get<0>(sp)), s2 = static_cast<signal>(std::get<1>(sp));
 
-                if ((is_incoming_signal<RespectClocking>(t, s1) && is_outgoing_signal<RespectClocking>(t, s2)) ||
-                    (is_incoming_signal<RespectClocking>(t, s2) && is_outgoing_signal<RespectClocking>(t, s1)))
+                if ((is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, s1) && is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, s2)) ||
+                    (is_incoming_signal<(RespectClocking and RespectClockingAll)>(t, s2) && is_outgoing_signal<(RespectClocking and RespectClockingAll)>(t, s1)))
                 {
                     opposite_signals = true;
 

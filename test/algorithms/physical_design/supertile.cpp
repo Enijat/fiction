@@ -12,15 +12,14 @@
 
 using namespace fiction;
 
-template <typename Lyt>
-void check_mapping_equiv_layout(const Lyt& lyt)
+void check_mapping_equiv_layout(const hex_even_row_gate_clk_lyt& lyt)
 {
-    const auto super_layout = supertilezation<Lyt>(lyt);
-    check_eq<Lyt, Lyt, true>(lyt, super_layout);
-    CHECK(lyt.get_layout_name() == super_layout.get_layout_name());
+    const auto super_layout = supertilezation<hex_even_row_gate_clk_lyt_disrespect_clocking, hex_even_row_gate_clk_lyt>(lyt);
+    check_eq<hex_even_row_gate_clk_lyt, hex_even_row_gate_clk_lyt_disrespect_clocking, true>(lyt, super_layout);
+    CHECK(lyt.get_layout_name() == super_layout.get_layout_name()); 
 }
 
 TEST_CASE("Layout equivalence", "[supertilezation]")
 {
-    check_mapping_equiv_layout<hex_even_row_gate_clk_lyt>(blueprints::row_clocked_and_xor_gate_layout<hex_even_row_gate_clk_lyt>());
+    check_mapping_equiv_layout(blueprints::row_clocked_and_xor_gate_layout<hex_even_row_gate_clk_lyt>());
 }

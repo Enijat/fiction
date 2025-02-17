@@ -57,7 +57,7 @@ class supertile_command : public command
             return;
         }
 
-        const auto apply_supertilezation = [](auto&& lyt_ptr) -> std::optional<fiction::hex_even_row_gate_clk_lyt>
+        const auto apply_supertilezation = [](auto&& lyt_ptr) -> std::optional<fiction::hex_even_row_gate_clk_lyt_disrespect_clocking>
         {
             using Lyt = typename std::decay_t<decltype(lyt_ptr)>::element_type;
 
@@ -65,7 +65,7 @@ class supertile_command : public command
             {
                 if constexpr (fiction::has_even_row_hex_arrangement_v<Lyt>)
                 {
-                    return fiction::supertilezation<fiction::hex_even_row_gate_clk_lyt>(*lyt_ptr);
+                    return fiction::supertilezation<fiction::hex_even_row_gate_clk_lyt_disrespect_clocking>(*lyt_ptr);
                 }
                 else
                 {
@@ -84,7 +84,7 @@ class supertile_command : public command
         {
             if (const auto hex_lyt = std::visit(apply_supertilezation, lyt); hex_lyt.has_value() /*&& hex_lyt != lyt*/) // TODO check if the hex_lyt != lyt works / get it working
             {
-                gls.extend() = std::make_shared<fiction::hex_even_row_gate_clk_lyt>(*hex_lyt);
+                gls.extend() = std::make_shared<fiction::hex_even_row_gate_clk_lyt_disrespect_clocking>(*hex_lyt);
             }
         }
         catch (...)
