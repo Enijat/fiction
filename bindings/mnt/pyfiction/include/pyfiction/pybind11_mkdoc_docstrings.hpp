@@ -1109,29 +1109,6 @@ static const char *__doc_fiction_bound_direction_UPPER =
 R"doc(Upper bounds live in the set :math:`[-\infty, \infty)` and are ordered
 by <.)doc";
 
-static const char *__doc_fiction_bound_direction =
-R"doc(The electrostatic potential bounds required for the *Ground State
-Space* algorithm. As the domain in which our potential bounds live are
-simply the real numbers, we may think of the lower bound and upper
-bound domains to be separate partial order structures on the real
-number line, inverse to each other. The *Ground State Space* algorithm
-requires the properties of a lower semi-lattice for these domains, ie.
-all finite meets must exist. This is implemented for the lower and
-upper bound respectively simply by taking a minimum or a maximum. One
-may think of meets as follows, which is very relevant to intention of
-their application: a meet, or greatest lower bound, is the *maximal
-information* common to a set (of potential bounds). This semantic
-operation is essential to the *Ground State Space* algorithm, which
-thus envelops without loss of accuracy.)doc";
-
-static const char *__doc_fiction_bound_direction_LOWER =
-R"doc(Lower bounds live in the set :math:`(-\infty\f, \infty]` and are
-ordered by >.)doc";
-
-static const char *__doc_fiction_bound_direction_UPPER =
-R"doc(Upper bounds live in the set :math:`[-\infty, \infty)` and are ordered
-by <.)doc";
-
 static const char *__doc_fiction_bounding_box_2d =
 R"doc(A 2D bounding box object that computes a minimum-sized box around all
 non-empty coordinates in a given layout. Layouts can be of arbitrary
@@ -7152,25 +7129,6 @@ static const char *__doc_fiction_detail_fanout_substitution_impl_ntk_topo = R"do
 static const char *__doc_fiction_detail_fanout_substitution_impl_ps = R"doc()doc";
 
 static const char *__doc_fiction_detail_fanout_substitution_impl_run = R"doc()doc";
-
-static const char *__doc_fiction_detail_find_key_with_tolerance =
-R"doc(This function searches for a floating-point value specified by the
-`key` in the provided map `map`, applying a tolerance specified by
-`fiction::physical_constants::POP_STABILITY_ERR`. Each key in the map
-is compared to the specified key within this tolerance.
-
-Template parameter ``MapType``:
-    The type of the map containing parameter points as keys.
-
-Parameter ``map``:
-    The map containing parameter points as keys and associated values.
-
-Parameter ``key``:
-    The parameter point to search for in the map.
-
-Returns:
-    An iterator to the found parameter point in the map, or
-    `map.cend()` if not found.)doc";
 
 static const char *__doc_fiction_detail_find_super_layout_size =
 R"doc(Utility function to find the required size of a supertile layout and
@@ -21302,6 +21260,46 @@ Template parameter ``T``:
     `fiction::static_depth_view`.)doc";
 
 static const char *__doc_fiction_static_depth_view_static_depth_view = R"doc()doc";
+
+static const char *__doc_fiction_super_4x4_group_lookup =
+R"doc(Utility function that allows to look up values which are repeated
+endlessly, and are based on a 4x4 group of supertiles, that are
+arranged as shown in the bachelor thesis "Super-Tile Routing for
+Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F.
+Kiefhaber, 2025
+
+Parameter ``x``:
+    x coordinate of the looked up position
+
+Parameter ``y``:
+    y coordinate of the looked up position
+
+Parameter ``even_slice``:
+    lookup array for rows with an even reduced_y coodrinate
+
+Parameter ``odd_slice``:
+    lookup array for rows with an odd reduced_y coordinate
+
+Returns:
+    looked up value from provided arrays)doc";
+
+static const char *__doc_fiction_supertilezation =
+R"doc(Transform a AMY-clocked hexagonal even-row gate-level layout into a
+AMYSUPER-clocked hexagonal even-row gate-level layout that only
+contains gates that can be realised with gates/wires from the SiDB
+extendagon gate library. This algorithm was proposed in the bachelor
+thesis "Super-Tile Routing for Omnidirectional Information Flow in
+Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
+
+Template parameter ``HexLyt``:
+    Even-row hexagonal gate-level layout return type.
+
+Parameter ``original_lyt``:
+    the gate-level layout that is to be transformed.
+
+Returns:
+    Either to new supertile gate-level layout or the original layout
+    if something went wrong.)doc";
 
 static const char *__doc_fiction_sweep_parameter = R"doc(Possible sweep parameters for the operational domain computation.)doc";
 
