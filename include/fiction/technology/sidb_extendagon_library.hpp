@@ -73,7 +73,6 @@ class sidb_extendagon_library : public sidb_bestagon_library
                         if (const auto at = lyt.above(t); (t != at) && lyt.is_wire_tile(at)) // double wire
                         {
                             const auto pa = determine_port_routing(lyt, at);
-
                             return DOUBLE_WIRE_MAP.at({p, pa});
                         }
                         else // regular wire
@@ -174,7 +173,7 @@ class sidb_extendagon_library : public sidb_bestagon_library
               // fanouts
               NORTH_EAST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT, NORTH_WEST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT, SOUTH_EAST_TO_NORTH_EAST_NORTH_WEST_FANOUT, SOUTH_WEST_TO_NORTH_EAST_NORTH_WEST_FANOUT,
               // crossing wire
-              NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING}},
+              NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING}},
              {create_not_tt(),
               {NORTH_EAST_SOUTH_EAST_NOT, NORTH_EAST_SOUTH_WEST_NOT, SOUTH_EAST_NORTH_WEST_NOT, SOUTH_WEST_NORTH_WEST_NOT}},
              {create_and_tt(),
@@ -703,7 +702,7 @@ class sidb_extendagon_library : public sidb_bestagon_library
     static constexpr const fcn_gate NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE{merge_at_compiletime({NORTH_EAST_EAST_WIRE, SOUTH_EAST_SOUTH_WEST_WIRE})};
 
     // crossing wires
-    static constexpr const fcn_gate NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING = CROSSING_WIRE;
+    static constexpr const fcn_gate NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING = CROSSING_WIRE;
 
     // fanouts
     static constexpr const fcn_gate NORTH_EAST_TO_SOUTH_EAST_SOUTH_WEST_FANOUT = MIRRORED_FANOUT_1_2;
@@ -1262,7 +1261,7 @@ class sidb_extendagon_library : public sidb_bestagon_library
     /**
      * Lookup table for double wires. Maps ports to corresponding wires.
      */
-    static inline const double_port_gate_map DOUBLE_WIRE_MAP = {
+    static inline const double_port_gate_map DOUBLE_WIRE_MAP = { //TODO CONTINUE I need to double all the entries, just like I did with the last one (the crossing one)
         //EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE
         {{{{port_direction(port_direction::cardinal::EAST)},
            {port_direction(port_direction::cardinal::WEST)}},
@@ -1431,27 +1430,47 @@ class sidb_extendagon_library : public sidb_bestagon_library
           {{port_direction(port_direction::cardinal::SOUTH_WEST)},
            {port_direction(port_direction::cardinal::SOUTH_EAST)}}},
          NORTH_EAST_EAST_AND_SOUTH_EAST_SOUTH_WEST_WIRE},
-         // NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING
+         // NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING
         {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}},
+          {{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::SOUTH_WEST)},
+           {port_direction(port_direction::cardinal::NORTH_EAST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::SOUTH_EAST)},
+           {port_direction(port_direction::cardinal::NORTH_WEST)}},
+          {{port_direction(port_direction::cardinal::SOUTH_WEST)},
+           {port_direction(port_direction::cardinal::NORTH_EAST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}},
+          {{port_direction(port_direction::cardinal::NORTH_WEST)},
+           {port_direction(port_direction::cardinal::SOUTH_EAST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::NORTH_WEST)},
+           {port_direction(port_direction::cardinal::SOUTH_EAST)}},
+          {{port_direction(port_direction::cardinal::NORTH_EAST)},
+           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::SOUTH_WEST)},
+           {port_direction(port_direction::cardinal::NORTH_EAST)}},
+          {{port_direction(port_direction::cardinal::NORTH_WEST)},
+           {port_direction(port_direction::cardinal::SOUTH_EAST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING},
+        {{{{port_direction(port_direction::cardinal::NORTH_WEST)},
            {port_direction(port_direction::cardinal::SOUTH_EAST)}},
           {{port_direction(port_direction::cardinal::SOUTH_WEST)},
-           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
-         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING},
-        {{{{port_direction(port_direction::cardinal::SOUTH_EAST)},
-           {port_direction(port_direction::cardinal::NORTH_EAST)}},
-          {{port_direction(port_direction::cardinal::SOUTH_WEST)},
-           {port_direction(port_direction::cardinal::NORTH_WEST)}}},
-         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING},
-        {{{{port_direction(port_direction::cardinal::NORTH_EAST)},
-           {port_direction(port_direction::cardinal::SOUTH_EAST)}},
-          {{port_direction(port_direction::cardinal::NORTH_WEST)},
-           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
-         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING},
-        {{{{port_direction(port_direction::cardinal::SOUTH_EAST)},
-           {port_direction(port_direction::cardinal::NORTH_EAST)}},
-          {{port_direction(port_direction::cardinal::NORTH_WEST)},
-           {port_direction(port_direction::cardinal::SOUTH_WEST)}}},
-         NORTH_EAST_SOUTH_EAST_AND_SOUTH_WEST_NORTH_WEST_CROSSING}};
+           {port_direction(port_direction::cardinal::NORTH_EAST)}}},
+         NORTH_EAST_SOUTH_WEST_AND_SOUTH_EAST_NORTH_WEST_CROSSING}};
     /**
      * Lookup table for fanouts.  Maps ports to corresponding wires.
      */

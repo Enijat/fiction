@@ -30,7 +30,6 @@ namespace fiction
 // TODO inline and constexpr and noexcept should be added everywhere they are needed
 // TODO alle "layout" erwähnungen durch "gate-level layout" ersetzen ?!
 // TODO coordinates und positions einheitlich verwenden
-// TODO remove the [[nodiscrad]] tag from methods whichs output can be ignored in some cases / looko up how exactly it works and what it does
 namespace detail
 {
 
@@ -370,8 +369,8 @@ template <typename HexLyt>
     assert(refference.x > 0);
     assert(refference.y > 0);
 
-    int64_t x = refference.x;
-    int64_t y = refference.y;
+    auto x = refference.x;
+    auto y = refference.y;
 
     switch (direction)
     {
@@ -402,8 +401,7 @@ template <typename HexLyt>
             {x--;}
         break;
     default:
-        x = refference.x;
-        y = refference.y;
+        // Don't change coordinates in "case C"
         break;
     }
 
@@ -528,16 +526,13 @@ template <typename HexLyt>
     {
         if (input_node == 0) // the tile from which the signal should be coming is empty, so a unfinished wire will be placed there that will later be connected
         {
-            //std::cout << "[i] Creating wire at " << static_cast<int>(position.x) << "," << static_cast<int>(position.y) << "," << static_cast<int>(position.z) << " (x,y,z), and created and connected it to " << static_cast<int>(input_position.x) << "," << static_cast<int>(input_position.y) << "," << static_cast<int>(input_position.z) << " (x,y,z)" << std::endl; //TODO remove
             lyt.create_buf(lyt.create_unconnected_buf(input_position), position);
         } else {
-            //std::cout << "[i] Creating normal wire at " << static_cast<int>(position.x) << "," << static_cast<int>(position.y) << "," << static_cast<int>(position.z) << " (x,y,z), connecting it to " << static_cast<int>(input_position.x) << "," << static_cast<int>(input_position.y) << "," << static_cast<int>(input_position.z) << " (x,y,z)" << std::endl; //TODO remove
             lyt.create_buf(lyt.make_signal(input_node), position);
         }
     }
     else // the wire already exists, it only needs it's incoming signal
     {   
-        //std::cout << "[i] Wire at " << static_cast<int>(position.x) << "," << static_cast<int>(position.y) << "," << static_cast<int>(position.z) << " (x,y,z) already existed, only connecting it to " << static_cast<int>(input_position.x) << "," << static_cast<int>(input_position.y) << "," << static_cast<int>(input_position.z) << " (x,y,z)" << std::endl; //TODO remove
         lyt.connect(lyt.make_signal(input_node), current_node);
         return true;
     }
@@ -569,10 +564,10 @@ template <typename HexLyt, std::size_t table_size>
     place_wire<HexLyt>(lyt, wire_position, last_placed_wire_position);
     #pragma GCC diagnostic pop
 
+    last_placed_wire_position = wire_position;
     table_position++;
     while (table_position + 1u < table_size and lookup_table[table_position + 1u] != X)
     {
-        last_placed_wire_position = wire_position;
         wire_position = get_near_position<HexLyt>(core, lookup_table[table_position], 1);
 
         if (!lyt.is_empty_tile(wire_position))
@@ -582,7 +577,8 @@ template <typename HexLyt, std::size_t table_size>
         #pragma GCC diagnostic ignored "-Wunused-result"
         place_wire<HexLyt>(lyt, wire_position, last_placed_wire_position);
         #pragma GCC diagnostic pop
-
+        
+        last_placed_wire_position = wire_position;
         table_position++;
     }
 
@@ -737,9 +733,32 @@ constexpr const std::array<std::array<hex_direction,10>,120> lookup_table_2in2ou
 {{NW, C, SE, E, X, SE, SW, C, NE, X}},{{NW, C, SE, E, X, SW, C, NE, X, X}},{{NW, C, SE, E, X, W, SW, C, NE, X}},{{NW, C, SE, X, SW, C, NE, X, X, X}},{{NW, C, SE, X, W, SW, C, NE, X, X}},
 {{NW, C, SE, X, W, SW, C, NE, E, X}},{{NW, C, SE, SW, X, W, SW, C, NE, X}},{{NW, C, SE, SW, X, W, SW, C, NE, E}},{{NW, NE, C, SW, X, W, NW, C, SE, X}},{{NW, C, SE, X, SW, C, NE, E, X, X}}}};
 
-//TODO fill out, currently just a placeholder so it compiles
-constexpr const std::array<std::array<hex_direction,10>,120> lookup_table_2in2out_BYPASS = {{
-{{X,X,X,X,X,X,X,X,X,X}}}};
+// This size could easily be halved in theory, just a more sophisticated lookup function is required
+constexpr const std::array<std::array<hex_direction,7>,120> lookup_table_2in2out_BYPASS = {{
+{{NE, NW, W, SW, X, E, SE}},{{NE, NW, X, SE, E, X, X}},{{NE, NW, X, SW, SE, E, X}},{{NE, NW, X, W, SW, SE, E}},{{NE, NW, X, SW, SE, X, X}},
+{{NE, NW, X, W, SW, SE, X}},{{NE, NW, X, E, SE, SW, W}},{{NE, NW, X, W, SW, X, X}},{{NE, NW, X, SW, W, X, X}},{{NE, NW, W, X, SE, SW, X}},
+{{NE, E, X, SW, SE, X, X}},{{NE, E, X, W, SW, SE, X}},{{NE, E, X, NW, W, SW, SE}},{{NE, E, X, W, SW, X, X}},{{NE, E, X, NW, W, SW, X}},
+{{NE, E, SE, X, NW, W, SW}},{{NE, E, X, NW, W, X, X}},{{NE, E, SE, X, NW, W, X}},{{NE, E, SE, SW, X, NW, W}},{{E, NE, NW, W, X, SW, SE}},
+{{E, NE, NW, W, X, SE, SW}},{{E, NE, NW, X, W, SW, SE}},{{E, NE, X, W, SW, SE, X}},{{E, NE, NW, X, W, SW, X}},{{E, NE, X, W, SW, X, X}},
+{{E, NE, X, NW, W, SW, X}},{{E, NE, X, SE, SW, W, NW}},{{E, NE, X, NW, W, X, X}},{{E, NE, X, W, NW, X, X}},{{E, NE, NW, X, SW, W, X}},
+{{E, SE, X, W, SW, X, X}},{{E, SE, X, NW, W, SW, X}},{{E, SE, X, NE, NW, W, SW}},{{E, SE, X, NW, W, X, X}},{{E, SE, X, W, NW, X, X}},
+{{E, SE, SW, X, W, NW, X}},{{E, SE, X, W, NW, NE, X}},{{E, SE, SW, X, W, NW, NE}},{{E, SE, SW, W, X, NE, NW}},{{SE, E, NE, NW, X, W, SW}},
+{{SE, E, NE, NW, X, SW, W}},{{SE, E, X, W, SW, X, X}},{{SE, E, X, NW, W, SW, X}},{{SE, E, X, NE, NW, W, SW}},{{SE, E, X, NW, W, X, X}},
+{{SE, E, X, W, NW, X, X}},{{SE, E, X, SW, W, NW, NE}},{{SE, E, X, W, NW, NE, X}},{{SE, E, X, NW, NE, X, X}},{{SE, E, NE, X, W, NW, X}},
+{{SE, SW, X, NW, W, X, X}},{{SE, SW, X, W, NW, X, X}},{{SE, SW, X, E, NE, NW, W}},{{SE, SW, X, W, NW, NE, X}},{{SE, SW, X, NW, NE, X, X}},
+{{SE, SW, W, X, NW, NE, X}},{{SE, SW, X, NW, NE, E, X}},{{SE, SW, W, X, NW, NE, E}},{{SE, SW, W, NW, X, E, NE}},{{SW, SE, E, NE, X, NW, W}},
+{{SW, SE, E, NE, X, W, NW}},{{SW, SE, X, NW, W, X, X}},{{SW, SE, X, W, NW, X, X}},{{SW, SE, X, E, NE, NW, W}},{{SW, SE, X, W, NW, NE, X}},
+{{SW, SE, X, NW, NE, X, X}},{{SW, SE, X, W, NW, NE, E}},{{SW, SE, X, NW, NE, E, X}},{{SW, SE, X, NE, E, X, X}},{{SW, SE, E, X, NW, W, X}},
+{{SW, W, X, NE, NW, X, X}},{{SW, W, X, NW, NE, X, X}},{{SW, W, X, SE, E, NE, NW}},{{SW, W, X, NW, NE, E, X}},{{SW, W, X, SE, E, NE, X}},
+{{SW, W, NW, X, SE, E, NE}},{{SW, W, X, SE, E, X, X}},{{SW, W, NW, X, SE, E, X}},{{SW, W, NW, NE, X, SE, E}},{{W, SW, SE, E, X, NE, NW}},
+{{W, SW, SE, E, X, NW, NE}},{{W, SW, X, NE, NW, X, X}},{{W, SW, X, NW, NE, X, X}},{{W, SW, X, SE, E, NE, NW}},{{W, SW, X, NW, NE, E, X}},
+{{W, SW, X, SE, E, NE, X}},{{W, SW, X, NW, NE, E, SE}},{{W, SW, X, SE, E, X, X}},{{W, SW, X, E, SE, X, X}},{{W, SW, SE, X, NE, NW, X}},
+{{W, NW, X, E, NE, X, X}},{{W, NW, X, SE, E, NE, X}},{{W, NW, X, SW, SE, E, NE}},{{W, NW, X, SE, E, X, X}},{{W, NW, X, SW, SE, E, X}},
+{{W, NW, X, NE, E, SE, SW}},{{W, NW, X, SW, SE, X, X}},{{W, NW, X, SE, SW, X, X}},{{W, NW, NE, E, X, SW, SE}},{{NW, W, SW, SE, X, E, NE}},
+{{NW, W, SW, SE, X, NE, E}},{{NW, W, X, E, NE, X, X}},{{NW, W, X, SE, E, NE, X}},{{NW, W, X, SW, SE, E, NE}},{{NW, W, X, SE, E, X, X}},
+{{NW, W, X, SW, SE, E, X}},{{NW, W, X, NE, E, SE, SW}},{{NW, W, X, SW, SE, X, X}},{{NW, W, X, SE, SW, X, X}},{{NW, W, SW, X, E, SE, X}},
+{{NW, NE, X, SE, E, X, X}},{{NW, NE, X, SW, SE, E, X}},{{NW, NE, X, W, SW, SE, E}},{{NW, NE, X, SW, SE, X, X}},{{NW, NE, X, W, SW, SE, X}},
+{{NW, NE, E, X, W, SW, SE}},{{NW, NE, X, W, SW, X, X}},{{NW, NE, E, X, W, SW, X}},{{NW, NE, E, SE, X, W, SW}},{{NW, NE, E, SE, X, SW, W}}}};
 
 /**
  * Utility function that populates a supertile by reading in the `original_tile`s node and it's inputs and outputs,
@@ -794,27 +813,48 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
                 hex_direction out2 = get_near_direction<InHexLyt>(other_wire, original_lyt.outgoing_data_flow(other_wire)[0]);
                 
                 const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
-
-                if (!is_crossing(in1, out1, in2, out2))
-                    {std::cout << "[W] detected bypass, which is not implemented yet, this will lead to undefined behaviour" << std::endl;} // TODO handle this and then remove it
-
-                std::array<hex_direction,10> lookup_table = is_crossing(in1, out1, in2, out2) ? lookup_table_2in2out_CROSSING[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out1, in2, out2))] : lookup_table_2in2out_BYPASS[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out1, in2, out2))];
-
-                uint8_t table_position = 0;
-
-                // place first wire
-                bool found_wire = false;
-                table_position = place_in_out_wires<OutHexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
-                if (!found_wire)
+                
+                if (is_crossing(in1, out1, in2, out2))
                 {
-                    *output_a = lookup_table[static_cast<uint64_t>(table_position - 2)];
+                    std::array<hex_direction,10> lookup_table = lookup_table_2in2out_CROSSING[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out1, in2, out2))];
+
+                    uint8_t table_position = 0;
+
+                    // place first wire
+                    bool found_wire = false;
+                    table_position = place_in_out_wires<OutHexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+                    if (!found_wire)
+                    {
+                        *output_a = lookup_table[static_cast<uint64_t>(table_position - 2)];
+                    }
+                    // place second wire
+                    found_wire = false;
+                    table_position = place_in_out_wires<OutHexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+                    if (!found_wire)
+                    {
+                        *output_b = lookup_table[static_cast<uint64_t>(table_position - 2)];
+                    }
                 }
-                // place second wire
-                found_wire = false;
-                table_position = place_in_out_wires<OutHexLyt,10>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
-                if (!found_wire)
+                else
                 {
-                    *output_b = lookup_table[static_cast<uint64_t>(table_position - 2)];
+                    std::array<hex_direction,7> lookup_table = lookup_table_2in2out_BYPASS[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out2, in2, out1))];
+
+                    uint8_t table_position = 0;
+
+                    // place first wire
+                    bool found_wire = false;
+                    table_position = place_in_out_wires<OutHexLyt,7>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+                    if (!found_wire)
+                    {
+                        *output_a = lookup_table[static_cast<uint64_t>(table_position - 2)];
+                    }
+                    // place second wire
+                    found_wire = false;
+                    table_position = place_in_out_wires<OutHexLyt,7>(super_lyt, core_tile, lookup_table, table_position, &found_wire);
+                    if (!found_wire)
+                    {
+                        *output_b = lookup_table[static_cast<uint64_t>(table_position - 2)];
+                    }
                 }
             }
             else // single wire
@@ -877,7 +917,6 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
         }
         else if (original_lyt.is_fanout(original_node) and outgoing_signals.size() == 2) // original_node is 2out fanout
         {
-
             hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
             hex_direction out1 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
             hex_direction out2 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[1]);
@@ -1089,16 +1128,20 @@ template <typename OutHexLyt, typename InHexLyt>
             detail::hex_direction output_b = detail::hex_direction::X;
             if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b))
             {
-                std::cout << "[e] found unknown gate while populating supertile, aborted translation" << std::endl;
+                std::cout << "[e] found unknown gate at tile " << current_original_tile.x << "," << current_original_tile.y << "," << current_original_tile.z << " while populating supertile, aborted translation" << std::endl;
                 return static_cast<OutHexLyt>(original_lyt);
             }
-            if (output_a == detail::hex_direction::X) // path is finished
+            if (output_a == detail::hex_direction::X and output_b == detail::hex_direction::X) // path is finished
             {
                 break;
             }
-            else if (output_b == detail::hex_direction::X) // path continues on one path
+            else if (output_a != detail::hex_direction::X and output_b == detail::hex_direction::X) // path continues on one path
             {
                 current_original_tile = detail::get_outgoing_from_direction<InHexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_a);
+            }
+            else if (output_a == detail::hex_direction::X and output_b != detail::hex_direction::X) // path continues on one path
+            {
+                current_original_tile = detail::get_outgoing_from_direction<InHexLyt>(original_lyt.outgoing_data_flow(current_original_tile), current_original_tile, output_b);
             }
             else // path splits up or contained a wire crossing
             {
