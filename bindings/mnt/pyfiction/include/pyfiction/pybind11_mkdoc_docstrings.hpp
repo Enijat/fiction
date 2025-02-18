@@ -7408,7 +7408,8 @@ Returns:
 
 static const char *__doc_fiction_detail_get_near_position =
 R"doc(Utility function that returns a tile next to the given one, based on
-the passed direction.
+the passed direction. Undefined behaviour if the passed direction
+would result in negative coordinates.
 
 Template parameter ``HexLyt``:
     Even-row hexagonal gate-level layout return type.
