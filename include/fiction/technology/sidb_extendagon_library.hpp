@@ -1261,7 +1261,7 @@ class sidb_extendagon_library : public sidb_bestagon_library
     /**
      * Lookup table for double wires. Maps ports to corresponding wires.
      */
-    static inline const double_port_gate_map DOUBLE_WIRE_MAP = { //TODO CONTINUE I need to double all the entries, just like I did with the last one (the crossing one)
+    static inline const double_port_gate_map DOUBLE_WIRE_MAP = { // TODO check if I really need all these combinations
         //EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE
         {{{{port_direction(port_direction::cardinal::EAST)},
            {port_direction(port_direction::cardinal::WEST)}},
