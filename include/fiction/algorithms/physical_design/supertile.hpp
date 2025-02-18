@@ -356,6 +356,7 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
 
 /**
  * Utility function that returns a tile next to the given one, based on the passed direction.
+ * Undefined behaviour if the passed direction would result in negative coordinates.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
  * @param refference `tile` that gives the position to be refferenced in the hexagonal layout. 
@@ -366,9 +367,6 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
 template <typename HexLyt>
 [[nodiscard]] constexpr tile<HexLyt> get_near_position(const tile<HexLyt> refference, hex_direction direction, uint8_t z) noexcept
 {
-    assert(refference.x > 0);
-    assert(refference.y > 0);
-
     auto x = refference.x;
     auto y = refference.y;
 
@@ -404,7 +402,7 @@ template <typename HexLyt>
         // Don't change coordinates in "case C"
         break;
     }
-
+    
     return tile<HexLyt>{x, y, z};
 }
 
