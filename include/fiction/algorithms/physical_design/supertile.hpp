@@ -11,10 +11,8 @@
 //#include "fiction/types.hpp"
 #include "fiction/utils/name_utils.hpp"
 #include "fiction/utils/placement_utils.hpp"
-#include "fiction/layouts/clocking_scheme.hpp"
-
-//FORME I know I need these:
-#include "fiction/utils/math_utils.hpp"
+#include "fiction/layouts/clocking_scheme.hpp"//FORME I know I need this one
+#include "fiction/utils/math_utils.hpp"//FORME I know I need this one
 
 //#include <mockturtle/traits.hpp>
 //#include <mockturtle/views/topo_view.hpp>
@@ -256,9 +254,10 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
  * @param size_y Pointer to where to write the required size in the y-dimension.
  * @param offset_x Pointer to where to write the required offset in the x-dimension.
  * @param offset_y Pointer to where to write the required offset in the y-dimension.
+ * @param matrix_size Size of the repeating matrix that the used clocking scheme is defined by
  */
 template <typename HexLyt>
-void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_y, int64_t* offset_x, int64_t* offset_y) noexcept
+void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_y, int64_t* offset_x, int64_t* offset_y, regular_matrix_size matrix_size) noexcept
 {
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
     assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
@@ -298,9 +297,22 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
     * B) doesn't wastes to much space (meaning the coordinates are as small as possible)
     * C) keeps the clocking such that the top left clock zone from the original is the same as the top left super clock zone
     */
-    // clang-format off
+    std::array<int8_t,2> relative_position;
+    int8_t relative_x;
+    int8_t relative_y;
 
-    static constexpr std::array<std::array<int8_t,2>,56> even_coord_slice{{
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
+    switch (matrix_size)
+    {
+    default:
+        std::cout << "[e] regular_matrix_size passed to find_super_layout_size is unknown. Defaulting to 4x4, which might cause undefined behaviour." << std::endl;
+    case regular_4x4:
+
+        // clang-format off
+
+        static constexpr std::array<std::array<int8_t,2>,56> even_coord_slice{{
             {{0,0}},{{1,0}},
             {{-1,10}},{{0,10}},{{1,10}},{{2,10}},{{3,10}},{{4,10}},{{5,10}},{{6,10}},{{7,10}},
             {{-2,6}},{{-1,6}},{{0,6}},{{1,6}},{{2,6}},{{3,6}},{{4,6}},{{5,6}},{{6,6}},{{7,6}},
@@ -310,36 +322,81 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
             {{-2,4}},{{-1,4}},{{0,4}},{{1,4}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{6,4}},{{7,4}},{{8,4}},{{9,4}}
             }};
 
-    static constexpr std::array<std::array<int8_t,2>,56> odd_coord_slice{{
+        static constexpr std::array<std::array<int8_t,2>,56> odd_coord_slice{{
+                {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
+                {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
+                {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
+                {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},{{8,3}},{{9,3}},
+                {{-3,9}},{{-2,9}},{{-1,9}},{{0,9}},{{1,9}},{{2,9}},{{3,9}},{{4,9}},{{5,9}},{{6,9}},{{7,9}},{{8,9}},
+                {{-1,5}},{{0,5}},{{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},{{6,5}},{{7,5}},{{8,5}},{{9,5}}
+                }};
+
+        // clang-format on
+
+        // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
+        relative_position = fiction::super_4x4_group_lookup<std::array<int8_t,2>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
+
+        relative_x = relative_position[0];
+        relative_y = relative_position[1];
+
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wconversion"
+
+        // check if offset needs to be moved to ...
+        if (relative_x < 1/*1 instead of 0 to include future surrounding wires*/) // ... the next right super clock zone group (to stay in the positive coordinates)
+        {
+            relative_x += 10;
+            relative_y += 4;
+        }
+        if (relative_y > 11/*11 instead of 10 to include future surrounding wires*/) // ... the next upper super clock zone group (to safe some space)
+        {
+            relative_x += 3;
+            relative_y -= 10;
+        }
+
+        #pragma GCC diagnostic pop
+
+        break;
+    case regular_3x2:
+
+        // clang-format off
+
+        static constexpr std::array<std::array<int8_t,2>,42> coord_slice{{
+            {{0,0}},{{1,0}},
+            {{-2,4}},{{-1,4}},{{0,4}},{{1,4}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{6,4}},
             {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
-            {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
-            {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
-            {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},{{8,3}},{{9,3}},
-            {{-3,9}},{{-2,9}},{{-1,9}},{{0,9}},{{1,9}},{{2,9}},{{3,9}},{{4,9}},{{5,9}},{{6,9}},{{7,9}},{{8,9}},
-            {{-1,5}},{{0,5}},{{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},{{6,5}},{{7,5}},{{8,5}},{{9,5}}
+            {{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},
+            {{-2,2}},{{-1,2}},{{0,2}},{{1,2}},{{2,2}},{{3,2}},{{4,2}},{{5,2}},{{6,2}},
+            {{3,6}},{{4,6}},
+            {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},
             }};
 
-    // clang-format on
+        // clang-format on
 
-    // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
-    std::array<int8_t,2> relative_position = fiction::super_4x4_group_lookup<std::array<int8_t,2>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
-    
-    int8_t relative_x = relative_position[0];
-    int8_t relative_y = relative_position[1];
+        // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
+        relative_position = fiction::super_3x2_group_lookup<std::array<int8_t,2>>(leftmost_core_tile_x, top_core_tile_y, coord_slice);
 
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wconversion"
+        relative_x = relative_position[0];
+        relative_y = relative_position[1];
 
-    // check if offset needs to be moved to ...
-    if (relative_x < 1/*1 instead of 0 to include future surrounding wires*/) // ... the next right super clock zone group (to stay in the positive coordinates)
-    {
-        relative_x += 10;
-        relative_y += 4;
-    }
-    if (relative_y > 10/*10 instead of 9 to include future surrounding wires*/) // ... the next upper super clock zone group (to safe some space)
-    {
-        relative_x += 3;
-        relative_y -= 10;
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wconversion"
+
+        // check if offset needs to be moved to ...
+        if (relative_x < 1/*1 instead of 0 to include future surrounding wires*/) // ... the next right super clock zone group (to stay in the positive coordinates)
+        {
+            relative_x += relative_y % 2 == 0 ? 8 : 7;
+            relative_y += 3;
+        }
+        if (relative_y > 6/*6 instead of 5 to include future surrounding wires*/) // ... the next upper super clock zone group (to safe some space)
+        {
+            relative_x += relative_y % 2 == 0 ? 2 : 1;
+            relative_y -= 5;
+        }
+
+        #pragma GCC diagnostic pop
+
+        break;
     }
 
     #pragma GCC diagnostic pop
@@ -1077,28 +1134,49 @@ template <typename HexLyt>
  * @tparam OutHexLyt Even-row hexagonal gate-level layout return type, RespectClockingAll set to false.
  * @tparam InHexLyt Even-row hexagonal gate-level layout return type, RespectClockingAll set to true.
  * @param original_lyt the gate-level layout that is to be transformed.
- * @return Either to new supertile gate-level layout or the original layout if something went wrong.
+ * @return Either to new supertile gate-level layout or the original layout if something went wrong. TODO return something else, which repsresents an error, or just throw an error
  */
 //TODO throw the right errors in this method instead of just returning the original layout
 template <typename OutHexLyt, typename InHexLyt>
-[[nodiscard]] OutHexLyt supertilezation(const InHexLyt& original_lyt) noexcept
+[[nodiscard]] OutHexLyt supertilezation(const InHexLyt& original_lyt)
 {
     static_assert(is_gate_level_layout_v<InHexLyt>, "InHexLyt is not a gate-level layout");
     static_assert(is_hexagonal_layout_v<InHexLyt>, "InHexLyt is not a hexagonal layout");
     static_assert(has_even_row_hex_arrangement_v<InHexLyt>, "InHexLyt does not have an even row hexagon arrangement");
     //TODO somehow check that RespectClockingAll ist set to false?
     if (original_lyt.z() > 1) {
-        std::cout << "[e] Given layouts z dimension is bigger then 1, unable to process" << std::endl;
-        return static_cast<OutHexLyt>(original_lyt);
+        std::cout << "[e] Given layouts z dimension is bigger then 1, unable to translate layout" << std::endl;
+        throw std::runtime_error("Given layouts z dimension is bigger then 1");
     }
     
     uint64_t size_x;
     uint64_t size_y;
     int64_t offset_x;
     int64_t offset_y;
-    detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y);
-    //TODO check if the right clocking scheme is used and maybe add propper supertile clocking?
-    OutHexLyt super_lyt{{size_x, size_y, 1}, original_lyt.is_clocking_scheme(clock_name::AMY) ? fiction::amy_supertile_clocking<OutHexLyt>() : fiction::row_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name()};
+    OutHexLyt super_lyt;
+    
+    // Deduce used clocking scheme and set super_clocking_function and offset accordingly
+    if (original_lyt.is_clocking_scheme(clock_name::AMY))
+    {
+        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, regular_4x4);
+        super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::amy_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
+    }
+    else if (original_lyt.is_clocking_scheme(clock_name::ROW))
+    {
+        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, regular_4x4);
+        super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::row_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
+    }
+    else if (original_lyt.is_clocking_scheme(clock_name::TINY))
+    {
+        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, regular_3x2);
+        super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::tiny_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
+    }
+    else
+    {
+        std::cout << "[e] clocking scheme of layout has no supertile version, aborting transformation" << std::endl;
+        throw std::runtime_error("clocking scheme of layout has no supertile version");
+    }
+
     std::vector<tile<OutHexLyt>> path_beginnings;
 
     // replace all inputs and save their output tile
@@ -1127,7 +1205,7 @@ template <typename OutHexLyt, typename InHexLyt>
             if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b))
             {
                 std::cout << "[e] found unknown gate at tile " << current_original_tile.x << "," << current_original_tile.y << "," << current_original_tile.z << " while populating supertile, aborted translation" << std::endl;
-                return static_cast<OutHexLyt>(original_lyt);
+                throw std::runtime_error("found unknown gate");
             }
             if (output_a == detail::hex_direction::X and output_b == detail::hex_direction::X) // path is finished
             {
