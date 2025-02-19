@@ -190,11 +190,15 @@ enum class num_clks : uint8_t
     FOUR
 };
 
-// TODO description (XxY)
+/**
+ * Represents the size of a matrix that defines a regular clocking scheme.
+ * AxB represents a matrix that has size A in the x direction and size B in the y direction.
+ */
 enum regular_matrix_size {
     regular_4x4,
     regular_3x2
 };
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 /**
@@ -764,7 +768,7 @@ static auto amy_clocking() noexcept
 {
     // clang-format off
 
-    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 4u>, 4u> even_row_4_cutout{//TODO update this to the preffered/final clocking scheme
+    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 4u>, 4u> even_row_4_cutout{
        {{{0, 1, 2, 3}},
         {{3, 2, 1, 0}},
         {{2, 3, 2, 1}},
@@ -793,7 +797,6 @@ template <typename Lyt>
 static auto tiny_clocking() noexcept
 {
     //TODO add more hex schemes like odd row and such here
-    //TODO also add tiny super clocking scheme
     // clang-format off
 
     static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 3u>, 2u> even_row_3_coutout{
@@ -813,7 +816,13 @@ static auto tiny_clocking() noexcept
                             true};
 }
 
-//TODO description + explanation
+/**
+ * Utility function that generates a lookup array for the super_4x4_group_lookup function.
+ * 
+ * @tparam HexLyt Clocked layout type.
+ * @param scheme Clocking scheme that is beeing transformed into supertile clocking scheme.
+ * @return Lookup array for coordinates with an even y value. 
+ */
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_even_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
@@ -854,7 +863,13 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
     return even_slice;
 }
 
-//TODO description + explanation
+/**
+ * Utility function that generates a lookup array for the super_4x4_group_lookup function.
+ * 
+ * @tparam HexLyt Clocked layout type.
+ * @param scheme Clocking scheme that is beeing transformed into supertile clocking scheme.
+ * @return Lookup array for coordinates with an odd y value. 
+ */
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_odd_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
@@ -897,7 +912,7 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 /**
  * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
  * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
- * TODO add note that even_row coordinates are required
+ * TODO check with static_assert that even_row coordinates are used
  * 
  * @param x x coordinate of the looked up position
  * @param y y coordinate of the looked up position
@@ -915,10 +930,9 @@ static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, co
     // translate into top two rows coordinates
     uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);
     reduced_x = static_cast<uint8_t>(reduced_x + 23 * reductions) % 56;
-    reduced_y = reduced_y % 2;
 
     // look up by traversing one super tile block
-    if (reduced_y == 0)
+    if (reduced_y % 2 == 0)
     {
         return even_slice[reduced_x];
     }
@@ -928,7 +942,13 @@ static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, co
     }
 }
 
-//TODO description + explanation
+/**
+ * Utility function that generates a lookup array for the super_3x2_group_lookup function.
+ * 
+ * @tparam HexLyt Clocked layout type.
+ * @param scheme Clocking scheme that is beeing transformed into supertile clocking scheme.
+ * @return Lookup array.
+ */
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 42u> generate_3x2_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
@@ -944,10 +964,10 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 
     const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 42u> slice{{
         a, a,
-        d, d, e, e, e, f, f, c, c,
-        a, a, a, b, b,
         e, e, f, f, f,
         d, d, a, a, b, b, b, c, c,
+        d, d, e, e, e, f, f, c, c,
+        a, a, a, b, b,
         f, f,
         d, d, d, e, e, b, b, c, c, c
         }};
@@ -960,7 +980,7 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 /**
  * Utility function that allows to look up values which are repeated endlessly, and are based on a 3x2 group of supertiles,
  * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
- * TODO add note that even_row coordinates are required
+ * TODO check with static_assert that even_row coordinates are used
  * 
  * @param x x coordinate of the looked up position
  * @param y y coordinate of the looked up position
@@ -976,37 +996,48 @@ static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, co
 
     // translate into top row coordinates
     uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);
-    reduced_x = static_cast<uint8_t>(reduced_x + 23 * reduced_y) % 42;
+    reduced_x = static_cast<uint8_t>(reduced_x + 51 * reductions) % 42;
     if (reduced_y % 2 != 0)
     {
-        reduced_x += 11;
+        reduced_x = (reduced_x + static_cast<uint8_t>(25)) % 42;
     }
 
     // look up by traversing one super tile block
     return slice[reduced_x];
 }
 
-//TODO description + explanation
-template <typename ArrayType, typename HexLyt>
-static constexpr const ArrayType clocking_supertilezation(const clocking_scheme<clock_zone<HexLyt>> scheme, regular_matrix_size matrix_size, int64_t x, int64_t y) noexcept
+/**
+ * Function that looks up the clock number for the given coordinates in a supertile clocking scheme, which is defined by the passed regular clocking scheme.
+ * 
+ * @tparam HexLyt Clocked layout type.
+ * @param scheme Regular clocking scheme that defines the supertile clocking scheme.
+ * @param matrix_size Size of the matrix that defines the regular clocking scheme.
+ * @param x X coordinate that will be looked up.
+ * @param y Y coordinate that will be looked up.
+ * @return The clock number at the given coordinates.
+ */
+template <typename HexLyt>
+static constexpr const typename clocking_scheme<clock_zone<HexLyt>>::clock_number clocking_supertilezation(const clocking_scheme<clock_zone<HexLyt>> scheme, regular_matrix_size matrix_size, int64_t x, int64_t y) noexcept
 {
     switch (matrix_size)
     {
     default:
     case regular_4x4:
-        return super_4x4_group_lookup<ArrayType>(x, y, generate_4x4_even_slice<HexLyt>(scheme), generate_4x4_odd_slice<HexLyt>(scheme));
+        return super_4x4_group_lookup<typename clocking_scheme<clock_zone<HexLyt>>::clock_number>(x, y, generate_4x4_even_slice<HexLyt>(scheme), generate_4x4_odd_slice<HexLyt>(scheme));
     case regular_3x2:
-        return super_3x2_group_lookup<ArrayType>(x, y, generate_3x2_slice<HexLyt>(scheme));
+        return super_3x2_group_lookup<typename clocking_scheme<clock_zone<HexLyt>>::clock_number>(x, y, generate_3x2_slice<HexLyt>(scheme));
     }
 }
+
 //TODO description
+//TODO check with static_assert that even_row coordinates are used
 template <typename Lyt>
 static auto row_supertile_clocking() noexcept
 {
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_supertile_4_clock_function =
     [](const clock_zone<Lyt>& cz) noexcept
         {
-            return clocking_supertilezation<typename clocking_scheme<clock_zone<Lyt>>::clock_number, Lyt>(row_clocking<Lyt>(num_clks::FOUR), regular_4x4, cz.x, cz.y);
+            return clocking_supertilezation<Lyt>(row_clocking<Lyt>(num_clks::FOUR), regular_4x4, cz.x, cz.y);
         };
 
     return clocking_scheme{clock_name::ROW_SUPER,
@@ -1020,7 +1051,7 @@ static auto row_supertile_clocking() noexcept
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
  * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
  * This is the supertile version of the amy pattern.
- * TODO add note that even_row coordinates are required
+ * TODO check with static_assert that even_row coordinates are used
  * 
  * @tparam Lyt Clocked layout type.
  * @return Hexagonal supertile AMY clocking scheme.
@@ -1031,7 +1062,7 @@ static auto amy_supertile_clocking() noexcept
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
         {
-            return clocking_supertilezation<typename clocking_scheme<clock_zone<Lyt>>::clock_number, Lyt>(amy_clocking<Lyt>(), regular_4x4, cz.x, cz.y);
+            return clocking_supertilezation<Lyt>(amy_clocking<Lyt>(), regular_4x4, cz.x, cz.y);
         };
 
     return clocking_scheme{clock_name::AMY_SUPER,
@@ -1042,13 +1073,14 @@ static auto amy_supertile_clocking() noexcept
                             true};
 }
 //TODO description
+//TODO check with static_assert that even_row coordinates are used
 template <typename Lyt>
 static auto tiny_supertile_clocking() noexcept
 {
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_supertile_3_clock_function =
     [](const clock_zone<Lyt>& cz) noexcept
         {
-            return clocking_supertilezation<typename clocking_scheme<clock_zone<Lyt>>::clock_number, Lyt>(tiny_clocking<Lyt>(), regular_3x2, cz.x, cz.y);
+            return clocking_supertilezation<Lyt>(tiny_clocking<Lyt>(), regular_3x2, cz.x, cz.y);
         };
 
     return clocking_scheme{clock_name::TINY_SUPER,
