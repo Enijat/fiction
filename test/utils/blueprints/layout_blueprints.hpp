@@ -466,22 +466,19 @@ GateLyt amy_clocked_path_balanced_and_xor_gate_layout() noexcept
 {
     static_assert(fiction::has_even_row_hex_arrangement_v<GateLyt>, "GateLyt does not have an even row hexagon arrangement");
 
-    GateLyt layout{typename GateLyt::aspect_ratio{5, 1, 0}, fiction::amy_clocking<GateLyt>()};
+    GateLyt layout{typename GateLyt::aspect_ratio{1, 3, 0}, fiction::amy_clocking<GateLyt>()};
 
     const auto x1 = layout.create_pi("x1", {1, 0});
-    const auto x2 = layout.create_pi("x2", {5, 1});
+    const auto x2 = layout.create_pi("x2", {0, 3});
 
-    const auto fa1 = layout.create_buf(x1, {2, 0});
-    const auto fa2 = layout.create_buf(x2, {4, 1});
+    const auto fa1 = layout.create_buf(x1, {1, 1});
+    const auto fa2 = layout.create_buf(x2, {0, 2});
 
-    const auto and1 = layout.create_and(fa1, fa2, {3, 0});
-    const auto xor1 = layout.create_xor(fa1, fa2, {3, 1});
+    const auto and1 = layout.create_and(fa1, fa2, {1, 2});
+    const auto xor1 = layout.create_xor(fa1, fa2, {0, 1});
 
-    const auto buf1 = layout.create_buf(and1, {4, 0});
-    const auto buf2 = layout.create_buf(xor1, {2, 1});
-
-    layout.create_po(buf1, "f1", {5, 0});
-    layout.create_po(buf2, "f2", {1, 1});
+    layout.create_po(xor1, "f1", {0, 0});
+    layout.create_po(and1, "f2", {1, 3});
 
     return layout;
 }

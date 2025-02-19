@@ -170,9 +170,11 @@ inline constexpr const char* CFE           = "CFE";
 inline constexpr const char* RIPPLE        = "RIPPLE";
 inline constexpr const char* SRS           = "SRS";
 inline constexpr const char* BANCS         = "BANCS";
+inline constexpr const char* TINY          = "TINY";
 inline constexpr const char* AMY           = "AMY";
-inline constexpr const char* AMY_SUPER     = "AMYSUPER";
 inline constexpr const char* ROW_SUPER     = "ROWSUPER";
+inline constexpr const char* AMY_SUPER     = "AMYSUPER";
+inline constexpr const char* TINY_SUPER    = "TINYSUPER";
 
 }  // namespace clock_name
 
@@ -186,6 +188,12 @@ enum class num_clks : uint8_t
      * Four clocks.
      */
     FOUR
+};
+
+// TODO description (XxY)
+enum regular_matrix_size {
+    regular_4x4,
+    regular_3x2
 };
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -756,16 +764,16 @@ static auto amy_clocking() noexcept
 {
     // clang-format off
 
-    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 4u>, 4u>
-        even_4_cutout{{{{0, 1, 2, 3}},
-                       {{2, 1, 0, 3}},
-                       {{1, 2, 3, 2}},
-                       {{0, 3, 1, 0}}}};
+    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 4u>, 4u> even_row_4_cutout{//TODO update this to the preffered/final clocking scheme
+       {{{0, 1, 2, 3}},
+        {{3, 2, 1, 0}},
+        {{2, 3, 2, 1}},
+        {{1, 0, 3, 0}}}};
 
     // clang-format on
 
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_4_clock_function =
-        [](const clock_zone<Lyt>& cz) noexcept { return even_4_cutout[cz.y % 4ul][cz.x % 4ul]; };
+        [](const clock_zone<Lyt>& cz) noexcept { return even_row_4_cutout[cz.y % 4ul][cz.x % 4ul]; };
 
     return clocking_scheme{clock_name::AMY,
                             even_row_amy_4_clock_function,
@@ -774,10 +782,40 @@ static auto amy_clocking() noexcept
                             4u,
                             true};
 }
+/**
+ * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
+ * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * 
+ * @tparam Lyt Clocked layout type.
+ * @return Hexagonal TINY clocking scheme.
+ */
+template <typename Lyt>
+static auto tiny_clocking() noexcept
+{
+    //TODO add more hex schemes like odd row and such here
+    //TODO also add tiny super clocking scheme
+    // clang-format off
+
+    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 3u>, 2u> even_row_3_coutout{
+       {{{0, 1, 2}},
+        {{1, 2, 0}}}};
+
+    // clang-format on
+
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_tiny_3_clock_function =
+        [](const clock_zone<Lyt>& cz) noexcept { return even_row_3_coutout[cz.y % 2ul][cz.x % 3ul]; };
+
+    return clocking_scheme{clock_name::TINY,
+                            even_row_tiny_3_clock_function,
+                            std::min(Lyt::max_fanin_size, 3u),
+                            3u,
+                            3u,
+                            true};
+}
 
 //TODO description + explanation
 template <typename HexLyt>
-static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_even_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
+static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_even_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
@@ -818,7 +856,7 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 
 //TODO description + explanation
 template <typename HexLyt>
-static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_odd_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
+static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_odd_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
@@ -859,6 +897,7 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 /**
  * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
  * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * TODO add note that even_row coordinates are required
  * 
  * @param x x coordinate of the looked up position
  * @param y y coordinate of the looked up position
@@ -888,10 +927,100 @@ static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, co
         return odd_slice[reduced_x];
     }
 }
+
+//TODO description + explanation
+template <typename HexLyt>
+static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 42u> generate_3x2_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
+{
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
+
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number d = scheme(clock_zone<HexLyt>{0, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number e = scheme(clock_zone<HexLyt>{1, 1});
+    typename clocking_scheme<clock_zone<HexLyt>>::clock_number f = scheme(clock_zone<HexLyt>{2, 1});
+    
+    // clang-format off
+
+    const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 42u> slice{{
+        a, a,
+        d, d, e, e, e, f, f, c, c,
+        a, a, a, b, b,
+        e, e, f, f, f,
+        d, d, a, a, b, b, b, c, c,
+        f, f,
+        d, d, d, e, e, b, b, c, c, c
+        }};
+
+    // clang-format on
+
+    return slice;
+}
+
+/**
+ * Utility function that allows to look up values which are repeated endlessly, and are based on a 3x2 group of supertiles,
+ * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * TODO add note that even_row coordinates are required
+ * 
+ * @param x x coordinate of the looked up position
+ * @param y y coordinate of the looked up position
+ * @param slice lookup array for rows
+ * @return looked up value from provided arrays
+ */
+template <typename ArrayType>
+static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, const std::array<ArrayType, 42u>& slice) noexcept
+{
+    // reduce to repeating block coordinates
+    uint8_t reduced_x = static_cast<uint8_t>(positive_mod<int64_t>(x, 42l));
+    uint8_t reduced_y = static_cast<uint8_t>(positive_mod<int64_t>(y, 112l));
+
+    // translate into top row coordinates
+    uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);
+    reduced_x = static_cast<uint8_t>(reduced_x + 23 * reduced_y) % 42;
+    if (reduced_y % 2 != 0)
+    {
+        reduced_x += 11;
+    }
+
+    // look up by traversing one super tile block
+    return slice[reduced_x];
+}
+
+//TODO description + explanation
+template <typename ArrayType, typename HexLyt>
+static constexpr const ArrayType clocking_supertilezation(const clocking_scheme<clock_zone<HexLyt>> scheme, regular_matrix_size matrix_size, int64_t x, int64_t y) noexcept
+{
+    switch (matrix_size)
+    {
+    default:
+    case regular_4x4:
+        return super_4x4_group_lookup<ArrayType>(x, y, generate_4x4_even_slice<HexLyt>(scheme), generate_4x4_odd_slice<HexLyt>(scheme));
+    case regular_3x2:
+        return super_3x2_group_lookup<ArrayType>(x, y, generate_3x2_slice<HexLyt>(scheme));
+    }
+}
+//TODO description
+template <typename Lyt>
+static auto row_supertile_clocking() noexcept
+{
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_supertile_4_clock_function =
+    [](const clock_zone<Lyt>& cz) noexcept
+        {
+            return clocking_supertilezation<typename clocking_scheme<clock_zone<Lyt>>::clock_number, Lyt>(row_clocking<Lyt>(num_clks::FOUR), regular_4x4, cz.x, cz.y);
+        };
+
+    return clocking_scheme{clock_name::ROW_SUPER,
+                            even_row_supertile_4_clock_function,
+                            std::min(Lyt::max_fanin_size, 2u),
+                            2u,
+                            4u,
+                            true};
+}
 /**
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
  * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
- * This is the supertile version of the amy pattern
+ * This is the supertile version of the amy pattern.
+ * TODO add note that even_row coordinates are required
  * 
  * @tparam Lyt Clocked layout type.
  * @return Hexagonal supertile AMY clocking scheme.
@@ -902,7 +1031,7 @@ static auto amy_supertile_clocking() noexcept
     static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_supertile_4_clock_function =
         [](const clock_zone<Lyt>& cz) noexcept
         {
-            return super_4x4_group_lookup<typename clocking_scheme<clock_zone<Lyt>>::clock_number>(cz.x, cz.y, generate_even_slice<Lyt>(amy_clocking<Lyt>()), generate_odd_slice<Lyt>(amy_clocking<Lyt>()));
+            return clocking_supertilezation<typename clocking_scheme<clock_zone<Lyt>>::clock_number, Lyt>(amy_clocking<Lyt>(), regular_4x4, cz.x, cz.y);
         };
 
     return clocking_scheme{clock_name::AMY_SUPER,
@@ -912,23 +1041,24 @@ static auto amy_supertile_clocking() noexcept
                             4u,
                             true};
 }
-
+//TODO description
 template <typename Lyt>
-static auto row_supertile_clocking() noexcept
+static auto tiny_supertile_clocking() noexcept
 {
-    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_row_supertile_4_clock_function =
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_supertile_3_clock_function =
     [](const clock_zone<Lyt>& cz) noexcept
         {
-            return super_4x4_group_lookup<typename clocking_scheme<clock_zone<Lyt>>::clock_number>(cz.x, cz.y, generate_even_slice<Lyt>(row_clocking<Lyt>(num_clks::FOUR)), generate_odd_slice<Lyt>(row_clocking<Lyt>(num_clks::FOUR)));
+            return clocking_supertilezation<typename clocking_scheme<clock_zone<Lyt>>::clock_number, Lyt>(tiny_clocking<Lyt>(), regular_3x2, cz.x, cz.y);
         };
 
-    return clocking_scheme{clock_name::ROW_SUPER,
-                            even_row_row_supertile_4_clock_function,
-                            std::min(Lyt::max_fanin_size, 2u),
-                            2u,
-                            4u,
+    return clocking_scheme{clock_name::TINY_SUPER,
+                            even_row_supertile_3_clock_function,
+                            std::min(Lyt::max_fanin_size, 3u),
+                            3u,
+                            3u,
                             true};
 }
+
 #pragma GCC diagnostic pop
 /**
  * Returns a smart pointer to the given scheme.
@@ -1010,9 +1140,11 @@ std::optional<clocking_scheme<clock_zone<Lyt>>> get_clocking_scheme(const std::s
         {clock_name::RIPPLE, ripple_clocking<Lyt>()},
         {clock_name::SRS, srs_clocking<Lyt>()},
         {clock_name::BANCS, bancs_clocking<Lyt>()},
+        {clock_name::TINY, tiny_clocking<Lyt>()},
         {clock_name::AMY, amy_clocking<Lyt>()},
+        {clock_name::ROW_SUPER, row_supertile_clocking<Lyt>()},
         {clock_name::AMY_SUPER, amy_supertile_clocking<Lyt>()},
-        {clock_name::ROW_SUPER, row_supertile_clocking<Lyt>()}};
+        {clock_name::TINY_SUPER, tiny_supertile_clocking<Lyt>()}};
 
     std::string upper_name = name.data();
     std::transform(upper_name.begin(), upper_name.end(), upper_name.begin(), ::toupper);
