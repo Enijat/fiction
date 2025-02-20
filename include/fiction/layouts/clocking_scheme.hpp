@@ -911,14 +911,14 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 
 /**
  * Utility function that allows to look up values which are repeated endlessly, and are based on a 4x4 group of supertiles,
- * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
- * TODO check with static_assert that even_row coordinates are used
+ * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
+ * The coordinate system that was used to generate the slices has to be of type `even_row`.
  * 
  * @param x x coordinate of the looked up position
  * @param y y coordinate of the looked up position
  * @param even_slice lookup array for rows with an even reduced_y coodrinate
  * @param odd_slice lookup array for rows with an odd reduced_y coordinate
- * @return looked up value from provided arrays
+ * @return Looked up value from provided arrays
  */
 template <typename ArrayType>
 static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
@@ -980,12 +980,12 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 /**
  * Utility function that allows to look up values which are repeated endlessly, and are based on a 3x2 group of supertiles,
  * that are arranged as shown in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
- * TODO check with static_assert that even_row coordinates are used
+ * The coordinate system that was used to generate the slices has to be of type `even_row`.
  * 
  * @param x x coordinate of the looked up position
  * @param y y coordinate of the looked up position
  * @param slice lookup array for rows
- * @return looked up value from provided arrays
+ * @return Looked up value from provided arrays
  */
 template <typename ArrayType>
 static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, const std::array<ArrayType, 42u>& slice) noexcept
@@ -996,7 +996,7 @@ static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, co
 
     // translate into top row coordinates
     uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);
-    reduced_x = static_cast<uint8_t>(reduced_x + 51 * reductions) % 42;
+    reduced_x = static_cast<uint8_t>((reduced_x + (51 * reductions)) % 42);
     if (reduced_y % 2 != 0)
     {
         reduced_x = (reduced_x + static_cast<uint8_t>(25)) % 42;
@@ -1029,8 +1029,12 @@ static constexpr const typename clocking_scheme<clock_zone<HexLyt>>::clock_numbe
     }
 }
 
-//TODO description
-//TODO check with static_assert that even_row coordinates are used
+/**
+ * Returns the supertile version of the `row` clocking scheme with four different clock zones.
+ *
+ * @tparam Lyt Clocked layout type.
+ * @return Row-based supertile clocking scheme.
+ */
 template <typename Lyt>
 static auto row_supertile_clocking() noexcept
 {
@@ -1085,8 +1089,8 @@ static auto tiny_supertile_clocking() noexcept
 
     return clocking_scheme{clock_name::TINY_SUPER,
                             even_row_supertile_3_clock_function,
-                            std::min(Lyt::max_fanin_size, 3u),
-                            3u,
+                            std::min(Lyt::max_fanin_size, 2u),
+                            2u,
                             3u,
                             true};
 }

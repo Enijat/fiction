@@ -113,12 +113,33 @@ template <typename HexLyt>
  * @param offset_x Offset that is added to the x coordinate.
  * @param offset_y Offset that is added to the y coordinate.
  * @param z z coordinate the translated `tile` should have.
+ * @param compensate_x_shift If set, will compensate the shift in x direction based on `relative_y_was_even`.
+ * @param relative_y_was_even Tells if the Y coordinate, based on which the offset was calculated, was even.
  * @return `tile` with the coodrinates which are translated into the supertile hex layout.
  */
 template <typename HexLyt>
-[[nodiscard]] inline constexpr tile<HexLyt> super(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z) noexcept
+[[nodiscard]] inline constexpr tile<HexLyt> super(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z, bool compensate_x_shift = false, bool relative_y_was_even = false) noexcept
 {
     std::array<int64_t,3> result = super_arraytype<HexLyt>(original_tile, offset_x, offset_y, z);
+    
+    if (compensate_x_shift)
+    {
+        if (result[1] % 2 != 0)
+        {
+            if (relative_y_was_even)
+            {
+                result[0] += 1;
+            }
+        }
+        else
+        {
+            if (!relative_y_was_even)
+            {
+                result[0] -= 1;
+            }
+        }
+    }
+
     return tile<HexLyt>{result[0], result[1], result[2]};
 }
 
@@ -254,10 +275,11 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
  * @param size_y Pointer to where to write the required size in the y-dimension.
  * @param offset_x Pointer to where to write the required offset in the x-dimension.
  * @param offset_y Pointer to where to write the required offset in the y-dimension.
- * @param matrix_size Size of the repeating matrix that the used clocking scheme is defined by
+ * @param y_was_even Pointer to where to write if the relative_y coordinate was even.
+ * @param matrix_size Size of the repeating matrix that the used clocking scheme is defined by.
  */
 template <typename HexLyt>
-void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_y, int64_t* offset_x, int64_t* offset_y, regular_matrix_size matrix_size) noexcept
+void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_y, int64_t* offset_x, int64_t* offset_y, bool* relative_y_was_even, regular_matrix_size matrix_size) noexcept
 {
     static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
     assert(lyt.x() <= std::numeric_limits<int64_t>::max()); // reason is that coordinates will be cast from uint64_t to int64_t
@@ -323,13 +345,13 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
             }};
 
         static constexpr std::array<std::array<int8_t,2>,56> odd_coord_slice{{
-                {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
-                {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
-                {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
-                {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},{{8,3}},{{9,3}},
-                {{-3,9}},{{-2,9}},{{-1,9}},{{0,9}},{{1,9}},{{2,9}},{{3,9}},{{4,9}},{{5,9}},{{6,9}},{{7,9}},{{8,9}},
-                {{-1,5}},{{0,5}},{{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},{{6,5}},{{7,5}},{{8,5}},{{9,5}}
-                }};
+            {{0,1}},{{1,1}},{{2,1}},{{3,1}},{{4,1}},
+            {{2,11}},{{3,11}},{{4,11}},{{5,11}},{{6,11}},
+            {{-3,7}},{{-2,7}},{{-1,7}},{{0,7}},{{1,7}},{{2,7}},{{3,7}},{{4,7}},{{5,7}},{{6,7}},{{7,7}},
+            {{-2,3}},{{-1,3}},{{0,3}},{{1,3}},{{2,3}},{{3,3}},{{4,3}},{{5,3}},{{6,3}},{{7,3}},{{8,3}},{{9,3}},
+            {{-3,9}},{{-2,9}},{{-1,9}},{{0,9}},{{1,9}},{{2,9}},{{3,9}},{{4,9}},{{5,9}},{{6,9}},{{7,9}},{{8,9}},
+            {{-1,5}},{{0,5}},{{1,5}},{{2,5}},{{3,5}},{{4,5}},{{5,5}},{{6,5}},{{7,5}},{{8,5}},{{9,5}}
+            }};
 
         // clang-format on
 
@@ -338,6 +360,8 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
 
         relative_x = relative_position[0];
         relative_y = relative_position[1];
+
+        *relative_y_was_even = relative_y % 2 == 0 ? true : false;
 
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wconversion"
@@ -378,6 +402,8 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
 
         relative_x = relative_position[0];
         relative_y = relative_position[1];
+
+        *relative_y_was_even = relative_y % 2 == 0 ? true : false;
 
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wconversion"
@@ -833,23 +859,25 @@ constexpr const std::array<std::array<hex_direction,7>,120> lookup_table_2in2out
  * @param offset_y Offset in y direction required for the translation of the `original_tile` to the super_lyt.
  * @param output_a If the supertile populated by this function has a ouput to another supertile which isn't populated yet,
  * this function will place the `hex_direction` of this other supertile at the location of this pointer.
- * @param output_b This pointer has the same functionallity as `output_a` and will only be used if there is a second `hex_output` direction into another unpopulated supertile. 
+ * @param output_b This pointer has the same functionallity as `output_a` and will only be used if there is a second `hex_output` direction into another unpopulated supertile.
+ * @param compensate_x_shift If set, will compensate the shift in x direction based on `relative_y_was_even`.
+ * @param relative_y_was_even Tells if the Y coordinate, based on which the offset was calculated, was even.
  * @return `true` if a unknown gate/fanout was placed at `original_tile`, else `false`. This includes primary inputs.
  */
 template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei ersten Argumente wechseln (ist intuitiver)
-[[nodiscard]] bool populate_supertile(const InHexLyt& original_lyt, OutHexLyt& super_lyt, const tile<InHexLyt> original_tile, int64_t offset_x, int64_t offset_y, hex_direction* output_a, hex_direction* output_b) noexcept
+[[nodiscard]] bool populate_supertile(const InHexLyt& original_lyt, OutHexLyt& super_lyt, const tile<InHexLyt> original_tile, int64_t offset_x, int64_t offset_y, hex_direction* output_a, hex_direction* output_b, bool compensate_x_shift, bool relative_y_was_even) noexcept
 {
     const auto original_node = original_lyt.get_node(original_tile);
     const auto incoming_signals = original_lyt.incoming_data_flow(original_tile);
     const auto outgoing_signals = original_lyt.outgoing_data_flow(original_tile);
+
+    const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0, compensate_x_shift, relative_y_was_even);
 
     if (incoming_signals.size() == 1)
     {
         if (original_lyt.is_po(original_node))
         {
             hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
-            
-            const auto core_tile = super<InHexLyt>(original_tile, offset_x, offset_y, 0);
 
             // place input wire
             const auto input_wire_position = get_near_position<OutHexLyt>(core_tile, in, 0);
@@ -872,8 +900,6 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
                 hex_direction out1 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
                 hex_direction in2 = get_near_direction<InHexLyt>(other_wire, original_lyt.incoming_data_flow(other_wire)[0]);
                 hex_direction out2 = get_near_direction<InHexLyt>(other_wire, original_lyt.outgoing_data_flow(other_wire)[0]);
-                
-                const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
                 
                 if (is_crossing(in1, out1, in2, out2))
                 {
@@ -923,8 +949,6 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
                 hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
                 hex_direction out = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
 
-                const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
-
                 #pragma GCC diagnostic push
                 #pragma GCC diagnostic ignored "-Wunused-result"
 
@@ -949,8 +973,6 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
         {
             hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
             hex_direction out = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
-
-            const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
             std::array<hex_direction,5> lookup_table = lookup_table_1in1out_INVERTER[static_cast<uint64_t>(perfect_hash_function_1to1(in, out))];
 
@@ -981,8 +1003,6 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
             hex_direction in = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
             hex_direction out1 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
             hex_direction out2 = get_near_direction<InHexLyt>(original_tile, outgoing_signals[1]);
-
-            const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
             std::array<hex_direction,9> lookup_table = lookup_table_1in2out[static_cast<uint64_t>(perfect_hash_function_2to1(in, out1, out2))];
 
@@ -1018,8 +1038,6 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
         hex_direction in1 = get_near_direction<InHexLyt>(original_tile, incoming_signals[0]);
         hex_direction in2 = get_near_direction<InHexLyt>(original_tile, incoming_signals[1]);
         hex_direction out = get_near_direction<InHexLyt>(original_tile, outgoing_signals[0]);
-
-        const auto core_tile = super<OutHexLyt>(original_tile, offset_x, offset_y, 0);
 
         std::array<hex_direction,9> lookup_table = lookup_table_2in1out[static_cast<uint64_t>(perfect_hash_function_2to1(out, in1, in2))];
         
@@ -1148,6 +1166,9 @@ template <typename OutHexLyt, typename InHexLyt>
     static_assert(is_gate_level_layout_v<InHexLyt>, "InHexLyt is not a gate-level layout");
     static_assert(is_hexagonal_layout_v<InHexLyt>, "InHexLyt is not a hexagonal layout");
     static_assert(has_even_row_hex_arrangement_v<InHexLyt>, "InHexLyt does not have an even row hexagon arrangement");
+    static_assert(is_gate_level_layout_v<OutHexLyt>, "InHexLyt is not a gate-level layout");
+    static_assert(is_hexagonal_layout_v<OutHexLyt>, "InHexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<OutHexLyt>, "InHexLyt does not have an even row hexagon arrangement");
     //TODO somehow check that RespectClockingAll ist set to false?
     if (original_lyt.z() > 1) {
         std::cout << "[e] Given layouts z dimension is bigger then 1, unable to translate layout" << std::endl;
@@ -1158,23 +1179,28 @@ template <typename OutHexLyt, typename InHexLyt>
     uint64_t size_y;
     int64_t offset_x;
     int64_t offset_y;
+    bool compensate_x_shift; // Required if the X size of the regular array is uneven
+    bool relative_y_was_even; // Same here
     OutHexLyt super_lyt;
     
     // Deduce used clocking scheme and set super_clocking_function and offset accordingly
     if (original_lyt.is_clocking_scheme(clock_name::AMY))
     {
-        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, regular_4x4);
+        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, &relative_y_was_even, regular_4x4);
         super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::amy_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
+        compensate_x_shift = false;
     }
     else if (original_lyt.is_clocking_scheme(clock_name::ROW))
     {
-        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, regular_4x4);
+        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, &relative_y_was_even, regular_4x4);
         super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::row_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
+        compensate_x_shift = false;
     }
     else if (original_lyt.is_clocking_scheme(clock_name::TINY))
     {
-        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, regular_3x2);
+        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, &relative_y_was_even, regular_3x2);
         super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::tiny_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
+        compensate_x_shift = true;
     }
     else
     {
@@ -1186,11 +1212,11 @@ template <typename OutHexLyt, typename InHexLyt>
 
     // replace all inputs and save their output tile
     original_lyt.foreach_pi(
-            [&original_lyt, &super_lyt, offset_x, offset_y, &path_beginnings](const auto& original_node)
+            [&original_lyt, &super_lyt, offset_x, offset_y, &path_beginnings, compensate_x_shift, relative_y_was_even](const auto& original_node)
             {
                 //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich das handlen? -> aparently nicht weil exact das nicht produziert, aber ich sollte es evtl trotzdem einfach abfangen
                 const auto original_tile = original_lyt.get_tile(original_node);
-                const auto super_tile = detail::super<InHexLyt>(original_tile, offset_x, offset_y, 0);
+                const auto super_tile = detail::super<InHexLyt>(original_tile, offset_x, offset_y, 0, compensate_x_shift, relative_y_was_even);
                 const auto super_signal = super_lyt.create_pi(original_lyt.get_name(original_lyt.get_node(original_tile)), super_tile);
                 const auto original_output_position = original_lyt.outgoing_data_flow(original_tile)[0];
                 const auto super_output_wire_position = detail::get_near_position<OutHexLyt>(super_tile, detail::get_near_direction<InHexLyt>(original_tile, original_output_position), 0);
@@ -1207,7 +1233,7 @@ template <typename OutHexLyt, typename InHexLyt>
         {
             detail::hex_direction output_a = detail::hex_direction::X;
             detail::hex_direction output_b = detail::hex_direction::X;
-            if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b))
+            if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b, compensate_x_shift, relative_y_was_even))
             {
                 std::cout << "[e] found unknown gate at tile " << current_original_tile.x << "," << current_original_tile.y << "," << current_original_tile.z << " while populating supertile, aborted translation" << std::endl;
                 throw std::runtime_error("found unknown gate");
