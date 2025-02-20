@@ -5,17 +5,11 @@
 #ifndef FICTION_SUPERTILE_HPP
 #define FICTION_SUPERTILE_HPP
 
-// TODO check if I really need all of these:
-#include "fiction/layouts/bounding_box.hpp"
-#include "fiction/traits.hpp"
-//#include "fiction/types.hpp"
-#include "fiction/utils/name_utils.hpp"
-#include "fiction/utils/placement_utils.hpp"
-#include "fiction/layouts/clocking_scheme.hpp"//FORME I know I need this one
-#include "fiction/utils/math_utils.hpp"//FORME I know I need this one
 
-//#include <mockturtle/traits.hpp>
-//#include <mockturtle/views/topo_view.hpp>
+#include "fiction/traits.hpp"
+#include "fiction/utils/name_utils.hpp"
+#include "fiction/layouts/clocking_scheme.hpp"
+#include "fiction/utils/math_utils.hpp"
 
 #include <limits>
 #include <cstdint>
@@ -1257,6 +1251,8 @@ template <typename OutHexLyt, typename InHexLyt>
             }
         }
     }
+
+    restore_names<InHexLyt, OutHexLyt>(original_lyt, super_lyt);
   
     return super_lyt;
 }

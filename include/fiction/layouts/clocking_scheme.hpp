@@ -758,7 +758,8 @@ static auto bancs_clocking() noexcept
 }
 /**
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
- * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
+ * Design for hexagonal layouts with even row coordinate systems.
  * 
  * @tparam HexLyt Clocked layout type.
  * @return Hexagonal AMY clocking scheme.
@@ -766,9 +767,6 @@ static auto bancs_clocking() noexcept
 template <typename HexLyt>
 static auto amy_clocking() noexcept
 {
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
     // clang-format off
 
     static constexpr std::array<std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 4u>, 4u> even_row_4_cutout{
@@ -791,7 +789,8 @@ static auto amy_clocking() noexcept
 }
 /**
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
- * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
+ * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.amy_clocking.
+ * Design for hexagonal layouts with even row coordinate systems.
  * 
  * @tparam HexLyt Clocked layout type.
  * @return Hexagonal TINY clocking scheme.
@@ -799,9 +798,6 @@ static auto amy_clocking() noexcept
 template <typename HexLyt>
 static auto tiny_clocking() noexcept
 {
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
     // clang-format off
 
     static constexpr std::array<std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 3u>, 2u> even_row_3_coutout{
@@ -823,6 +819,7 @@ static auto tiny_clocking() noexcept
 
 /**
  * Utility function that generates a lookup array for the super_4x4_group_lookup function.
+ * Design for hexagonal layouts with even row coordinate systems.
  * 
  * @tparam HexLyt Clocked layout type.
  * @param scheme Clocking scheme that is beeing transformed into supertile clocking scheme.
@@ -831,9 +828,6 @@ static auto tiny_clocking() noexcept
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_even_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -873,6 +867,7 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 
 /**
  * Utility function that generates a lookup array for the super_4x4_group_lookup function.
+ * Design for hexagonal layouts with even row coordinate systems.
  * 
  * @tparam HexLyt Clocked layout type.
  * @param scheme Clocking scheme that is beeing transformed into supertile clocking scheme.
@@ -881,9 +876,6 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_odd_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -955,6 +947,7 @@ static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, co
 
 /**
  * Utility function that generates a lookup array for the super_3x2_group_lookup function.
+ * Design for hexagonal layouts with even row coordinate systems.
  * 
  * @tparam HexLyt Clocked layout type.
  * @param scheme Clocking scheme that is beeing transformed into supertile clocking scheme.
@@ -963,9 +956,6 @@ static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, co
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 42u> generate_3x2_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
-    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
-    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
-
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -1013,7 +1003,7 @@ static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, co
     reduced_x = static_cast<uint8_t>((reduced_x + (51 * reductions)) % 42);
     if (reduced_y % 2 != 0)
     {
-        reduced_x = (reduced_x + static_cast<uint8_t>(25)) % 42;
+        reduced_x = static_cast<uint8_t>((reduced_x + 25) % 42);
     }
 
     // look up by traversing one super tile block
@@ -1139,7 +1129,7 @@ std::shared_ptr<clocking_scheme<clock_zone<Lyt>>> ptr(clocking_scheme<clock_zone
 template <typename Lyt>
 bool is_linear_scheme(const clocking_scheme<clock_zone<Lyt>>& scheme) noexcept
 {
-    static constexpr const std::array<const char*, 4> linear_schemes{
+    static constexpr const std::array<const char*, 5> linear_schemes{
         {clock_name::COLUMNAR, clock_name::ROW, clock_name::ROW_SUPER, clock_name::TWODDWAVE, clock_name::TWODDWAVE_HEX}};
 
     return std::any_of(linear_schemes.cbegin(), linear_schemes.cend(),

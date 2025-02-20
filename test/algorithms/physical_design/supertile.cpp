@@ -6,6 +6,7 @@
 
 #include "utils/blueprints/layout_blueprints.hpp"
 #include "utils/equivalence_checking_utils.hpp"
+#include "fiction/types.hpp"
 
 #include <fiction/algorithms/verification/equivalence_checking.hpp>
 #include <fiction/algorithms/physical_design/supertile.hpp>
