@@ -760,15 +760,18 @@ static auto bancs_clocking() noexcept
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
  * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
  * 
- * @tparam Lyt Clocked layout type.
+ * @tparam HexLyt Clocked layout type.
  * @return Hexagonal AMY clocking scheme.
  */
-template <typename Lyt>
+template <typename HexLyt>
 static auto amy_clocking() noexcept
 {
+    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+
     // clang-format off
 
-    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 4u>, 4u> even_row_4_cutout{
+    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 4u>, 4u> even_row_4_cutout{
        {{{0, 1, 2, 3}},
         {{3, 2, 1, 0}},
         {{2, 3, 2, 1}},
@@ -776,12 +779,12 @@ static auto amy_clocking() noexcept
 
     // clang-format on
 
-    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_amy_4_clock_function =
-        [](const clock_zone<Lyt>& cz) noexcept { return even_row_4_cutout[cz.y % 4ul][cz.x % 4ul]; };
+    static const typename clocking_scheme<clock_zone<HexLyt>>::clock_function even_row_amy_4_clock_function =
+        [](const clock_zone<HexLyt>& cz) noexcept { return even_row_4_cutout[cz.y % 4ul][cz.x % 4ul]; };
 
     return clocking_scheme{clock_name::AMY,
                             even_row_amy_4_clock_function,
-                            std::min(Lyt::max_fanin_size, 3u),
+                            std::min(HexLyt::max_fanin_size, 3u),
                             3u,
                             4u,
                             true};
@@ -790,27 +793,29 @@ static auto amy_clocking() noexcept
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
  * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
  * 
- * @tparam Lyt Clocked layout type.
+ * @tparam HexLyt Clocked layout type.
  * @return Hexagonal TINY clocking scheme.
  */
-template <typename Lyt>
+template <typename HexLyt>
 static auto tiny_clocking() noexcept
 {
-    //TODO add more hex schemes like odd row and such here
+    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+
     // clang-format off
 
-    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<Lyt>>::clock_number, 3u>, 2u> even_row_3_coutout{
+    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 3u>, 2u> even_row_3_coutout{
        {{{0, 1, 2}},
         {{1, 2, 0}}}};
 
     // clang-format on
 
-    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_tiny_3_clock_function =
-        [](const clock_zone<Lyt>& cz) noexcept { return even_row_3_coutout[cz.y % 2ul][cz.x % 3ul]; };
+    static const typename clocking_scheme<clock_zone<HexLyt>>::clock_function even_row_tiny_3_clock_function =
+        [](const clock_zone<HexLyt>& cz) noexcept { return even_row_3_coutout[cz.y % 2ul][cz.x % 3ul]; };
 
     return clocking_scheme{clock_name::TINY,
                             even_row_tiny_3_clock_function,
-                            std::min(Lyt::max_fanin_size, 3u),
+                            std::min(HexLyt::max_fanin_size, 3u),
                             3u,
                             3u,
                             true};
@@ -826,6 +831,9 @@ static auto tiny_clocking() noexcept
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_even_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
+    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -873,6 +881,9 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 56u> generate_4x4_odd_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
+    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -952,6 +963,9 @@ static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, co
 template <typename HexLyt>
 static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 42u> generate_3x2_slice(const clocking_scheme<clock_zone<HexLyt>> scheme) noexcept
 {
+    static_assert(is_hexagonal_layout_v<HexLyt>, "HexLyt is not a hexagonal layout");
+    static_assert(has_even_row_hex_arrangement_v<HexLyt>, "HexLyt does not have an even row hexagon arrangement");
+
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number a = scheme(clock_zone<HexLyt>{0, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number b = scheme(clock_zone<HexLyt>{1, 0});
     typename clocking_scheme<clock_zone<HexLyt>>::clock_number c = scheme(clock_zone<HexLyt>{2, 0});
@@ -1018,7 +1032,7 @@ static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, co
  */
 template <typename HexLyt>
 static constexpr const typename clocking_scheme<clock_zone<HexLyt>>::clock_number clocking_supertilezation(const clocking_scheme<clock_zone<HexLyt>> scheme, regular_matrix_size matrix_size, int64_t x, int64_t y) noexcept
-{
+{ 
     switch (matrix_size)
     {
     default:
@@ -1030,10 +1044,10 @@ static constexpr const typename clocking_scheme<clock_zone<HexLyt>>::clock_numbe
 }
 
 /**
- * Returns the supertile version of the `row` clocking scheme with four different clock zones.
+ * Returns the supertile version of the `ROW` clocking scheme with four different clock zones.
  *
  * @tparam Lyt Clocked layout type.
- * @return Row-based supertile clocking scheme.
+ * @return Hexagonal supertile `ROW` clocking scheme.
  */
 template <typename Lyt>
 static auto row_supertile_clocking() noexcept
@@ -1052,13 +1066,10 @@ static auto row_supertile_clocking() noexcept
                             true};
 }
 /**
- * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
- * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025
- * This is the supertile version of the amy pattern.
- * TODO check with static_assert that even_row coordinates are used
+ * Returns the supertile version of the `AMY` clocking scheme.
  * 
  * @tparam Lyt Clocked layout type.
- * @return Hexagonal supertile AMY clocking scheme.
+ * @return Hexagonal supertile `AMY` clocking scheme.
  */
 template <typename Lyt>
 static auto amy_supertile_clocking() noexcept
@@ -1076,8 +1087,12 @@ static auto amy_supertile_clocking() noexcept
                             4u,
                             true};
 }
-//TODO description
-//TODO check with static_assert that even_row coordinates are used
+/**
+ * Returns the supertile version of the `TINY` clocking scheme.
+ * 
+ * @tparam Lyt Clocked layout type.
+ * @return Hexagonal supertile `TINY` clocking scheme.
+ */
 template <typename Lyt>
 static auto tiny_supertile_clocking() noexcept
 {
@@ -1113,6 +1128,7 @@ std::shared_ptr<clocking_scheme<clock_zone<Lyt>>> ptr(clocking_scheme<clock_zone
  *
  * - COLUMNAR
  * - ROW
+ * - ROWSUPER
  * - 2DDWAVE
  * - 2DDWAVEHEX
  *
@@ -1124,7 +1140,7 @@ template <typename Lyt>
 bool is_linear_scheme(const clocking_scheme<clock_zone<Lyt>>& scheme) noexcept
 {
     static constexpr const std::array<const char*, 4> linear_schemes{
-        {clock_name::COLUMNAR, clock_name::ROW, clock_name::TWODDWAVE, clock_name::TWODDWAVE_HEX}};
+        {clock_name::COLUMNAR, clock_name::ROW, clock_name::ROW_SUPER, clock_name::TWODDWAVE, clock_name::TWODDWAVE_HEX}};
 
     return std::any_of(linear_schemes.cbegin(), linear_schemes.cend(),
                        [&scheme](const auto& name) { return scheme == name; });
