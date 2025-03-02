@@ -170,10 +170,12 @@ inline constexpr const char* CFE           = "CFE";
 inline constexpr const char* RIPPLE        = "RIPPLE";
 inline constexpr const char* SRS           = "SRS";
 inline constexpr const char* BANCS         = "BANCS";
-inline constexpr const char* TINY          = "TINY";
 inline constexpr const char* AMY           = "AMY";
+inline constexpr const char* FLIP           = "FLIP";
+inline constexpr const char* TINY          = "TINY";
 inline constexpr const char* ROW_SUPER     = "ROWSUPER";
 inline constexpr const char* AMY_SUPER     = "AMYSUPER";
+inline constexpr const char* FLIP_SUPER     = "FLIPSUPER";
 inline constexpr const char* TINY_SUPER    = "TINYSUPER";
 
 }  // namespace clock_name
@@ -772,8 +774,8 @@ static auto amy_clocking() noexcept
     static constexpr std::array<std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 4u>, 4u> even_row_4_cutout{
        {{{0, 1, 2, 3}},
         {{3, 2, 1, 0}},
-        {{2, 3, 2, 1}},
-        {{1, 0, 3, 0}}}};
+        {{2, 3, 0, 1}},
+        {{1, 0, 3, 2}}}};
 
     // clang-format on
 
@@ -789,7 +791,38 @@ static auto amy_clocking() noexcept
 }
 /**
  * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
- * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.amy_clocking.
+ * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
+ * Design for hexagonal layouts with even row coordinate systems.
+ * 
+ * @tparam HexLyt Clocked layout type.
+ * @return Hexagonal FLIP clocking scheme.
+ */
+template <typename HexLyt>
+static auto flip_clocking() noexcept
+{
+    // clang-format off
+
+    static constexpr std::array<std::array<typename clocking_scheme<clock_zone<HexLyt>>::clock_number, 4u>, 4u> even_row_4_cutout{
+       {{{3, 2, 3, 2}},
+        {{0, 1, 0, 1}},
+        {{2, 3, 2, 3}},
+        {{1, 0, 1, 0}}}};
+
+    // clang-format on
+
+    static const typename clocking_scheme<clock_zone<HexLyt>>::clock_function even_row_flip_4_clock_function =
+        [](const clock_zone<HexLyt>& cz) noexcept { return even_row_4_cutout[cz.y % 4ul][cz.x % 4ul]; };
+
+    return clocking_scheme{clock_name::FLIP,
+                            even_row_flip_4_clock_function,
+                            std::min(HexLyt::max_fanin_size, 3u),
+                            3u,
+                            4u,
+                            true};
+}
+/**
+ * Returns a hexagonal clocking pattern as defined in the bachelor thesis "Super-Tile Routing for Omnidirectional
+ * Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
  * Design for hexagonal layouts with even row coordinate systems.
  * 
  * @tparam HexLyt Clocked layout type.
@@ -926,15 +959,15 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 template <typename ArrayType>
 static constexpr const ArrayType super_4x4_group_lookup(int64_t x, int64_t y, const std::array<ArrayType, 56u>& even_slice, const std::array<ArrayType, 56u>& odd_slice) noexcept
 {
-    // reduce to repeating block coordinates
+    // reduce to repeating rectangle coordinates
     uint8_t reduced_x = static_cast<uint8_t>(positive_mod<int64_t>(x, 56l));
     uint8_t reduced_y = static_cast<uint8_t>(positive_mod<int64_t>(y, 112l));
 
     // translate into top two rows coordinates
-    uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);
-    reduced_x = static_cast<uint8_t>(reduced_x + 23 * reductions) % 56;
+    uint8_t shifts = static_cast<uint8_t>(reduced_y >> 1);
+    reduced_x = static_cast<uint8_t>(reduced_x + 23 * shifts) % 56;
 
-    // look up by traversing one super tile block
+    // look up by traversing one super tile group
     if (reduced_y % 2 == 0)
     {
         return even_slice[reduced_x];
@@ -994,19 +1027,19 @@ static constexpr const std::array<typename clocking_scheme<clock_zone<HexLyt>>::
 template <typename ArrayType>
 static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, const std::array<ArrayType, 42u>& slice) noexcept
 {
-    // reduce to repeating block coordinates
+    // reduce to repeating rectangle coordinates
     uint8_t reduced_x = static_cast<uint8_t>(positive_mod<int64_t>(x, 42l));
     uint8_t reduced_y = static_cast<uint8_t>(positive_mod<int64_t>(y, 112l));
 
     // translate into top row coordinates
-    uint8_t reductions = static_cast<uint8_t>(reduced_y >> 1);
-    reduced_x = static_cast<uint8_t>((reduced_x + (51 * reductions)) % 42);
+    uint8_t shifts = static_cast<uint8_t>(reduced_y >> 1);
+    reduced_x = static_cast<uint8_t>((reduced_x + (51 * shifts)) % 42);
     if (reduced_y % 2 != 0)
     {
         reduced_x = static_cast<uint8_t>((reduced_x + 25) % 42);
     }
 
-    // look up by traversing one super tile block
+    // look up by traversing one super tile group
     return slice[reduced_x];
 }
 
@@ -1020,6 +1053,7 @@ static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, co
  * @param y Y coordinate that will be looked up.
  * @return The clock number at the given coordinates.
  */
+//TODO make matrix_size a template parameter
 template <typename HexLyt>
 static constexpr const typename clocking_scheme<clock_zone<HexLyt>>::clock_number clocking_supertilezation(const clocking_scheme<clock_zone<HexLyt>> scheme, regular_matrix_size matrix_size, int64_t x, int64_t y) noexcept
 { 
@@ -1072,6 +1106,28 @@ static auto amy_supertile_clocking() noexcept
 
     return clocking_scheme{clock_name::AMY_SUPER,
                             even_row_amy_supertile_4_clock_function,
+                            std::min(Lyt::max_fanin_size, 3u),
+                            3u,
+                            4u,
+                            true};
+}
+/**
+ * Returns the supertile version of the `FLIP` clocking scheme.
+ * 
+ * @tparam Lyt Clocked layout type.
+ * @return Hexagonal supertile `FLIP` clocking scheme.
+ */
+template <typename Lyt>
+static auto flip_supertile_clocking() noexcept
+{
+    static const typename clocking_scheme<clock_zone<Lyt>>::clock_function even_row_flip_supertile_4_clock_function =
+        [](const clock_zone<Lyt>& cz) noexcept
+        {
+            return clocking_supertilezation<Lyt>(flip_clocking<Lyt>(), regular_4x4, cz.x, cz.y);
+        };
+
+    return clocking_scheme{clock_name::FLIP_SUPER,
+                            even_row_flip_supertile_4_clock_function,
                             std::min(Lyt::max_fanin_size, 3u),
                             3u,
                             4u,
@@ -1182,10 +1238,12 @@ std::optional<clocking_scheme<clock_zone<Lyt>>> get_clocking_scheme(const std::s
         {clock_name::RIPPLE, ripple_clocking<Lyt>()},
         {clock_name::SRS, srs_clocking<Lyt>()},
         {clock_name::BANCS, bancs_clocking<Lyt>()},
-        {clock_name::TINY, tiny_clocking<Lyt>()},
         {clock_name::AMY, amy_clocking<Lyt>()},
+        {clock_name::FLIP, flip_clocking<Lyt>()},
+        {clock_name::TINY, tiny_clocking<Lyt>()},
         {clock_name::ROW_SUPER, row_supertile_clocking<Lyt>()},
         {clock_name::AMY_SUPER, amy_supertile_clocking<Lyt>()},
+        {clock_name::FLIP_SUPER, flip_supertile_clocking<Lyt>()},
         {clock_name::TINY_SUPER, tiny_supertile_clocking<Lyt>()}};
 
     std::string upper_name = name.data();

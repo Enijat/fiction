@@ -36,6 +36,7 @@ namespace detail
  * @param z z coordinate the translated `tile` should have.
  * @return Array with the coodrinates which are translated into the supertile hex layout.
  */
+//TODO maybe I can get rid of the arraytype specification by adding a template parameter to super()
 template <typename HexLyt>
 [[nodiscard]] constexpr std::array<int64_t,3> super_arraytype(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z) noexcept
 {
@@ -114,6 +115,7 @@ template <typename HexLyt>
 template <typename HexLyt>
 [[nodiscard]] inline constexpr tile<HexLyt> super(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z, bool compensate_x_shift = false, bool relative_y_was_even = false) noexcept
 {
+    //TODO maybe I can get rid of the compensate parameters by analysing the offset, 4x4 offset probably only has even values and 3x2 offset possibly has odd ones, or some slightly more complicated combination of x and y being even or odd.
     std::array<int64_t,3> result = super_arraytype<HexLyt>(original_tile, offset_x, offset_y, z);
     
     if (compensate_x_shift)
@@ -160,13 +162,13 @@ template <typename HexLyt>
  */
 enum hex_direction {
     NE = 0, // values fixed because they are used in the hash functions
-    E = 1,
+    E  = 1,
     SE = 2,
     SW = 3,
-    W = 4,
+    W  = 4,
     NW = 5,
-    X = 6, // represents invalid direction, used for spacing / filling
-    C = 7
+    X  = 6, // represents invalid direction, used for spacing / filling
+    C  = 7 // represents the central tile
 };
 
 using namespace detail; //TODO For what did I need this again? -> put description here
@@ -349,7 +351,7 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
 
         // clang-format on
 
-        // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
+        // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 supertile group it is in
         relative_position = fiction::super_4x4_group_lookup<std::array<int8_t,2>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
 
         relative_x = relative_position[0];
@@ -1145,7 +1147,7 @@ template <typename HexLyt>
 }
 
 /**
- * Transform a AMY-clocked hexagonal even-row gate-level layout into a AMYSUPER-clocked hexagonal even-row gate-level layout
+ * Transform a  hexagonal even-row gate-level layout into a supertile-clocked hexagonal even-row gate-level layout
  * that only contains gates that can be realised with gates/wires from the SiDB extendagon gate library.
  * This algorithm was proposed in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025.
  * 
@@ -1184,6 +1186,12 @@ template <typename OutHexLyt, typename InHexLyt>
         super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::amy_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
         compensate_x_shift = false;
     }
+    else if (original_lyt.is_clocking_scheme(clock_name::FLIP))
+    {
+        detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, &relative_y_was_even, regular_4x4);
+        super_lyt = OutHexLyt({size_x, size_y, 1}, fiction::flip_supertile_clocking<OutHexLyt>(), original_lyt.get_layout_name());
+        compensate_x_shift = false;
+    }
     else if (original_lyt.is_clocking_scheme(clock_name::ROW))
     {
         detail::find_super_layout_size<InHexLyt>(original_lyt, &size_x, &size_y, &offset_x, &offset_y, &relative_y_was_even, regular_4x4);
@@ -1198,6 +1206,7 @@ template <typename OutHexLyt, typename InHexLyt>
     }
     else
     {
+        //TODO Instead of printing to the console directly, it would be better to write the error to the console from the cli function that calls supertilezation.
         std::cout << "[e] clocking scheme of layout has no supertile version, aborting transformation" << std::endl;
         throw std::runtime_error("clocking scheme of layout has no supertile version");
     }
@@ -1252,7 +1261,7 @@ template <typename OutHexLyt, typename InHexLyt>
         }
     }
 
-    restore_names<InHexLyt, OutHexLyt>(original_lyt, super_lyt);
+    restore_names<InHexLyt, OutHexLyt>(original_lyt, super_lyt); // TODO Find out if I need this or remove it
   
     return super_lyt;
 }
