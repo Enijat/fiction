@@ -282,36 +282,36 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
     assert(lyt.y() <= std::numeric_limits<int64_t>::max());
 
     // Search trough hexagonal layout to find the outermost, non-empty tiles (after translation into supertile-hexagonal layout)
-    int64_t leftmost_core_tile_x = std::numeric_limits<int64_t>::max();
-    int64_t rightmost_core_tile_x = std::numeric_limits<int64_t>::min();
-    int64_t top_core_tile_y = std::numeric_limits<int64_t>::max();
-    int64_t bottom_core_tile_y = std::numeric_limits<int64_t>::min();
+    int64_t leftmost_central_tile_x = std::numeric_limits<int64_t>::max();
+    int64_t rightmost_central_tile_x = std::numeric_limits<int64_t>::min();
+    int64_t top_central_tile_y = std::numeric_limits<int64_t>::max();
+    int64_t bottom_central_tile_y = std::numeric_limits<int64_t>::min();
     
     lyt.foreach_node(
-        [&lyt, &leftmost_core_tile_x, &rightmost_core_tile_x, &top_core_tile_y, &bottom_core_tile_y](const auto& node)
+        [&lyt, &leftmost_central_tile_x, &rightmost_central_tile_x, &top_central_tile_y, &bottom_central_tile_y](const auto& node)
         {
             const auto tile = lyt.get_tile(node);
 
             const std::array<int64_t,3> pos = super_arraytype<HexLyt>(tile);
 
-            if (pos[0] < leftmost_core_tile_x)
-                {leftmost_core_tile_x = pos[0];}
-            if (pos[0] > rightmost_core_tile_x)
-                {rightmost_core_tile_x = pos[0];}
-            if (pos[1] < top_core_tile_y)
-                {top_core_tile_y = pos[1];}
-            if (pos[1] > bottom_core_tile_y)
-                {bottom_core_tile_y = pos[1];}
+            if (pos[0] < leftmost_central_tile_x)
+                {leftmost_central_tile_x = pos[0];}
+            if (pos[0] > rightmost_central_tile_x)
+                {rightmost_central_tile_x = pos[0];}
+            if (pos[1] < top_central_tile_y)
+                {top_central_tile_y = pos[1];}
+            if (pos[1] > bottom_central_tile_y)
+                {bottom_central_tile_y = pos[1];}
         });
 
-    if (leftmost_core_tile_x > rightmost_core_tile_x)
+    if (leftmost_central_tile_x > rightmost_central_tile_x)
     {
         std::cout << "[w] didn't find any nodes in layout" << std::endl;
     }
 
     /*
     * calculate the offset that
-    * A) keeps every supertile (so core and wires) in positive coordinates
+    * A) keeps every supertile (so central tile and wires) in positive coordinates
     * B) doesn't wastes to much space (meaning the coordinates are as small as possible)
     * C) keeps the clocking such that the top left clock zone from the original is the same as the top left super clock zone
     */
@@ -351,8 +351,8 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
 
         // clang-format on
 
-        // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 supertile group it is in
-        relative_position = fiction::super_4x4_group_lookup<std::array<int8_t,2>>(leftmost_core_tile_x, top_core_tile_y, even_coord_slice, odd_coord_slice);
+        // get the top left corner position, of the rectangle encapsulating all central tiles, relative to the 4x4 supertile group it is in
+        relative_position = fiction::super_4x4_group_lookup<std::array<int8_t,2>>(leftmost_central_tile_x, top_central_tile_y, even_coord_slice, odd_coord_slice);
 
         relative_x = relative_position[0];
         relative_y = relative_position[1];
@@ -393,8 +393,8 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
 
         // clang-format on
 
-        // get the top left corner position, of the rectangle encapsulating all core tiles, relative to the 4x4 super clock zone group it is in
-        relative_position = fiction::super_3x2_group_lookup<std::array<int8_t,2>>(leftmost_core_tile_x, top_core_tile_y, coord_slice);
+        // get the top left corner position, of the rectangle encapsulating all central tiles, relative to the 4x4 super clock zone group it is in
+        relative_position = fiction::super_3x2_group_lookup<std::array<int8_t,2>>(leftmost_central_tile_x, top_central_tile_y, coord_slice);
 
         relative_x = relative_position[0];
         relative_y = relative_position[1];
@@ -424,11 +424,11 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
     #pragma GCC diagnostic pop
 
     // calculate offset for translated tiles
-    int64_t x_offset = static_cast<int64_t>(relative_x) - leftmost_core_tile_x;
-    int64_t y_offset = static_cast<int64_t>(relative_y) - top_core_tile_y;
+    int64_t x_offset = static_cast<int64_t>(relative_x) - leftmost_central_tile_x;
+    int64_t y_offset = static_cast<int64_t>(relative_y) - top_central_tile_y;
 
-    *size_x = static_cast<uint64_t>(rightmost_core_tile_x + 1 + x_offset);
-    *size_y = static_cast<uint64_t>(bottom_core_tile_y + 1 + y_offset);
+    *size_x = static_cast<uint64_t>(rightmost_central_tile_x + 1 + x_offset);
+    *size_y = static_cast<uint64_t>(bottom_central_tile_y + 1 + y_offset);
     *offset_x = x_offset;
     *offset_y = y_offset;
 }
@@ -438,22 +438,22 @@ void find_super_layout_size(const HexLyt& lyt, uint64_t* size_x, uint64_t* size_
  * Undefined behaviour if the passed direction would result in negative coordinates.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
- * @param refference `tile` that gives the position to be refferenced in the hexagonal layout. 
- * @param direction Direction in which the requested `tile` is positioned, relative to `refference`. 
+ * @param reference `tile` that gives the position to be referenced in the hexagonal layout. 
+ * @param direction Direction in which the requested `tile` is positioned, relative to `reference`. 
  * @param z The z-position that the requested tile shoudl have.
  * @return The requested `tile`.
  */
 template <typename HexLyt>
-[[nodiscard]] constexpr tile<HexLyt> get_near_position(const tile<HexLyt> refference, hex_direction direction, uint8_t z) noexcept
+[[nodiscard]] constexpr tile<HexLyt> get_near_position(const tile<HexLyt> reference, hex_direction direction, uint8_t z) noexcept
 {
-    auto x = refference.x;
-    auto y = refference.y;
+    auto x = reference.x;
+    auto y = reference.y;
 
     switch (direction)
     {
     case NE:
         y--;
-        if (refference.y % 2 == 0)
+        if (reference.y % 2 == 0)
             {x++;}
         break;
     case E:
@@ -461,12 +461,12 @@ template <typename HexLyt>
         break;
     case SE:
         y++;
-        if (refference.y % 2 == 0)
+        if (reference.y % 2 == 0)
             {x++;}
         break;
     case SW:
         y++;
-        if (refference.y % 2 != 0)
+        if (reference.y % 2 != 0)
             {x--;}
         break;
     case W:
@@ -474,7 +474,7 @@ template <typename HexLyt>
         break;
     case NW:
         y--;
-        if (refference.y % 2 != 0)
+        if (reference.y % 2 != 0)
             {x--;}
         break;
     default: // also "case C"
@@ -486,53 +486,53 @@ template <typename HexLyt>
 }
 
 /**
- * Utility function that returns the `hex_direction` in which an adjacent tile is relative to the refference tile. Z position is ignored.
+ * Utility function that returns the `hex_direction` in which an adjacent tile is relative to the reference tile. Z position is ignored.
  * Undefined behaviour when the same tile is passed twice.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
- * @param refference `tile` that gives the position to be refferenced in the hexagonal layout. 
- * @param position Position of the other `tile`, defines the `hex_direction` from the refference tile. 
+ * @param reference `tile` that gives the position to be referenced in the hexagonal layout. 
+ * @param position Position of the other `tile`, defines the `hex_direction` from the reference tile. 
  * @return The requested `hex_direction`.
  */
 template <typename HexLyt>
-[[nodiscard]] constexpr hex_direction get_near_direction(const tile<HexLyt> refference, const tile<HexLyt> position) noexcept
+[[nodiscard]] constexpr hex_direction get_near_direction(const tile<HexLyt> reference, const tile<HexLyt> position) noexcept
 {
-    if (position.y < refference.y)
+    if (position.y < reference.y)
     {
-        if (position.x == refference.x)
+        if (position.x == reference.x)
         {
-            if (refference.y % 2 == 0)
+            if (reference.y % 2 == 0)
                 {return NW;}
             else
                 {return NE;}
         }
         else
         {
-            if (refference.y % 2 == 0)
+            if (reference.y % 2 == 0)
                 {return NE;}
             else
                 {return NW;}
         }
     }
-    else if (position.y == refference.y)
+    else if (position.y == reference.y)
     {
-        if (position.x > refference.x)
+        if (position.x > reference.x)
             {return E;}
         else
             {return W;}
     }
     else
     {
-        if (position.x == refference.x)
+        if (position.x == reference.x)
         {
-            if (refference.y % 2 == 0)
+            if (reference.y % 2 == 0)
                 {return SW;}
             else
                 {return SE;}
         }
         else
         {
-            if (refference.y % 2 == 0)
+            if (reference.y % 2 == 0)
                 {return SE;}
             else
                 {return SW;}
@@ -621,22 +621,22 @@ template <typename HexLyt>
 }
 
 /**
- * Utility function that places one string of wires in a supertile, whichs position is definded by the core `tile`.
+ * Utility function that places one string of wires in a supertile, whichs position is definded by the central `tile`.
  * Used for wire crossings an bypasses.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
  * @tparam array_size Size of the passed lookup array.
  * @param lyt Hexagonal gate-level supertile layout that will house the wires.
- * @param core `tile` that represents the central position in a supertile.
+ * @param central_tile `tile` that represents the central position in a supertile.
  * @param lookup_array Lookup array that defines the path the wires will take.
  * @param array_position Position in the lookup array where the start of the current wire string is positioned.
  * @param found_wire Pointer to where this method will write `true` if an unfinished wire was already present at the position of the last wire placed by this function.
  * @return Returns the updated position in the lookup array that reflects the position of the next entity in the array.
  */
 template <typename HexLyt, std::size_t array_size>
-[[nodiscard]] uint8_t place_in_out_wires(HexLyt& lyt, const tile<HexLyt> core, const std::array<hex_direction,array_size>& lookup_array, uint8_t array_position, bool* found_wire) noexcept
+[[nodiscard]] uint8_t place_in_out_wires(HexLyt& lyt, const tile<HexLyt> central_tile, const std::array<hex_direction,array_size>& lookup_array, uint8_t array_position, bool* found_wire) noexcept
 {
-    auto wire_position = get_near_position<HexLyt>(core, lookup_array[array_position], 0);
+    auto wire_position = get_near_position<HexLyt>(central_tile, lookup_array[array_position], 0);
     auto last_placed_wire_position = get_near_position<HexLyt>(wire_position, static_cast<hex_direction>((lookup_array[array_position] + 1) % 6), 0);
 
     #pragma GCC diagnostic push
@@ -648,7 +648,7 @@ template <typename HexLyt, std::size_t array_size>
     array_position++;
     while (array_position + 1u < array_size and lookup_array[array_position + 1u] != X)
     {
-        wire_position = get_near_position<HexLyt>(core, lookup_array[array_position], 1);
+        wire_position = get_near_position<HexLyt>(central_tile, lookup_array[array_position], 1);
 
         if (!lyt.is_empty_tile(wire_position))
             {wire_position.z = 0;}
@@ -662,31 +662,31 @@ template <typename HexLyt, std::size_t array_size>
         array_position++;
     }
 
-    wire_position = get_near_position<HexLyt>(core, lookup_array[array_position], 0);
+    wire_position = get_near_position<HexLyt>(central_tile, lookup_array[array_position], 0);
     if (place_wire<HexLyt>(lyt, wire_position, last_placed_wire_position))
     {
         *found_wire = true;
     }
 
-    return static_cast<uint8_t>(array_position + 2u); // to skip the last placed wire and a potential spacer
+    return static_cast<uint8_t>(array_position + 2u); // + 2 to skip the last placed wire and a potential spacer
 }
 
 /**
- * Utility function that places one string of input wires in a supertile, whichs position is defined by the core `tile`.
+ * Utility function that places one string of input wires in a supertile, whichs position is defined by the central `tile`.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
  * @tparam array_size Size of the lookup array that is passed.
  * @param lyt Hexagonal gate-level supertile layout that will house the wires.
- * @param core `tile` that represents the central position in a supertile.
+ * @param central_tile `tile` that represents the central position in a supertile.
  * @param lookup_array Lookup array that defines the path the wires will take.
  * @param array_position Position in the lookup array where the start of the current wire string is positioned.
  * @param last_wire Pointer to where this function will write the `tile` of the last wire that was placed.
  * @return Returns the updated position in the lookup array that reflects the position of the next entity in the array.
  */
 template <typename HexLyt, std::size_t array_size>
-[[nodiscard]] uint8_t place_input_wires(HexLyt& lyt, const tile<HexLyt> core, const std::array<hex_direction,array_size>& lookup_array, uint8_t array_position, tile<HexLyt>* last_wire) noexcept
+[[nodiscard]] uint8_t place_input_wires(HexLyt& lyt, const tile<HexLyt> central_tile, const std::array<hex_direction,array_size>& lookup_array, uint8_t array_position, tile<HexLyt>* last_wire) noexcept
 {
-    auto input_wire_position = get_near_position<HexLyt>(core, lookup_array[array_position], 0);
+    auto input_wire_position = get_near_position<HexLyt>(central_tile, lookup_array[array_position], 0);
     auto last_placed_wire_position = get_near_position<HexLyt>(input_wire_position, static_cast<hex_direction>((lookup_array[array_position] + 1) % 6), 0);
 
     #pragma GCC diagnostic push
@@ -698,7 +698,7 @@ template <typename HexLyt, std::size_t array_size>
     while (lookup_array[array_position] != X)
     {
         last_placed_wire_position = input_wire_position;
-        input_wire_position = get_near_position<HexLyt>(core, lookup_array[array_position], 1);
+        input_wire_position = get_near_position<HexLyt>(central_tile, lookup_array[array_position], 1);
 
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wunused-result"
@@ -709,28 +709,28 @@ template <typename HexLyt, std::size_t array_size>
     }
 
     *last_wire = input_wire_position;
-    return ++array_position; // to skip the spacer
+    return ++array_position; // ++ to skip the spacer in the array
 }
 
 /**
- * Utility function that places one string of output wires in a supertile, whichs position is defined by the core `tile`.
+ * Utility function that places one string of output wires in a supertile, whichs position is defined by the central `tile`.
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
  * @tparam array_size Size of the lookup array that is passed.
  * @param lyt Hexagonal gate-level supertile layout that will house the wires.
- * @param core `tile` that represents the central position in a supertile.
+ * @param central_tile `tile` that represents the central position in a supertile.
  * @param lookup_array Lookup array that defines the path the wires will take.
  * @param array_position Position in the lookup array where the start of the current wire string is positioned.
  * @param found_wire Pointer to where this method will write `true` if an unfinished wire was already present at the position of the last wire placed by this function.
  * @return Returns the updated position in the lookup array that reflects the position of the next entity in the array.
  */
 template <typename HexLyt, std::uint8_t array_size>
-[[nodiscard]] uint8_t place_output_wires(HexLyt& lyt, const tile<HexLyt> core, const std::array<hex_direction,array_size>& lookup_array, uint8_t array_position, bool* found_wire) noexcept //This one also needs a pointer to a bool where it can write if it found a existing wire
+[[nodiscard]] uint8_t place_output_wires(HexLyt& lyt, const tile<HexLyt> central_tile, const std::array<hex_direction,array_size>& lookup_array, uint8_t array_position, bool* found_wire) noexcept
 {
-    auto last_placed_wire_position = core;
+    auto last_placed_wire_position = central_tile;
     while (array_position + 1u < array_size and lookup_array[array_position + 1u] != X)
     {
-        const auto output_wire_position = get_near_position<HexLyt>(core, lookup_array[array_position], 1);
+        const auto output_wire_position = get_near_position<HexLyt>(central_tile, lookup_array[array_position], 1);
 
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wunused-result"
@@ -741,12 +741,12 @@ template <typename HexLyt, std::uint8_t array_size>
 
         array_position++;
     }
-    const auto output_wire_position = get_near_position<HexLyt>(core, lookup_array[array_position], 0);
+    const auto output_wire_position = get_near_position<HexLyt>(central_tile, lookup_array[array_position], 0);
     if (place_wire<HexLyt>(lyt, output_wire_position, last_placed_wire_position))
     {
         *found_wire = true;
     }
-    return static_cast<uint8_t>(array_position + 2u); // to skip the last placed wire and a potential spacer
+    return static_cast<uint8_t>(array_position + 2u); // + 2 to skip the last placed wire and a potential spacer in the array
 }
 
 /**
@@ -952,7 +952,7 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
                 const auto input_wire_position = get_near_position<OutHexLyt>(central_tile, in, 0);
                 place_wire<OutHexLyt>(super_lyt, input_wire_position, get_near_position<OutHexLyt>(input_wire_position, static_cast<hex_direction>((in + 1) % 6), 0));
 
-                // place core wire
+                // place central wire
                 place_wire<OutHexLyt>(super_lyt, central_tile, get_near_position<OutHexLyt>(central_tile, in, 0));
 
                 #pragma GCC diagnostic pop
@@ -978,7 +978,7 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
             // place input wires
             array_position = place_input_wires<OutHexLyt,5>(super_lyt, central_tile, lookup_array, array_position, &last_wire);
 
-            // place inverter core
+            // place inverter at the central tile
             super_lyt.create_not(super_lyt.make_signal(super_lyt.get_node(last_wire)), central_tile);
 
             #pragma GCC diagnostic push
@@ -1008,7 +1008,7 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
             // place input wires
             array_position = place_input_wires<OutHexLyt,9>(super_lyt, central_tile, lookup_array, array_position, &last_wire);
 
-            // place fanout core
+            // place fanout at the central tile
             super_lyt.create_buf(super_lyt.make_signal(super_lyt.get_node(last_wire)), central_tile);
 
             // place output wires 1
@@ -1047,7 +1047,7 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
         // place input wires 2
         array_position = place_input_wires<OutHexLyt,9>(super_lyt, central_tile, lookup_array, array_position, &last_wire_2);
 
-        // place core
+        // place central tile
         const auto last_signal_1 = super_lyt.make_signal(super_lyt.get_node(last_wire_1));
         const auto last_signal_2 = super_lyt.make_signal(super_lyt.get_node(last_wire_2));
         if (original_lyt.is_and(original_node))
@@ -1122,19 +1122,19 @@ void add_unique(std::vector<tile<HexLyt>>& vector, const tile<HexLyt> new_tile) 
 }
 
 /**
- * Utility function that searches through a vector of `tile`s, that house outgoing signals from the refference `tile`, based on the given direction.
+ * Utility function that searches through a vector of `tile`s, that house outgoing signals from the reference `tile`, based on the given direction.
  * (Main usage of the function is to copy the z position of the existing `tile`, since x and y are already defined.)
  * 
  * @tparam HexLyt Even-row hexagonal gate-level layout return type.
  * @param outgoing_tiles Vector to search through.
- * @param refference `tile` from which the outgoing tiles originate.
- * @param direction Direction of the requested `tile`, relative to the refference `tile`.
+ * @param reference `tile` from which the outgoing tiles originate.
+ * @param direction Direction of the requested `tile`, relative to the reference `tile`.
  * @return The `tile` in the given direction, or, if no correct tile was found, a tile in the right x and y position with the z coordinate 0.
  */
 template <typename HexLyt>
-[[nodiscard]] tile<HexLyt> get_outgoing_from_direction(const std::vector<tile<HexLyt>> outgoing_tiles, const tile<HexLyt> refference, hex_direction direction) noexcept
+[[nodiscard]] tile<HexLyt> get_outgoing_from_direction(const std::vector<tile<HexLyt>> outgoing_tiles, const tile<HexLyt> reference, hex_direction direction) noexcept
 {
-    const auto sample = get_near_position<HexLyt>(refference, direction, 0);
+    const auto sample = get_near_position<HexLyt>(reference, direction, 0);
     for (tile<HexLyt> outgoing : outgoing_tiles)
     {
         if (sample.x == outgoing.x and sample.y == outgoing.y)

@@ -53,7 +53,7 @@ class supertile_command : public command
 
         if (const auto is_correctly_clocked = std::visit(check_clocking_scheme_pattern, lyt); !is_correctly_clocked)
         {
-            env->out() << "[e] layout has to be clocked with one of the following schemes: TINY, AMY, FLIP, ROW" << std::endl;
+            env->out() << "[e] layout has to be clocked with one of the following schemes: ROW, AMY, FLIP, TINY" << std::endl;
             return;
         }
 
