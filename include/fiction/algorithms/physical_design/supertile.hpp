@@ -184,6 +184,7 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
 [[nodiscard]] constexpr int8_t perfect_hash_function_1to1(hex_direction A, hex_direction B) noexcept
 {
     int8_t base = A > B ? 15 : 0;
+
     if ((A * B) == 2)
     {
         return 12 + base;
@@ -240,7 +241,8 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
 
     if (in2 * out2 == 8)
     {
-        if (in2 < out2) {
+        if (in2 < out2)
+        {
             return 20*in1 + 9; // 20*in1 + 17 - 8
         }
         else
@@ -250,7 +252,8 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
     }
     else
     {
-        if (in2 < out2) {
+        if (in2 < out2)
+        {
             return 20*in1 + 2*out1 + in2 + out2 - 8; // 20*in1 + 2*out1 + in2 + out2 - 8
         }
         else
@@ -601,11 +604,13 @@ template <typename HexLyt>
 
     if (current_node == 0)
     {
-        if (input_node == 0) // the tile from which the signal should be coming is empty, so a unfinished wire will be placed there that will later be connected
+        if (input_node == 0) // the tile from which the signal should be coming is empty, so an unfinished wire will be placed there that will later be connected
         {
             //std::cout << "Creating wire at " << position.x << "," << position.y << "," << position.z << " and created unconnected wire at " << input_position.x << "," << input_position.y << "," << input_position.z << std::endl; // TODO remove
             lyt.create_buf(lyt.create_unconnected_buf(input_position), position);
-        } else {
+        }
+        else
+        {
             //std::cout << "Creating wire at " << position.x << "," << position.y << "," << position.z << " and connecting it to " << input_position.x << "," << input_position.y << "," << input_position.z << std::endl; // TODO remove
             lyt.create_buf(lyt.make_signal(input_node), position);
         }
