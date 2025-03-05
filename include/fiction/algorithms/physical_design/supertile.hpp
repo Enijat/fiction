@@ -154,7 +154,8 @@ template <typename HexLyt>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
 /**
  * These reflect the possible directions in a pointy-top hexagonal layout.
  * They are additionally used to represent the positions in a supertile, in which case each
@@ -176,6 +177,7 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
 /**
  * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
  * to the range 0 to 29 without gaps and or overlaps.
+ * If the input values do not follow these constrains undefined behaviour will happen.
  * 
  * @param A Reflects the input of a wire or inverter.
  * @param B Reflects the output of a wire or inverter.
@@ -201,7 +203,8 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
 
 /**
  * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
- * to the range 0 to 59 without gaps and or overlaps. The order of the input values `B` and `C` is not relevant. 
+ * to the range 0 to 59 without gaps and or overlaps. The order of the input values `B` and `C` is not relevant.
+ * If the input values do not follow these constrains undefined behaviour will happen.
  * 
  * @param A Can reflect the single output in a 2-in 1-out logic gate or the single input in a fanout.
  * @param B Can reflect either of the two inputs in a 2-in 1-out logic gate or either of the two oupputs of a fanout.
@@ -225,15 +228,16 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
 
 /**
  * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
- * to the range 0 to 119 without gaps and or overlaps. Designed for wire crossings and bypasses
+ * to the range 0 to 119 without gaps and or overlaps. Designed for wire crossings.
+ * If the input values do not follow these constrains undefined behaviour will happen.
  * 
- * @param in1 First crossing/bypass input.
- * @param out1 First crossing/bypass output.
- * @param in2 Second crossing/bypass input.
- * @param out2 Second crossing/bypass output.
+ * @param in1 First crossing input.
+ * @param out1 First crossing output.
+ * @param in2 Second crossing input.
+ * @param out2 Second crossing output.
  * @return Hash result to be used in the respective lookup table.
  */
-[[nodiscard]] constexpr int8_t perfect_hash_function_2to2(hex_direction in1, hex_direction out1, hex_direction in2, hex_direction out2) noexcept
+[[nodiscard]] constexpr int8_t perfect_hash_function_2to2_CROSSING(hex_direction in1, hex_direction out1, hex_direction in2, hex_direction out2) noexcept
 {
     out1 = static_cast<hex_direction>(positive_mod<int8_t>((out1 - in1), 6));
     in2 = static_cast<hex_direction>(positive_mod<int8_t>((in2 - in1), 6));
@@ -263,6 +267,88 @@ using namespace detail; //TODO For what did I need this again? -> put descriptio
     }
 }
 
+/**
+ * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
+ * to the range 0 to 119 without gaps and or overlaps. Designed for wire bypasses.
+ * If the input values do not follow these constrains undefined behaviour will happen.
+ *  
+ * @param in1 First bypass input.
+ * @param out1 First bypass output.
+ * @param in2 Second bypass input.
+ * @param out2 Second bypass output.
+ * @return Hash result to be used in the respective lookup table.
+ */
+[[nodiscard]] constexpr int16_t perfect_hash_function_2to2_BYPASS(hex_direction in1, hex_direction out1, hex_direction in2, hex_direction out2) noexcept
+{
+    out1 = static_cast<hex_direction>(positive_mod<int8_t>((out1 - in1), 6));
+    in2 = static_cast<hex_direction>(positive_mod<int8_t>((in2 - in1), 6));
+    out2 = static_cast<hex_direction>(positive_mod<int8_t>((out2 - in1), 6));
+
+    int16_t base = in1*40;
+    int16_t rough = 0;
+
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wswitch"
+
+    switch (in2)
+    {
+    case 1:
+        rough = (out1 * out2) - (out1 + out2);
+        if (rough == 7)
+        {
+            return base + 4;
+        }
+        else if (rough == 11)
+        {
+            return base;
+        }
+        return base + rough;
+    case 2:
+        base += 6;
+        rough = (out1 - out2) + 4;
+        if ((out1 + out2) > 7)
+        {
+            rough -= 2;
+        }
+        return base + rough;
+    case 3:
+        base += 15;
+        if ((out1 * out2) == 10)
+        {
+            if ((out2 - out1) > 0)
+            {
+                return base + 4;
+            }
+            else
+            {
+                return base + 9;
+            }
+        }
+        return base + (out1 - out2) + 4;
+    case 4:
+        base += 25;
+        if ((out1 * out2) == 3)
+        {
+            return base + 4;
+        }
+        else if ((out1 * out2) == 6)
+        {
+            return base + 5;
+        }
+        return base + (out1 - out2) + 4;
+    case 5:
+        base += 34;
+        if ((out1*out2) == 6)
+        {
+            return base + 5;
+        }
+        return base + out1 + out2 - 3;
+    }
+
+    #pragma GCC diagnostic pop
+}
+
+#pragma GCC diagnostic pop
 #pragma GCC diagnostic pop
 
 /**
@@ -822,31 +908,55 @@ constexpr const std::array<std::array<hex_direction,10>,120> lookup_table_2in2ou
 {{NW, C, SE, X, W, SW, C, NE, E, X}},{{NW, C, SE, SW, X, W, SW, C, NE, X}},{{NW, C, SE, SW, X, W, SW, C, NE, E}},{{NW, NE, C, SW, X, W, NW, C, SE, X}},{{NW, C, SE, X, SW, C, NE, E, X, X}}}};
 
 // TODO This size could easily be halved in theory, just a more sophisticated lookup function is required
-constexpr const std::array<std::array<hex_direction,7>,120> lookup_table_2in2out_BYPASS = {{
-    {{NE, NW, W, SW, X, E, SE}},{{NE, NW, W, X, E, SE, X}},{{NE, NW, X, E, SE, X, X}},{{NE, NW, W, X, E, SE, SW}},{{NE, NW, X, E, SE, SW, X}},
-    {{NE, NW, X, SE, SW, X, X}},{{NE, NW, X, E, SE, SW, W}},{{NE, NW, X, SE, SW, W, X}},{{NE, NW, X, SW, W, X, X}},{{NE, NW, W, X, SE, SW, X}},
-    {{NE, E, X, SW, SE, X, X}},{{NE, E, X, W, SW, SE, X}},{{NE, E, X, NW, W, SW, SE}},{{NE, E, X, W, SW, X, X}},{{NE, E, X, NW, W, SW, X}},
-    {{NE, E, SE, X, NW, W, SW}},{{NE, E, X, NW, W, X, X}},{{NE, E, SE, X, NW, W, X}},{{NE, E, SE, SW, X, NW, W}},{{NE, E, SE, X, W, SW, X}},
-    {{E, NE, NW, W, X, SE, SW}},{{E, NE, NW, X, SE, SW, X}},{{E, NE, X, SE, SW, X, X}},{{E, NE, NW, X, SE, SW, W}},{{E, NE, X, SE, SW, W, X}},
-    {{E, NE, X, SW, W, X, X}},{{E, NE, X, SE, SW, W, NW}},{{E, NE, X, SW, W, NW, X}},{{E, NE, X, W, NW, X, X}},{{E, NE, NW, X, SW, W, X}},
-    {{E, SE, X, W, SW, X, X}},{{E, SE, X, NW, W, SW, X}},{{E, SE, X, NE, NW, W, SW}},{{E, SE, X, NW, W, X, X}},{{E, SE, X, NE, NW, W, X}},
-    {{E, SE, SW, X, NE, NW, W}},{{E, SE, X, NE, NW, X, X}},{{E, SE, SW, X, NE, NW, X}},{{E, SE, SW, W, X, NE, NW}},{{E, SE, SW, X, NW, W, X}},
-    {{SE, E, NE, NW, X, SW, W}},{{SE, E, NE, X, SW, W, X}},{{SE, E, X, SW, W, X, X}},{{SE, E, NE, X, SW, W, NW}},{{SE, E, X, SW, W, NW, X}},
-    {{SE, E, X, W, NW, X, X}},{{SE, E, X, SW, W, NW, NE}},{{SE, E, X, W, NW, NE, X}},{{SE, E, X, NW, NE, X, X}},{{SE, E, NE, X, W, NW, X}},
-    {{SE, SW, X, NW, W, X, X}},{{SE, SW, X, NE, NW, W, X}},{{SE, SW, X, E, NE, NW, W}},{{SE, SW, X, NE, NW, X, X}},{{SE, SW, X, E, NE, NW, X}},
-    {{SE, SW, W, X, E, NE, NW}},{{SE, SW, X, E, NE, X, X}},{{SE, SW, W, X, E, NE, X}},{{SE, SW, W, NW, X, E, NE}},{{SE, SW, W, X, NE, NW, X}},
-    {{SW, SE, E, NE, X, W, NW}},{{SW, SE, E, X, W, NW, X}},{{SW, SE, X, W, NW, X, X}},{{SW, SE, E, X, W, NW, NE}},{{SW, SE, X, W, NW, NE, X}},
-    {{SW, SE, X, NW, NE, X, X}},{{SW, SE, X, W, NW, NE, E}},{{SW, SE, X, NW, NE, E, X}},{{SW, SE, X, NE, E, X, X}},{{SW, SE, E, X, NW, NE, X}},
-    {{SW, W, X, NE, NW, X, X}},{{SW, W, X, E, NE, NW, X}},{{SW, W, X, SE, E, NE, NW}},{{SW, W, X, E, NE, X, X}},{{SW, W, X, SE, E, NE, X}},
-    {{SW, W, NW, X, SE, E, NE}},{{SW, W, X, SE, E, X, X}},{{SW, W, NW, X, SE, E, X}},{{SW, W, NW, NE, X, SE, E}},{{SW, W, NW, X, E, NE, X}},
-    {{W, SW, SE, E, X, NW, NE}},{{W, SW, SE, X, NW, NE, X}},{{W, SW, X, NW, NE, X, X}},{{W, SW, SE, X, NW, NE, E}},{{W, SW, X, NW, NE, E, X}},
-    {{W, SW, X, NE, E, X, X}},{{W, SW, X, NW, NE, E, SE}},{{W, SW, X, NE, E, SE, X}},{{W, SW, X, E, SE, X, X}},{{W, SW, SE, X, NE, E, X}},
-    {{W, NW, X, E, NE, X, X}},{{W, NW, X, SE, E, NE, X}},{{W, NW, X, SW, SE, E, NE}},{{W, NW, X, SE, E, X, X}},{{W, NW, X, SW, SE, E, X}},
-    {{W, NW, NE, X, SW, SE, E}},{{W, NW, X, SW, SE, X, X}},{{W, NW, NE, X, SW, SE, X}},{{W, NW, NE, E, X, SW, SE}},{{W, NW, NE, X, SE, E, X}},
-    {{NW, W, SW, SE, X, NE, E}},{{NW, W, SW, X, NE, E, X}},{{NW, W, X, NE, E, X, X}},{{NW, W, SW, X, NE, E, SE}},{{NW, W, X, NE, E, SE, X}},
-    {{NW, W, X, E, SE, X, X}},{{NW, W, X, NE, E, SE, SW}},{{NW, W, X, E, SE, SW, X}},{{NW, W, X, SE, SW, X, X}},{{NW, W, SW, X, E, SE, X}},
-    {{NW, NE, X, SE, E, X, X}},{{NW, NE, X, SW, SE, E, X}},{{NW, NE, X, W, SW, SE, E}},{{NW, NE, X, SW, SE, X, X}},{{NW, NE, X, W, SW, SE, X}},
-    {{NW, NE, E, X, W, SW, SE}},{{NW, NE, X, W, SW, X, X}},{{NW, NE, E, X, W, SW, X}},{{NW, NE, E, SE, X, W, SW}},{{NW, NE, E, X, SW, SE, X}}}};
+constexpr const std::array<std::array<hex_direction,7>,240> lookup_table_2in2out_BYPASS = {{
+    {{NE, NW, X, E, SE, SW, W}},{{NE, NW, W, SW, X, E, SE}},{{NE, NW, W, X, E, SE, X}},{{NE, NW, X, E, SE, X, X}},{{NE, NW, X, E, SE, SW, X}},
+    {{NE, NW, W, X, E, SE, SW}},{{NE, E, X, SE, SW, W, NW}},{{NE, E, X, SE, SW, W, X}},{{NE, E, X, SE, SW, X, X}},{{NE, NW, X, SE, SW, W, X}},
+    {{NE, NW, X, SE, SW, X, X}},{{NE, NW, W, X, SE, SW, X}},{{NE, NW, W, SW, X, SE, E}},{{NE, NW, W, X, SE, E, X}},{{NE, NW, X, SE, E, X, X}},
+    {{NE, E, X, SW, W, NW, X}},{{NE, E, X, SW, W, X, X}},{{NE, E, SE, X, SW, W, X}},{{NE, E, X, SW, SE, X, X}},{{NE, E, SE, X, SW, W, NW}},
+    {{NE, NW, X, SW, W, X, X}},{{NE, NW, W, X, SW, SE, X}},{{NE, NW, W, X, SW, SE, E}},{{NE, NW, X, SW, SE, E, X}},{{NE, NW, X, SW, SE, X, X}},
+    {{NE, E, X, W, NW, X, X}},{{NE, E, SE, X, W, NW, X}},{{NE, E, SE, SW, X, W, NW}},{{NE, E, X, W, SW, SE, X}},{{NE, E, X, W, SW, X, X}},
+    {{NE, E, SE, X, W, SW, X}},{{NE, NW, X, W, SW, X, X}},{{NE, NW, X, W, SW, SE, X}},{{NE, NW, X, W, SW, SE, E}},{{NE, E, X, NW, W, SW, SE}},
+    {{NE, E, X, NW, W, SW, X}},{{NE, E, X, NW, W, X, X}},{{NE, E, SE, X, NW, W, X}},{{NE, E, SE, SW, X, NW, W}},{{NE, E, SE, X, NW, W, SW}},
+    {{E, NE, X, SE, SW, W, NW}},{{E, NE, NW, W, X, SE, SW}},{{E, NE, NW, X, SE, SW, X}},{{E, NE, X, SE, SW, X, X}},{{E, NE, X, SE, SW, W, X}},
+    {{E, NE, NW, X, SE, SW, W}},{{E, SE, X, SW, W, NW, NE}},{{E, SE, X, SW, W, NW, X}},{{E, SE, X, SW, W, X, X}},{{E, NE, X, SW, W, NW, X}},
+    {{E, NE, X, SW, W, X, X}},{{E, NE, NW, X, SW, W, X}},{{E, NE, NW, W, X, SW, SE}},{{E, NE, NW, X, SW, SE, X}},{{E, NE, X, SW, SE, X, X}},
+    {{E, SE, X, W, NW, NE, X}},{{E, SE, X, W, NW, X, X}},{{E, SE, SW, X, W, NW, X}},{{E, SE, X, W, SW, X, X}},{{E, SE, SW, X, W, NW, NE}},
+    {{E, NE, X, W, NW, X, X}},{{E, NE, NW, X, W, SW, X}},{{E, NE, NW, X, W, SW, SE}},{{E, NE, X, W, SW, SE, X}},{{E, NE, X, W, SW, X, X}},
+    {{E, SE, X, NW, NE, X, X}},{{E, SE, SW, X, NW, NE, X}},{{E, SE, SW, W, X, NW, NE}},{{E, SE, X, NW, W, SW, X}},{{E, SE, X, NW, W, X, X}},
+    {{E, SE, SW, X, NW, W, X}},{{E, NE, X, NW, W, X, X}},{{E, NE, X, NW, W, SW, X}},{{E, NE, X, NW, W, SW, SE}},{{E, SE, X, NE, NW, W, SW}},
+    {{E, SE, X, NE, NW, W, X}},{{E, SE, X, NE, NW, X, X}},{{E, SE, SW, X, NE, NW, X}},{{E, SE, SW, W, X, NE, NW}},{{E, SE, SW, X, NE, NW, W}},
+    {{SE, E, X, SW, W, NW, NE}},{{SE, E, NE, NW, X, SW, W}},{{SE, E, NE, X, SW, W, X}},{{SE, E, X, SW, W, X, X}},{{SE, E, X, SW, W, NW, X}},
+    {{SE, E, NE, X, SW, W, NW}},{{SE, SW, X, W, NW, NE, E}},{{SE, SW, X, W, NW, NE, X}},{{SE, SW, X, W, NW, X, X}},{{SE, E, X, W, NW, NE, X}},
+    {{SE, E, X, W, NW, X, X}},{{SE, E, NE, X, W, NW, X}},{{SE, E, NE, NW, X, W, SW}},{{SE, E, NE, X, W, SW, X}},{{SE, E, X, W, SW, X, X}},
+    {{SE, SW, X, NW, NE, E, X}},{{SE, SW, X, NW, NE, X, X}},{{SE, SW, W, X, NW, NE, X}},{{SE, SW, X, NW, W, X, X}},{{SE, SW, W, X, NW, NE, E}},
+    {{SE, E, X, NW, NE, X, X}},{{SE, E, NE, X, NW, W, X}},{{SE, E, NE, X, NW, W, SW}},{{SE, E, X, NW, W, SW, X}},{{SE, E, X, NW, W, X, X}},
+    {{SE, SW, X, NE, E, X, X}},{{SE, SW, W, X, NE, E, X}},{{SE, SW, W, NW, X, NE, E}},{{SE, SW, X, NE, NW, W, X}},{{SE, SW, X, NE, NW, X, X}},
+    {{SE, SW, W, X, NE, NW, X}},{{SE, E, X, NE, NW, X, X}},{{SE, E, X, NE, NW, W, X}},{{SE, E, X, NE, NW, W, SW}},{{SE, SW, X, E, NE, NW, W}},
+    {{SE, SW, X, E, NE, NW, X}},{{SE, SW, X, E, NE, X, X}},{{SE, SW, W, X, E, NE, X}},{{SE, SW, W, NW, X, E, NE}},{{SE, SW, W, X, E, NE, NW}},
+    {{SW, SE, X, W, NW, NE, E}},{{SW, SE, E, NE, X, W, NW}},{{SW, SE, E, X, W, NW, X}},{{SW, SE, X, W, NW, X, X}},{{SW, SE, X, W, NW, NE, X}},
+    {{SW, SE, E, X, W, NW, NE}},{{SW, W, X, NW, NE, E, SE}},{{SW, W, X, NW, NE, E, X}},{{SW, W, X, NW, NE, X, X}},{{SW, SE, X, NW, NE, E, X}},
+    {{SW, SE, X, NW, NE, X, X}},{{SW, SE, E, X, NW, NE, X}},{{SW, SE, E, NE, X, NW, W}},{{SW, SE, E, X, NW, W, X}},{{SW, SE, X, NW, W, X, X}},
+    {{SW, W, X, NE, E, SE, X}},{{SW, W, X, NE, E, X, X}},{{SW, W, NW, X, NE, E, X}},{{SW, W, X, NE, NW, X, X}},{{SW, W, NW, X, NE, E, SE}},
+    {{SW, SE, X, NE, E, X, X}},{{SW, SE, E, X, NE, NW, X}},{{SW, SE, E, X, NE, NW, W}},{{SW, SE, X, NE, NW, W, X}},{{SW, SE, X, NE, NW, X, X}},
+    {{SW, W, X, E, SE, X, X}},{{SW, W, NW, X, E, SE, X}},{{SW, W, NW, NE, X, E, SE}},{{SW, W, X, E, NE, NW, X}},{{SW, W, X, E, NE, X, X}},
+    {{SW, W, NW, X, E, NE, X}},{{SW, SE, X, E, NE, X, X}},{{SW, SE, X, E, NE, NW, X}},{{SW, SE, X, E, NE, NW, W}},{{SW, W, X, SE, E, NE, NW}},
+    {{SW, W, X, SE, E, NE, X}},{{SW, W, X, SE, E, X, X}},{{SW, W, NW, X, SE, E, X}},{{SW, W, NW, NE, X, SE, E}},{{SW, W, NW, X, SE, E, NE}},
+    {{W, SW, X, NW, NE, E, SE}},{{W, SW, SE, E, X, NW, NE}},{{W, SW, SE, X, NW, NE, X}},{{W, SW, X, NW, NE, X, X}},{{W, SW, X, NW, NE, E, X}},
+    {{W, SW, SE, X, NW, NE, E}},{{W, NW, X, NE, E, SE, SW}},{{W, NW, X, NE, E, SE, X}},{{W, NW, X, NE, E, X, X}},{{W, SW, X, NE, E, SE, X}},
+    {{W, SW, X, NE, E, X, X}},{{W, SW, SE, X, NE, E, X}},{{W, SW, SE, E, X, NE, NW}},{{W, SW, SE, X, NE, NW, X}},{{W, SW, X, NE, NW, X, X}},
+    {{W, NW, X, E, SE, SW, X}},{{W, NW, X, E, SE, X, X}},{{W, NW, NE, X, E, SE, X}},{{W, NW, X, E, NE, X, X}},{{W, NW, NE, X, E, SE, SW}},
+    {{W, SW, X, E, SE, X, X}},{{W, SW, SE, X, E, NE, X}},{{W, SW, SE, X, E, NE, NW}},{{W, SW, X, E, NE, NW, X}},{{W, SW, X, E, NE, X, X}},
+    {{W, NW, X, SE, SW, X, X}},{{W, NW, NE, X, SE, SW, X}},{{W, NW, NE, E, X, SE, SW}},{{W, NW, X, SE, E, NE, X}},{{W, NW, X, SE, E, X, X}},
+    {{W, NW, NE, X, SE, E, X}},{{W, SW, X, SE, E, X, X}},{{W, SW, X, SE, E, NE, X}},{{W, SW, X, SE, E, NE, NW}},{{W, NW, X, SW, SE, E, NE}},
+    {{W, NW, X, SW, SE, E, X}},{{W, NW, X, SW, SE, X, X}},{{W, NW, NE, X, SW, SE, X}},{{W, NW, NE, E, X, SW, SE}},{{W, NW, NE, X, SW, SE, E}},
+    {{NW, W, X, NE, E, SE, SW}},{{NW, W, SW, SE, X, NE, E}},{{NW, W, SW, X, NE, E, X}},{{NW, W, X, NE, E, X, X}},{{NW, W, X, NE, E, SE, X}},
+    {{NW, W, SW, X, NE, E, SE}},{{NW, NE, X, E, SE, SW, W}},{{NW, NE, X, E, SE, SW, X}},{{NW, NE, X, E, SE, X, X}},{{NW, W, X, E, SE, SW, X}},
+    {{NW, W, X, E, SE, X, X}},{{NW, W, SW, X, E, SE, X}},{{NW, W, SW, SE, X, E, NE}},{{NW, W, SW, X, E, NE, X}},{{NW, W, X, E, NE, X, X}},
+    {{NW, NE, X, SE, SW, W, X}},{{NW, NE, X, SE, SW, X, X}},{{NW, NE, E, X, SE, SW, X}},{{NW, NE, X, SE, E, X, X}},{{NW, NE, E, X, SE, SW, W}},
+    {{NW, W, X, SE, SW, X, X}},{{NW, W, SW, X, SE, E, X}},{{NW, W, SW, X, SE, E, NE}},{{NW, W, X, SE, E, NE, X}},{{NW, W, X, SE, E, X, X}},
+    {{NW, NE, X, SW, W, X, X}},{{NW, NE, E, X, SW, W, X}},{{NW, NE, E, SE, X, SW, W}},{{NW, NE, X, SW, SE, E, X}},{{NW, NE, X, SW, SE, X, X}},
+    {{NW, NE, E, X, SW, SE, X}},{{NW, W, X, SW, SE, X, X}},{{NW, W, X, SW, SE, E, X}},{{NW, W, X, SW, SE, E, NE}},{{NW, NE, X, W, SW, SE, E}},
+    {{NW, NE, X, W, SW, SE, X}},{{NW, NE, X, W, SW, X, X}},{{NW, NE, E, X, W, SW, X}},{{NW, NE, E, SE, X, W, SW}},{{NW, NE, E, X, W, SW, SE}}}};
 
 /**
  * Utility function that populates a supertile by reading in the `original_tile`s node and it's inputs and outputs,
@@ -904,7 +1014,7 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
                 
                 if (is_crossing(in1, out1, in2, out2))
                 {        
-                    std::array<hex_direction,10> lookup_array = lookup_table_2in2out_CROSSING[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out1, in2, out2))];
+                    std::array<hex_direction,10> lookup_array = lookup_table_2in2out_CROSSING[static_cast<uint64_t>(perfect_hash_function_2to2_CROSSING(in1, out1, in2, out2))];
 
                     uint8_t array_position = 0;
 
@@ -924,8 +1034,8 @@ template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei
                     }
                 }
                 else
-                {                   
-                    std::array<hex_direction,7> lookup_array = lookup_table_2in2out_BYPASS[static_cast<uint64_t>(perfect_hash_function_2to2(in1, out2, in2, out1))];
+                {
+                    std::array<hex_direction,7> lookup_array = lookup_table_2in2out_BYPASS[static_cast<uint64_t>(perfect_hash_function_2to2_BYPASS(in1, out1, in2, out2))];
 
                     uint8_t array_position = 0;
 
