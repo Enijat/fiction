@@ -1053,7 +1053,6 @@ static constexpr const ArrayType super_3x2_group_lookup(int64_t x, int64_t y, co
  * @param y Y coordinate that will be looked up.
  * @return The clock number at the given coordinates.
  */
-//TODO make matrix_size a template parameter
 template <typename HexLyt>
 static constexpr const typename clocking_scheme<clock_zone<HexLyt>>::clock_number clocking_supertilezation(const clocking_scheme<clock_zone<HexLyt>> scheme, regular_matrix_size matrix_size, int64_t x, int64_t y) noexcept
 { 

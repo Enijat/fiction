@@ -18,10 +18,6 @@
 
 namespace fiction
 {
-// TODO after checking all -Wconversion errors and beeing finished, I should move the diagnostics-compiler info to the top and bottom of the file, so I don't have to repeat it everywhere I need it
-// TODO inline and constexpr and noexcept should be added everywhere they are needed
-// TODO alle "layout" erwähnungen durch "gate-level layout" ersetzen ?!
-// TODO coordinates und positions einheitlich verwenden
 namespace detail
 {
 
@@ -36,7 +32,6 @@ namespace detail
  * @param z z coordinate the translated `tile` should have.
  * @return Array with the coodrinates which are translated into the supertile hex layout.
  */
-//TODO maybe I can get rid of the arraytype specification by adding a template parameter to super()
 template <typename HexLyt>
 [[nodiscard]] constexpr std::array<int64_t,3> super_arraytype(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z) noexcept
 {
@@ -115,7 +110,6 @@ template <typename HexLyt>
 template <typename HexLyt>
 [[nodiscard]] inline constexpr tile<HexLyt> super(const tile<HexLyt> original_tile, int64_t offset_x, int64_t offset_y, int64_t z, bool compensate_x_shift = false, bool relative_y_was_even = false) noexcept
 {
-    //TODO maybe I can get rid of the compensate parameters by analysing the offset, 4x4 offset probably only has even values and 3x2 offset possibly has odd ones, or some slightly more complicated combination of x and y being even or odd.
     std::array<int64_t,3> result = super_arraytype<HexLyt>(original_tile, offset_x, offset_y, z);
     
     if (compensate_x_shift)
@@ -172,7 +166,7 @@ enum hex_direction {
     C  = 7 // represents the central tile
 };
 
-using namespace detail; //TODO For what did I need this again? -> put description here
+using namespace detail;
 
 /**
  * Hash function that maps the input values (if they follow the constrains outlined in the in the bachelor thesis "Super-Tile Routing for Omnidirectional Information Flow in Silicon Dangling Bond Logic" by F. Kiefhaber, 2025)
@@ -692,18 +686,15 @@ template <typename HexLyt>
     {
         if (input_node == 0) // the tile from which the signal should be coming is empty, so an unfinished wire will be placed there that will later be connected
         {
-            //std::cout << "Creating wire at " << position.x << "," << position.y << "," << position.z << " and created unconnected wire at " << input_position.x << "," << input_position.y << "," << input_position.z << std::endl; // TODO remove
             lyt.create_buf(lyt.create_unconnected_buf(input_position), position);
         }
         else
         {
-            //std::cout << "Creating wire at " << position.x << "," << position.y << "," << position.z << " and connecting it to " << input_position.x << "," << input_position.y << "," << input_position.z << std::endl; // TODO remove
             lyt.create_buf(lyt.make_signal(input_node), position);
         }
     }
     else // the wire already exists, it only needs it's incoming signal
     {
-        //std::cout << "Wire at " << position.x << "," << position.y << "," << position.z << " already existed, only connecting it to " << input_position.x << "," << input_position.y << "," << input_position.z << std::endl; // TODO remove
         lyt.connect(lyt.make_signal(input_node), current_node);
         return true;
     }
@@ -880,7 +871,6 @@ constexpr const std::array<std::array<hex_direction,5>,30> lookup_table_1in1out_
 {{NW, W, SW, X, NE}},{{SW, X, NE, E, X}},{{W, SW, X, NE, E}},{{NW, X, SE, E, X}},{{SW, W, NW, X, SE}},
 {{W, NW, X, SE, X}},{{NW, X, SE, X, X}},{{SE, X, NE, E, X}},{{W, NW, X, SW, X}},{{NW, X, SW, X, X}}}};
 
-// TODO This size could easily be halved in theory, just a more sophisticated lookup function is required
 constexpr const std::array<std::array<hex_direction,10>,120> lookup_table_2in2out_CROSSING = {{
 {{NE, NW, C, SE, X, E, NE, C, SW, X}},{{NE, C, SW, SE, X, E, SE, C, NW, W}},{{NE, C, SW, SE, X, E, SE, C, NW, X}},{{NE, C, SW, X, E, SE, C, NW, W, X}},{{NE, C, SW, X, E, SE, C, NW, X, X}},
 {{NE, C, SW, X, SE, C, NW, X, X, X}},{{NE, C, SW, W, X, E, SE, C, NW, X}},{{NE, C, SW, W, X, SE, C, NW, X, X}},{{NE, C, SW, W, X, SW, SE, C, NW, X}},{{NE, C, SW, X, SE, C, NW, W, X, X}},
@@ -907,7 +897,6 @@ constexpr const std::array<std::array<hex_direction,10>,120> lookup_table_2in2ou
 {{NW, C, SE, E, X, SE, SW, C, NE, X}},{{NW, C, SE, E, X, SW, C, NE, X, X}},{{NW, C, SE, E, X, W, SW, C, NE, X}},{{NW, C, SE, X, SW, C, NE, X, X, X}},{{NW, C, SE, X, W, SW, C, NE, X, X}},
 {{NW, C, SE, X, W, SW, C, NE, E, X}},{{NW, C, SE, SW, X, W, SW, C, NE, X}},{{NW, C, SE, SW, X, W, SW, C, NE, E}},{{NW, NE, C, SW, X, W, NW, C, SE, X}},{{NW, C, SE, X, SW, C, NE, E, X, X}}}};
 
-// TODO This size could easily be halved in theory, just a more sophisticated lookup function is required
 constexpr const std::array<std::array<hex_direction,7>,240> lookup_table_2in2out_BYPASS = {{
     {{NE, NW, X, E, SE, SW, W}},{{NE, NW, W, SW, X, E, SE}},{{NE, NW, W, X, E, SE, X}},{{NE, NW, X, E, SE, X, X}},{{NE, NW, X, E, SE, SW, X}},
     {{NE, NW, W, X, E, SE, SW}},{{NE, E, X, SE, SW, W, NW}},{{NE, E, X, SE, SW, W, X}},{{NE, E, X, SE, SW, X, X}},{{NE, NW, X, SE, SW, W, X}},
@@ -975,7 +964,7 @@ constexpr const std::array<std::array<hex_direction,7>,240> lookup_table_2in2out
  * @param relative_y_was_even Tells if the Y coordinate, based on which the offset was calculated, was even.
  * @return `true` if a unknown gate/fanout was placed at `original_tile`, else `false`. This includes primary inputs.
  */
-template <typename OutHexLyt, typename InHexLyt> //TODO die reihenfolge der zwei ersten Argumente wechseln (ist intuitiver)
+template <typename OutHexLyt, typename InHexLyt>
 [[nodiscard]] bool populate_supertile(const InHexLyt& original_lyt, OutHexLyt& super_lyt, const tile<InHexLyt> original_tile, int64_t offset_x, int64_t offset_y, hex_direction* output_a, hex_direction* output_b, bool compensate_x_shift, bool relative_y_was_even) noexcept
 {
     const auto original_node = original_lyt.get_node(original_tile);
@@ -1280,7 +1269,6 @@ template <typename OutHexLyt, typename InHexLyt>
     static_assert(is_gate_level_layout_v<OutHexLyt>, "InHexLyt is not a gate-level layout");
     static_assert(is_hexagonal_layout_v<OutHexLyt>, "InHexLyt is not a hexagonal layout");
     static_assert(has_even_row_hex_arrangement_v<OutHexLyt>, "InHexLyt does not have an even row hexagon arrangement");
-    //TODO somehow check that RespectClockingAll ist set to false?
     if (original_lyt.z() > 1) {
         std::cout << "[e] Given layouts z dimension is bigger then 1, unable to translate layout" << std::endl;
         throw std::runtime_error("Given layouts z dimension is bigger then 1");
@@ -1321,7 +1309,6 @@ template <typename OutHexLyt, typename InHexLyt>
     }
     else
     {
-        //TODO Instead of printing to the console directly, it would be better to write the error to the console from the cli function that calls supertilezation.
         std::cout << "[e] clocking scheme of layout has no supertile version, aborting transformation" << std::endl;
         throw std::runtime_error("clocking scheme of layout has no supertile version");
     }
@@ -1332,7 +1319,6 @@ template <typename OutHexLyt, typename InHexLyt>
     original_lyt.foreach_pi(
             [&original_lyt, &super_lyt, offset_x, offset_y, &path_beginnings, compensate_x_shift, relative_y_was_even](const auto& original_node)
             {
-                //TODO: inputs können wohl auch inverter sein ?! wie und wo muss ich das handlen? -> aparently nicht weil exact das nicht produziert, aber ich sollte es evtl trotzdem einfach abfangen
                 const auto original_tile = original_lyt.get_tile(original_node);
                 const auto super_tile = detail::super<InHexLyt>(original_tile, offset_x, offset_y, 0, compensate_x_shift, relative_y_was_even);
                 const auto super_signal = super_lyt.create_pi(original_lyt.get_name(original_lyt.get_node(original_tile)), super_tile);
@@ -1353,13 +1339,12 @@ template <typename OutHexLyt, typename InHexLyt>
             detail::hex_direction output_b = detail::hex_direction::X;
             if (detail::populate_supertile(original_lyt, super_lyt, current_original_tile, offset_x, offset_y, &output_a, &output_b, compensate_x_shift, relative_y_was_even))
             {
-                //TODO auch hier nicht direkt zur console printen sondern den fehler in der CLI methode abfangen.
                 std::cout << "[e] found unknown gate at tile " << current_original_tile.x << "," << current_original_tile.y << "," << current_original_tile.z << " while populating supertile, aborted translation" << std::endl;
                 throw std::runtime_error("found unknown gate");
             }
             if (output_a == detail::hex_direction::X and output_b == detail::hex_direction::X) // path is finished
             {
-                break; // TODO: change the while loop to do{..}while(...) and put this as a proper exit condition.
+                break;
             }
             else if (output_a != detail::hex_direction::X and output_b == detail::hex_direction::X) // path continues on one path
             {
@@ -1377,7 +1362,7 @@ template <typename OutHexLyt, typename InHexLyt>
         }
     }
 
-    restore_names<InHexLyt, OutHexLyt>(original_lyt, super_lyt); // TODO Find out if I need this or remove it
+    restore_names<InHexLyt, OutHexLyt>(original_lyt, super_lyt);
   
     return super_lyt;
 }

@@ -241,7 +241,6 @@ class fcn_gate_library
      * Since the `std::vector` used in `merge()` is a `non-literal` but I need it to be,
      * this does the exact same as `merge()`, just actually at compile time. (by using `std::array`)
      * Also x and y are swappend in this method because the SiDB gates are constructed in such a way that each row is an array, instead of each array, which is how this class intends it to be.
-     * TODO -> One could implement a method that changes the way a gate is stored (from row arrays in a single column array to column array stored in a single row array) so that all the methods here are usable again. (method should be true `constexpr`!)
      * 
      * Merges two `fcn_gate`s into one at compile time. This is intended to be used for wires. Unexpected behavior
      * can be caused, if more than one `fcn_gate` has a cell at the same position.
@@ -346,7 +345,6 @@ class fcn_gate_library
      * Since the `std::reverse` and `std::for_each` method used in `reverse_columns()` isn't a `constexpr` in the C++ version used here (17) and I need it to be (would be in 20),
      * this does the exact same as `reverse_columns()`, just actually at compile time.
      * Also x and y are swappend in this method because the SiDB gates are constructed in such a way that each row is an array, instead of each column, which is not how this class intends it to be.
-     * TODO -> One could implement a method that changes the way a gate is stored (from row arrays in a single column array to column array stored in a single row array) so that all the methods here are usable again. (method should be true `constexpr`!)
      * 
      * Reverses the columns of the given `fcn_gate` at compile time.
      *

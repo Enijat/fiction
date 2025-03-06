@@ -5,7 +5,6 @@
 #ifndef FICTION_SIDB_HEX_WIRES_LIBRARY_HPP
 #define FICTION_SIDB_HEX_WIRES_LIBRARY_HPP
 
-//TODO: Make shure I really need all these includes
 #include "fiction/technology/cell_ports.hpp"
 #include "fiction/technology/cell_technologies.hpp"
 #include "fiction/technology/fcn_gate_library.hpp"
@@ -23,10 +22,6 @@
 
 namespace fiction
 {
-    /**
-     * TODO give description here
-     */
-
 class sidb_extendagon_library : public sidb_bestagon_library
 {
   public:
@@ -190,74 +185,6 @@ class sidb_extendagon_library : public sidb_bestagon_library
               {NORTH_EAST_NORTH_WEST_TO_SOUTH_EAST_XNOR, NORTH_EAST_NORTH_WEST_TO_SOUTH_WEST_XNOR, SOUTH_EAST_SOUTH_WEST_TO_NORTH_EAST_XNOR, SOUTH_EAST_SOUTH_WEST_TO_NORTH_WEST_XNOR}}}};
 
         return implementations;
-    }
-    /**
-     * Returns a map of all different wire implementations and their respective port information.
-     *
-     * This is an optional interface function that is required by some algorithms.
-     *
-     * @return Map of all different wire implementations and their respective port information.
-     */
-    static gate_ports<port_direction> get_gate_ports() noexcept
-    {
-        //TODO die primary inputs / outputs hinzufügen, bei den wires nehm ich alle drei straight wire (muss beide seiten als ein primary input und output markieren),
-        // und bei invertern nehm ich die beiden straight inverter (auch wieder beide seiten mit in und out markieren)
-        static const gate_ports<port_direction> ports{{
-                                                        /** FORME: primary inputs / outputs
-                                                        {DIAGONAL_WIRE,
-                                                            {
-                                                                {
-                                                                    {
-                                                                        {port_direction(port_direction::cardinal::NORTH_WEST)},
-                                                                        {}
-                                                                    },
-                                                                    {
-                                                                        {
-                                                                            {port_direction(port_direction::cardinal::NORTH_WEST)},
-                                                                            {port_direction(port_direction::cardinal::SOUTH_EAST)}
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        },
-                                                        {MIRRORED_DIAGONAL_WIRE,
-                                                            {
-                                                                {
-                                                                    {
-                                                                        {port_direction(port_direction::cardinal::NORTH_EAST)},
-                                                                        {port_direction(port_direction::cardinal::SOUTH_WEST)}
-                                                                    }
-                                                                }
-                                                            }
-                                                        },*/
-
-                                                        /** FORME: samples
-                                                        {1in1out,
-                                                        {{{{IN},
-                                                           {OUT}}}}},
-
-                                                        {2in2out,
-                                                        {{{{IN1,
-                                                            IN2},
-                                                           {OUT1,
-                                                            OUT2}}}}},
-
-                                                        {2in1out,
-                                                        {{{{IN1,
-                                                            IN2},
-                                                           {OUT}}}}},
-
-                                                        {1in2out,
-                                                        {{{{IN},
-                                                           {OUT1,
-                                                            OUT2}}}}},*/
-                                                        
-        }};
-
-         //TODO finish this method and remove the following line
-        std::cout << "[e] you called an unfinished method" << std::endl;
-
-        return ports;
     }
 
   private:
@@ -1261,7 +1188,7 @@ class sidb_extendagon_library : public sidb_bestagon_library
     /**
      * Lookup table for double wires. Maps ports to corresponding wires.
      */
-    static inline const double_port_gate_map DOUBLE_WIRE_MAP = { // TODO check if I really need all these combinations
+    static inline const double_port_gate_map DOUBLE_WIRE_MAP = {
         //EAST_WEST_AND_SOUTH_EAST_SOUTH_WEST_WIRE
         {{{{port_direction(port_direction::cardinal::EAST)},
            {port_direction(port_direction::cardinal::WEST)}},

@@ -77,7 +77,7 @@ namespace fiction
  *
  * @tparam ClockedLayout The clocked layout that is to be extended by gate functions.
  */
-template <typename ClockedLayout, bool RespectClockingAll = true> // TODO check again if RespectClockingAll could be reduced to AllowSameClockInfoFlow)
+template <typename ClockedLayout, bool RespectClockingAll = true>
 class gate_level_layout : public ClockedLayout
 {
   public:

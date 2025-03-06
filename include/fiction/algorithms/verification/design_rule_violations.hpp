@@ -453,7 +453,7 @@ class gate_level_drvs_impl
                 {
                     if (const auto t = lyt.get_tile(w); lyt.is_crossing_layer(t))
                     {
-                        if (!(lyt.is_wire_tile(lyt.below(t)) or lyt.is_empty_tile(lyt.below(t)))) // TODO The proper way would be to rewrite the supertile population, but this is faster for now
+                        if (!(lyt.is_wire_tile(lyt.below(t)) or lyt.is_empty_tile(lyt.below(t))))
                         {
                             all_wire_crossings = false;
                             log_tile(t, crossing_report);

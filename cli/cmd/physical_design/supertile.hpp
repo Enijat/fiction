@@ -5,7 +5,6 @@
 #ifndef FICTION_CMD_SUPERTILE_HPP
 #define FICTION_CMD_SUPERTILE_HPP
 
-//TODO check if I really need all of these
 #include <fiction/algorithms/physical_design/supertile.hpp>
 #include <fiction/layouts/clocked_layout.hpp>
 #include <fiction/traits.hpp>
@@ -16,9 +15,6 @@
 namespace alice
 {
 
-/**
- * Transforms a hexagonal layout by TODO gescheide Erklärung finden
- */
 class supertile_command : public command
 {
   public:
@@ -28,13 +24,12 @@ class supertile_command : public command
      * @param e alice::environment that specifies stores etc.
      */
     explicit supertile_command(const environment::ptr& e) :
-            command(e, "Transforms a hexagonal layout by replacing each tile with a supertile. Resulting layouts can be transformed into cell-level layouts with the Extendagon gate library.")
+            command(e, "Transforms a hexagonal layout by replacing each tile with a supertile.\n"
+                       "Resulting layouts can be transformed into cell-level layouts with the Extendagon gate library.\n"
+                       "Currently possible for the clocking schemes ROW, AMY, FLIP, TINY")
     {}
 
   protected:
-    /**
-     * Fucntion to transform a gexagonal layout by ... TODO hier Erklärung von oben kopieren
-     */
     void execute() override
     {
         auto& gls = store<fiction::gate_layout_t>();
