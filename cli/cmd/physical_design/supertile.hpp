@@ -28,7 +28,7 @@ class supertile_command : public command
      * @param e alice::environment that specifies stores etc.
      */
     explicit supertile_command(const environment::ptr& e) :
-            command(e, "Does super stuff") //TODO hier gescheiden text und dabei auf benennung achten (also layout vs tiles vs gates, etc.)
+            command(e, "Transforms a hexagonal layout by replacing each tile with a supertile. Resulting layouts can be transformed into cell-level layouts with the Extendagon gate library.")
     {}
 
   protected:
