@@ -784,8 +784,8 @@ static auto amy_clocking() noexcept
 
     return clocking_scheme{clock_name::AMY,
                             even_row_amy_4_clock_function,
-                            std::min(HexLyt::max_fanin_size, 3u),
-                            3u,
+                            std::min(HexLyt::max_fanin_size, 2u),
+                            2u,
                             4u,
                             true};
 }
@@ -815,8 +815,8 @@ static auto flip_clocking() noexcept
 
     return clocking_scheme{clock_name::FLIP,
                             even_row_flip_4_clock_function,
-                            std::min(HexLyt::max_fanin_size, 3u),
-                            3u,
+                            std::min(HexLyt::max_fanin_size, 2u),
+                            2u,
                             4u,
                             true};
 }
